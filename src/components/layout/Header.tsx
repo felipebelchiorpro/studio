@@ -113,7 +113,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full">
       {/* Red Top Bar Marquee */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto flex h-10 items-center justify-between px-4 text-xs sm:text-sm">
+        <div className="container mx-auto flex h-8 items-center justify-between px-4 text-xs sm:text-sm">
           <Button variant="ghost" size="icon" onClick={handlePrevMessage} className="h-full px-2 hover:bg-primary/80">
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Previous message</span>
@@ -130,7 +130,7 @@ export default function Header() {
       </div>
 
       {/* Dark Contact Bar */}
-      <div className="bg-card text-card-foreground border-b border-border/40 py-2">
+      <div className="bg-background text-card-foreground border-b border-border/40 py-2">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between px-4 text-xs">
           <div className="flex items-center space-x-3 sm:space-x-4 mb-2 sm:mb-0">
             <a href="https://wa.me/5514997326263" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-primary transition-colors">
