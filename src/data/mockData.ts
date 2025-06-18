@@ -79,7 +79,7 @@ export const mockProducts: Product[] = [
 ];
 
 export const mockCategories: Category[] = [
-  { id: 'catOffers', name: 'Ofertas', imageUrl: 'https://placehold.co/800x400.png' },
+  { id: 'catComboOffers', name: 'COMBO E OFERTAS', imageUrl: 'https://placehold.co/800x400.png' },
   { id: 'cat1', name: 'Proteínas', imageUrl: 'https://placehold.co/800x400.png' },
   { id: 'cat2', name: 'Aminoácidos', imageUrl: 'https://placehold.co/800x400.png' },
   { id: 'cat3', name: 'Vitaminas', imageUrl: 'https://placehold.co/800x400.png' },

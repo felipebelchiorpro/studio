@@ -29,9 +29,9 @@ export default function HomePage() {
                 <Button
                   variant="ghost"
                   className={
-                    category.name === "Ofertas"
-                      ? "text-sm font-medium text-primary border-2 border-primary rounded-full hover:text-primary hover:bg-primary/20 px-4 py-1 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
-                      : "text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
+                    category.name === "COMBO E OFERTAS"
+                      ? "uppercase text-sm font-medium text-primary border-2 border-primary rounded-full hover:text-primary hover:bg-primary/20 px-4 py-1 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
+                      : "uppercase text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
                   }
                 >
                   {category.name}
@@ -52,7 +52,7 @@ export default function HomePage() {
           <h2 id="featured-categories-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Categorias em Destaque</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {mockCategories.filter(cat => cat.name !== "Ofertas").slice(0, 4).map((category: Category) => ( 
+          {mockCategories.filter(cat => cat.name !== "COMBO E OFERTAS").slice(0, 4).map((category: Category) => ( 
             <Link key={category.id} href={`/products?category=${encodeURIComponent(category.name)}`} passHref>
               <div className="group relative aspect-video overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
                 {category.imageUrl && (
@@ -66,7 +66,7 @@ export default function HomePage() {
                   />
                 )}
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-2">
-                  <h3 className="font-headline text-lg md:text-xl font-bold text-white text-center">{category.name}</h3>
+                  <h3 className="font-headline text-lg md:text-xl font-bold text-white text-center uppercase">{category.name}</h3>
                 </div>
               </div>
             </Link>
