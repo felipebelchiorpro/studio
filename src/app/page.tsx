@@ -11,8 +11,8 @@ import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 export default function HomePage() {
-  const featuredProducts = mockProducts.slice(0, 4); 
-  const topLevelCategories = mockCategories; 
+  const featuredProducts = mockProducts.slice(0, 4);
+  const topLevelCategories = mockCategories;
 
   return (
     <div className="space-y-12">
@@ -20,7 +20,7 @@ export default function HomePage() {
       <section aria-labelledby="category-menu-heading" className="mb-8">
         <h2 id="category-menu-heading" className="sr-only">Navegar por Categorias</h2>
         <div className="bg-muted py-2.5"> {/* Darker bar background, adjusted padding */}
-          <div className="container mx-auto flex items-center overflow-x-auto space-x-1 md:space-x-2 px-2"> 
+          <div className="container mx-auto flex items-center justify-center space-x-1 md:space-x-2 px-2">
             {topLevelCategories.map((category: Category) => (
               <Link
                 key={category.id}
@@ -30,12 +30,12 @@ export default function HomePage() {
                 <Button
                   variant="ghost" // Base variant, specific styling below
                   className={
-                    category.id === "catComboOffers" 
+                    category.id === "catComboOffers"
                       ? "uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
                       : "uppercase text-xs sm:text-sm font-medium text-foreground hover:text-primary hover:bg-transparent px-2 sm:px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
                   }
                 >
-                  {category.name} 
+                  {category.name}
                 </Button>
               </Link>
             ))}
