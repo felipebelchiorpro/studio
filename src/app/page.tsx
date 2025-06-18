@@ -1,14 +1,14 @@
 
 "use client";
 
-import React, { useState } from 'react'; // Adicionado useState
+import React, { useState } from 'react';
 import { Banner } from "@/components/Banner";
 import ProductCard from "@/components/ProductCard";
 import { mockProducts, mockCategories, mockPromotions, mainDropdownCategories } from "@/data/mockData";
 import type { Product, Category, DropdownCategory as MainDropdownCategoryType } from "@/types";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Menu as MenuIcon, ChevronDown } from "lucide-react";
+import { ChevronRight, Menu as MenuIcon } from "lucide-react";
 import Image from "next/image";
 import {
   DropdownMenu,
@@ -17,11 +17,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuGroup,
-  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu";
 
 export default function HomePage() {
@@ -29,7 +24,6 @@ export default function HomePage() {
   const topLevelCategories = mockCategories;
 
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
-  const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
 
   return (
     <div className="space-y-12">
@@ -39,16 +33,15 @@ export default function HomePage() {
         <div className="bg-card py-2.5"> {/* Bar background */}
           <div className="container mx-auto px-2 flex items-center space-x-2">
             {/* Dropdown Menu for "CATEGORIAS" */}
-            <DropdownMenu 
-              open={mainMenuOpen} 
+            <DropdownMenu
+              open={mainMenuOpen}
               onOpenChange={setMainMenuOpen}
-              // onMouseLeave={() => { setMainMenuOpen(false); setOpenSubmenus({}); }} // Gerencia o fechamento principal
             >
-              <div 
-                onMouseLeave={() => { setMainMenuOpen(false); setOpenSubmenus({}); }}
+              <div
+                onMouseLeave={() => { setMainMenuOpen(false); }}
               >
                 <DropdownMenuTrigger asChild>
-                  <Button 
+                  <Button
                     className="uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-3 sm:px-4 py-2 sm:py-2.5 h-auto flex items-center whitespace-nowrap"
                     onMouseEnter={() => setMainMenuOpen(true)}
                   >
@@ -56,66 +49,19 @@ export default function HomePage() {
                     CATEGORIAS
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="start" 
+                <DropdownMenuContent
+                  align="start"
                   className="w-64 bg-background border-border shadow-lg"
-                  // onMouseLeave já está no div wrapper
-                  // Adicionado onMouseEnter para manter aberto se o mouse entrar direto no conteúdo
-                  onMouseEnter={() => setMainMenuOpen(true)} 
+                  onMouseEnter={() => setMainMenuOpen(true)}
                 >
                   <DropdownMenuLabel className="font-semibold text-foreground">Principais Categorias</DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-border/50" />
                   {mainDropdownCategories.map((mainCat: MainDropdownCategoryType) => (
-                    mainCat.hasSubmenu && mainCat.subItems ? (
-                      <DropdownMenuSub
-                        key={mainCat.id}
-                        open={openSubmenus[mainCat.id] || false}
-                        onOpenChange={(isOpen) =>
-                          setOpenSubmenus((prev) => ({ ...prev, [mainCat.id]: isOpen }))
-                        }
-                      >
-                        <div 
-                          onMouseLeave={() => setOpenSubmenus((prev) => ({ ...prev, [mainCat.id]: false }))}
-                        >
-                          <DropdownMenuSubTrigger
-                            onMouseEnter={() => setOpenSubmenus((prev) => ({ ...prev, [mainCat.id]: true }))}
-                            className="text-foreground hover:bg-muted focus:bg-muted"
-                          >
-                            <span>{mainCat.name}</span>
-                            <ChevronRight className="ml-auto h-4 w-4" />
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent 
-                              className="bg-background border-border shadow-lg text-foreground"
-                              // onMouseLeave já está no div wrapper do SubMenu
-                              // Adicionado onMouseEnter para manter aberto se o mouse entrar direto no conteúdo do submenu
-                              onMouseEnter={() => setOpenSubmenus((prev) => ({ ...prev, [mainCat.id]: true }))}
-                            >
-                              {mainCat.href && (
-                                <Link href={mainCat.href} passHref>
-                                  <DropdownMenuItem className="hover:bg-muted focus:bg-muted" onClick={() => {setMainMenuOpen(false); setOpenSubmenus({});}}>
-                                    Ver Tudo em {mainCat.name}
-                                  </DropdownMenuItem>
-                                </Link>
-                              )}
-                              {mainCat.subItems.map(subItem => (
-                                <Link key={subItem.id} href={subItem.href} passHref>
-                                  <DropdownMenuItem className="hover:bg-muted focus:bg-muted" onClick={() => {setMainMenuOpen(false); setOpenSubmenus({});}}>
-                                    {subItem.name}
-                                  </DropdownMenuItem>
-                                </Link>
-                              ))}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </div>
-                      </DropdownMenuSub>
-                    ) : (
-                      <Link key={mainCat.id} href={mainCat.href || "/products"} passHref>
-                        <DropdownMenuItem className="text-foreground hover:bg-muted focus:bg-muted" onClick={() => {setMainMenuOpen(false); setOpenSubmenus({});}}>
-                          {mainCat.name}
-                        </DropdownMenuItem>
-                      </Link>
-                    )
+                    <Link key={mainCat.id} href={mainCat.href || "/products"} passHref>
+                      <DropdownMenuItem className="text-foreground hover:bg-muted focus:bg-muted" onClick={() => { setMainMenuOpen(false); }}>
+                        {mainCat.name}
+                      </DropdownMenuItem>
+                    </Link>
                   ))}
                 </DropdownMenuContent>
               </div>
@@ -128,7 +74,7 @@ export default function HomePage() {
                 const buttonClassName = isComboOffer
                   ? "uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
                   : "uppercase text-xs sm:text-sm font-medium text-foreground hover:text-primary hover:bg-transparent px-2 sm:px-3 py-1.5 h-auto whitespace-nowrap flex items-center";
-                
+
                 return (
                   <Link
                     key={category.id}
@@ -139,7 +85,7 @@ export default function HomePage() {
                       variant="ghost"
                       className={buttonClassName}
                     >
-                      {category.name}
+                      {category.name.toUpperCase()}
                     </Button>
                   </Link>
                 );
@@ -173,7 +119,7 @@ export default function HomePage() {
                   />
                 )}
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-2">
-                  <h3 className="font-headline text-lg md:text-xl font-bold text-white text-center uppercase">{category.name}</h3>
+                  <h3 className="font-headline text-lg md:text-xl font-bold text-white text-center uppercase">{category.name.toUpperCase()}</h3>
                 </div>
               </div>
             </Link>
@@ -213,4 +159,3 @@ export default function HomePage() {
     </div>
   );
 }
-
