@@ -11,15 +11,16 @@ import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 export default function HomePage() {
-  const featuredProducts = mockProducts.slice(0, 4); // Show 4 featured products
-  const topLevelCategories = mockCategories; // Using all categories for the top menu
+  const featuredProducts = mockProducts.slice(0, 4); 
+  const topLevelCategories = mockCategories; 
 
   return (
     <div className="space-y-12">
       <section aria-labelledby="category-menu-heading" className="mb-8">
         <h2 id="category-menu-heading" className="sr-only">Navegar por Categorias</h2>
         <div className="bg-card py-3 border-b border-t border-border/40 shadow-none">
-          <div className="container mx-auto flex items-center justify-center overflow-x-auto space-x-2 md:space-x-4 px-2">
+          {/* A classe justify-center foi removida para reverter a centralização */}
+          <div className="container mx-auto flex items-center overflow-x-auto space-x-2 md:space-x-4 px-2"> 
             {topLevelCategories.map((category: Category) => (
               <Link
                 key={category.id}
@@ -29,12 +30,12 @@ export default function HomePage() {
                 <Button
                   variant="ghost"
                   className={
-                    category.id === "catComboOffers"
+                    category.id === "catComboOffers" 
                       ? "uppercase text-sm font-medium text-primary border-2 border-primary rounded-full hover:text-primary hover:bg-primary/20 px-4 py-1 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
                       : "uppercase text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
                   }
                 >
-                  {category.name}
+                  {category.name} 
                 </Button>
               </Link>
             ))}
