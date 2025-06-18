@@ -1,14 +1,22 @@
 
 "use client";
 
+import React from 'react'; // Added React import for Fragment if needed, though not strictly for this change
 import { Banner } from "@/components/Banner";
 import ProductCard from "@/components/ProductCard";
 import { mockProducts, mockCategories, mockPromotions } from "@/data/mockData";
 import type { Product, Category } from "@/types";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react"; // Added ChevronDown
 import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"; // Added DropdownMenu components
 
 export default function HomePage() {
   const featuredProducts = mockProducts.slice(0, 4);
@@ -19,26 +27,80 @@ export default function HomePage() {
       {/* Category Menu Section */}
       <section aria-labelledby="category-menu-heading" className="mb-8">
         <h2 id="category-menu-heading" className="sr-only">Navegar por Categorias</h2>
-        <div className="bg-muted py-2.5"> {/* Darker bar background, adjusted padding */}
-          <div className="container mx-auto flex items-center justify-center space-x-1 md:space-x-2 px-2">
-            {topLevelCategories.map((category: Category) => (
-              <Link
-                key={category.id}
-                href={`/products?category=${encodeURIComponent(category.name)}`}
-                passHref
-              >
-                <Button
-                  variant="ghost" // Base variant, specific styling below
-                  className={
-                    category.id === "catComboOffers"
-                      ? "uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
-                      : "uppercase text-xs sm:text-sm font-medium text-foreground hover:text-primary hover:bg-transparent px-2 sm:px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
-                  }
+        <div className="bg-muted py-2.5">
+          <div className="container mx-auto flex items-center justify-center flex-wrap space-x-1 md:space-x-2 px-2">
+            {topLevelCategories.map((category: Category) => {
+              const isComboOffer = category.id === "catComboOffers";
+              const buttonClassName = isComboOffer
+                ? "uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
+                : "uppercase text-xs sm:text-sm font-medium text-foreground hover:text-primary hover:bg-transparent px-2 sm:px-3 py-1.5 h-auto whitespace-nowrap flex items-center";
+
+              if (category.name === 'ENDURANCE') {
+                return (
+                  <DropdownMenu key={category.id}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={buttonClassName}
+                      >
+                        {category.name}
+                        <ChevronDown className="ml-1 h-4 w-4 shrink-0" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="bg-card border-border shadow-lg w-52">
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/products?category=${encodeURIComponent(category.name)}`}
+                          className="block px-2 py-1.5 text-xs hover:bg-muted w-full text-left cursor-pointer"
+                        >
+                          Ver Tudo em {category.name}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/products?category=${encodeURIComponent(category.name)}&subcategory=whey`}
+                          className="block px-2 py-1.5 text-xs hover:bg-muted w-full text-left cursor-pointer"
+                        >
+                          Whey
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/products?category=${encodeURIComponent(category.name)}&subcategory=creatina`}
+                          className="block px-2 py-1.5 text-xs hover:bg-muted w-full text-left cursor-pointer"
+                        >
+                          Creatina
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/products?category=${encodeURIComponent(category.name)}&subcategory=vitaminas`}
+                          className="block px-2 py-1.5 text-xs hover:bg-muted w-full text-left cursor-pointer"
+                        >
+                          Vitaminas
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              }
+
+              return (
+                <Link
+                  key={category.id}
+                  href={`/products?category=${encodeURIComponent(category.name)}`}
+                  passHref
                 >
-                  {category.name}
-                </Button>
-              </Link>
-            ))}
+                  <Button
+                    variant="ghost"
+                    className={buttonClassName}
+                  >
+                    {category.name}
+                  </Button>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -107,3 +169,4 @@ export default function HomePage() {
     </div>
   );
 }
+
