@@ -4,17 +4,29 @@
 import React from 'react';
 import { Banner } from "@/components/Banner";
 import ProductCard from "@/components/ProductCard";
-import { mockProducts, mockCategories, mockPromotions } from "@/data/mockData";
-import type { Product, Category } from "@/types";
+import { mockProducts, mockCategories, mockPromotions, mainDropdownCategories } from "@/data/mockData";
+import type { Product, Category, DropdownCategory as MainDropdownCategoryType } from "@/types";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Menu as MenuIcon, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuGroup,
+  DropdownMenuPortal
+} from "@/components/ui/dropdown-menu";
 
 export default function HomePage() {
   const featuredProducts = mockProducts.slice(0, 4);
-  // mockCategories já está definido em mockData com as categorias corretas para a barra horizontal
-  const topLevelCategories = mockCategories; 
+  const topLevelCategories = mockCategories;
 
   return (
     <div className="space-y-12">
@@ -22,29 +34,79 @@ export default function HomePage() {
       <section aria-labelledby="category-menu-heading" className="mb-8">
         <h2 id="category-menu-heading" className="sr-only">Navegar por Categorias</h2>
         <div className="bg-card py-2.5"> {/* Bar background */}
-          {/* Container for horizontal scrollable categories, aligned left */}
-          <div className="container mx-auto pl-2 pr-2 flex items-center overflow-x-auto whitespace-nowrap space-x-1 md:space-x-2">
-            {topLevelCategories.map((category: Category) => {
-              const isComboOffer = category.id === "catComboOffers";
-              const buttonClassName = isComboOffer
-                ? "uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
-                : "uppercase text-xs sm:text-sm font-medium text-foreground hover:text-primary hover:bg-transparent px-2 sm:px-3 py-1.5 h-auto whitespace-nowrap flex items-center";
-              
-              return (
-                <Link
-                  key={category.id}
-                  href={`/products?category=${encodeURIComponent(category.name)}`}
-                  passHref
-                >
-                  <Button
-                    variant="ghost"
-                    className={buttonClassName}
+          <div className="container mx-auto px-2 flex items-center space-x-2">
+            {/* Dropdown Menu for "CATEGORIAS" */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-3 sm:px-4 py-2 sm:py-2.5 h-auto flex items-center whitespace-nowrap">
+                  <MenuIcon className="h-4 w-4 mr-2" />
+                  CATEGORIAS
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-64 bg-background border-border shadow-lg" align="start">
+                <DropdownMenuLabel className="font-semibold text-foreground">Principais Categorias</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-border/50" />
+                {mainDropdownCategories.map((mainCat: MainDropdownCategoryType) => (
+                  mainCat.hasSubmenu && mainCat.subItems ? (
+                    <DropdownMenuSub key={mainCat.id}>
+                      <DropdownMenuSubTrigger className="text-foreground hover:bg-muted focus:bg-muted">
+                        <span>{mainCat.name}</span>
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="bg-background border-border shadow-lg text-foreground">
+                          {mainCat.href && ( // Option to view all in parent category
+                            <Link href={mainCat.href} passHref>
+                              <DropdownMenuItem className="hover:bg-muted focus:bg-muted">
+                                Ver Tudo em {mainCat.name}
+                              </DropdownMenuItem>
+                            </Link>
+                          )}
+                          {mainCat.subItems.map(subItem => (
+                            <Link key={subItem.id} href={subItem.href} passHref>
+                              <DropdownMenuItem className="hover:bg-muted focus:bg-muted">
+                                {subItem.name}
+                              </DropdownMenuItem>
+                            </Link>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                  ) : (
+                    <Link key={mainCat.id} href={mainCat.href || "/products"} passHref>
+                      <DropdownMenuItem className="text-foreground hover:bg-muted focus:bg-muted">
+                        {mainCat.name}
+                      </DropdownMenuItem>
+                    </Link>
+                  )
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Container for horizontal scrollable categories, aligned left */}
+            <div className="flex-1 flex items-center overflow-x-auto whitespace-nowrap space-x-1 md:space-x-2 min-w-0">
+              {topLevelCategories.map((category: Category) => {
+                const isComboOffer = category.id === "catComboOffers";
+                const buttonClassName = isComboOffer
+                  ? "uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
+                  : "uppercase text-xs sm:text-sm font-medium text-foreground hover:text-primary hover:bg-transparent px-2 sm:px-3 py-1.5 h-auto whitespace-nowrap flex items-center";
+                
+                return (
+                  <Link
+                    key={category.id}
+                    href={`/products?category=${encodeURIComponent(category.name)}`}
+                    passHref
                   >
-                    {category.name}
-                  </Button>
-                </Link>
-              );
-            })}
+                    <Button
+                      variant="ghost"
+                      className={buttonClassName}
+                    >
+                      {category.name}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -59,7 +121,6 @@ export default function HomePage() {
           <h2 id="featured-categories-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Categorias em Destaque</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {/* Filter out "COMBO E OFERTAS" from featured categories as it's highlighted in the top bar */}
           {mockCategories.filter(cat => cat.id !== "catComboOffers").slice(0, 4).map((category: Category) => (
             <Link key={category.id} href={`/products?category=${encodeURIComponent(category.name)}`} passHref>
               <div className="group relative aspect-video overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
