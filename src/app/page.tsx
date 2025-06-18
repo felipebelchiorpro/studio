@@ -28,12 +28,13 @@ export default function HomePage() {
               >
                 <Button
                   variant="ghost"
-                  className="text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
+                  className={
+                    category.name === "Ofertas"
+                      ? "text-sm font-medium text-primary border-2 border-primary rounded-full hover:text-primary hover:bg-primary/20 px-4 py-1 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
+                      : "text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
+                  }
                 >
                   {category.name}
-                  {category.name === "Ofertas" && (
-                    <span className="ml-1.5 inline-block h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                  )}
                 </Button>
               </Link>
             ))}
@@ -49,15 +50,9 @@ export default function HomePage() {
       <section aria-labelledby="featured-categories-heading">
         <div className="flex justify-between items-center mb-6">
           <h2 id="featured-categories-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Categorias em Destaque</h2>
-          {/* Link para ver todas as categorias pode ser mantido ou removido se o menu superior for suficiente */}
-          {/* <Link href="/products" passHref>
-            <Button variant="ghost" className="text-primary hover:text-primary/90">
-              Ver Todas <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link> */}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {mockCategories.filter(cat => cat.name !== "Ofertas").slice(0, 4).map((category: Category) => ( // Mostrando apenas 4 em destaque aqui, excluindo "Ofertas" se já estiver no menu principal
+          {mockCategories.filter(cat => cat.name !== "Ofertas").slice(0, 4).map((category: Category) => ( 
             <Link key={category.id} href={`/products?category=${encodeURIComponent(category.name)}`} passHref>
               <div className="group relative aspect-video overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
                 {category.imageUrl && (
