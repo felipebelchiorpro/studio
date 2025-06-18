@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Banner } from "@/components/Banner";
@@ -22,7 +23,7 @@ export default function HomePage() {
 
       <section aria-labelledby="featured-categories-heading">
         <div className="flex justify-between items-center mb-6">
-          <h2 id="featured-categories-heading" className="font-headline text-3xl font-semibold text-foreground">Categorias em Destaque</h2>
+          <h2 id="featured-categories-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Categorias em Destaque</h2>
           <Link href="/products" passHref>
             <Button variant="ghost" className="text-primary hover:text-primary/90">
               Ver Todas <ChevronRight className="ml-1 h-4 w-4" />
@@ -44,7 +45,7 @@ export default function HomePage() {
                   />
                 )}
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-2">
-                  <h3 className="font-headline text-lg md:text-xl font-medium text-white text-center">{category.name}</h3>
+                  <h3 className="font-headline text-lg md:text-xl font-semibold text-white text-center">{category.name}</h3>
                 </div>
               </div>
             </Link>
@@ -54,10 +55,10 @@ export default function HomePage() {
 
       <section aria-labelledby="featured-products-heading">
         <div className="flex justify-between items-center mb-6">
-          <h2 id="featured-products-heading" className="font-headline text-3xl font-semibold text-foreground">Produtos Populares</h2>
+          <h2 id="featured-products-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Produtos Populares</h2>
           <Link href="/products" passHref>
             <Button variant="ghost" className="text-primary hover:text-primary/90">
-              Ver Todos <ChevronRight className="ml-1 h-4 w-4" />
+              Ver Todas <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -70,7 +71,7 @@ export default function HomePage() {
 
       <section aria-labelledby="call-to-action-heading" className="py-12 bg-card rounded-lg shadow-lg">
         <div className="container mx-auto text-center">
-          <h2 id="call-to-action-heading" className="font-headline text-3xl font-semibold text-primary mb-4">Pronto para Elevar seu Treino?</h2>
+          <h2 id="call-to-action-heading" className="font-headline text-3xl font-semibold text-primary mb-4 uppercase">Pronto para Elevar seu Treino?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
             Descubra nossa linha completa de suplementos e alcance seus objetivos de performance e saúde.
           </p>
