@@ -18,12 +18,22 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import InfoBar from '@/components/InfoBar'; // Import the new InfoBar component
+import InfoBar from '@/components/InfoBar';
 
 export default function HomePage() {
-  const featuredProducts = mockProducts.slice(0, 8); // Ensure enough products for carousel
+  const featuredProducts = mockProducts.slice(0, 8);
   const popularProductsPlugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
+  );
+
+  const bestSellingProducts = mockProducts.filter(p => (p.rating || 0) >= 4.5).slice(0, 8);
+  const bestSellersPlugin = useRef(
+    Autoplay({ delay: 5500, stopOnInteraction: true })
+  );
+
+  const onSaleProducts = mockProducts.filter(p => p.originalPrice && p.originalPrice > p.price).slice(0, 8);
+  const onSaleProductsPlugin = useRef(
+    Autoplay({ delay: 6000, stopOnInteraction: true })
   );
 
   return (
@@ -33,7 +43,6 @@ export default function HomePage() {
         <Banner promotions={mockPromotions} />
       </section>
 
-      {/* InfoBar section added below the banner */}
       <InfoBar />
 
       <section aria-labelledby="featured-categories-heading">
@@ -63,37 +72,115 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="featured-products-heading">
+      <section aria-labelledby="popular-products-heading">
         <div className="flex justify-between items-center mb-6">
-          <h2 id="featured-products-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Produtos Populares</h2>
+          <h2 id="popular-products-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Produtos Populares</h2>
+          <Link href="/products" passHref>
+            <Button variant="ghost" className="text-primary hover:text-primary/90">
+              Ver Todos <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        {featuredProducts.length > 0 ? (
+          <Carousel
+            plugins={[popularProductsPlugin.current]}
+            className="w-full"
+            opts={{
+              align: "start",
+              loop: featuredProducts.length > 3, // Loop if enough items for md view
+            }}
+            onMouseEnter={popularProductsPlugin.current.stop}
+            onMouseLeave={popularProductsPlugin.current.reset}
+          >
+            <CarouselContent className="-ml-4">
+              {featuredProducts.map((product: Product) => (
+                <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/4">
+                  <div className="h-full p-1">
+                    <ProductCard product={product} />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+            <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+          </Carousel>
+        ) : (
+          <p className="text-muted-foreground">Nenhum produto popular encontrado.</p>
+        )}
+      </section>
+
+      <section aria-labelledby="best-selling-products-heading">
+        <div className="flex justify-between items-center mb-6">
+          <h2 id="best-selling-products-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Mais Vendidos</h2>
+          <Link href="/products" passHref>
+            <Button variant="ghost" className="text-primary hover:text-primary/90">
+              Ver Todos <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        {bestSellingProducts.length > 0 ? (
+          <Carousel
+            plugins={[bestSellersPlugin.current]}
+            className="w-full"
+            opts={{
+              align: "start",
+              loop: bestSellingProducts.length > 3,
+            }}
+            onMouseEnter={bestSellersPlugin.current.stop}
+            onMouseLeave={bestSellersPlugin.current.reset}
+          >
+            <CarouselContent className="-ml-4">
+              {bestSellingProducts.map((product: Product) => (
+                <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/4">
+                  <div className="h-full p-1">
+                    <ProductCard product={product} />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+            <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+          </Carousel>
+        ) : (
+           <p className="text-muted-foreground">Nenhum produto mais vendido encontrado.</p>
+        )}
+      </section>
+
+      <section aria-labelledby="on-sale-products-heading">
+        <div className="flex justify-between items-center mb-6">
+          <h2 id="on-sale-products-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Em Promoção</h2>
           <Link href="/products" passHref>
             <Button variant="ghost" className="text-primary hover:text-primary/90">
               Ver Todas <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
         </div>
-        <Carousel
-          plugins={[popularProductsPlugin.current]}
-          className="w-full"
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          onMouseEnter={popularProductsPlugin.current.stop}
-          onMouseLeave={popularProductsPlugin.current.reset}
-        >
-          <CarouselContent className="-ml-4"> {/* Negative margin to offset CarouselItem's padding */}
-            {featuredProducts.map((product: Product) => (
-              <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/4">
-                <div className="h-full p-1"> {/* Added small padding for spacing around card if needed */}
-                  <ProductCard product={product} />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-          <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-        </Carousel>
+        {onSaleProducts.length > 0 ? (
+          <Carousel
+            plugins={[onSaleProductsPlugin.current]}
+            className="w-full"
+            opts={{
+              align: "start",
+              loop: onSaleProducts.length > 3,
+            }}
+            onMouseEnter={onSaleProductsPlugin.current.stop}
+            onMouseLeave={onSaleProductsPlugin.current.reset}
+          >
+            <CarouselContent className="-ml-4">
+              {onSaleProducts.map((product: Product) => (
+                <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/4">
+                  <div className="h-full p-1">
+                    <ProductCard product={product} />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+            <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+          </Carousel>
+        ) : (
+          <p className="text-muted-foreground">Nenhum produto em promoção encontrado.</p>
+        )}
       </section>
 
       <section aria-labelledby="call-to-action-heading" className="py-12 bg-card rounded-lg border border-border/40 shadow-none">
