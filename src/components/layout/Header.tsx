@@ -19,6 +19,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu";
 import Image from 'next/image';
 
@@ -49,6 +53,7 @@ export default function Header() {
   const pathname = usePathname();
 
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
+  // const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setCartItemCount(getCartItemCount());
@@ -77,31 +82,41 @@ export default function Header() {
 
   const handleMainMenuLeave = () => {
     setMainMenuOpen(false);
+    // setOpenSubmenus({}); 
   };
   
   const handleMenuItemClick = () => {
     setMainMenuOpen(false);
+    // setOpenSubmenus({});
   };
+
+  // const handleSubMenuEnter = (submenuId: string) => {
+  //   setOpenSubmenus(prev => ({ ...prev, [submenuId]: true }));
+  // };
+
+  // const handleSubMenuLeave = (submenuId: string) => {
+  //   setOpenSubmenus(prev => ({ ...prev, [submenuId]: false }));
+  // };
 
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      {/* Upper Header Part (Logo, Search, Auth/Cart) */}
+      {/* Upper Header Part */}
       <div className="bg-background border-b border-border/40">
         <div className="container mx-auto flex h-[88px] items-center justify-between px-4 space-x-4">
           {/* Logo */}
           <Link href="/" className="flex items-center flex-shrink-0" aria-label="DarkStore Suplementos Home">
-            <Image
-              src="/darkstore-logo.png" 
-              alt="DarkStore Suplementos Logo"
-              width={180} 
-              height={44} 
-              className="object-contain"
-              priority 
-            />
+             <Image
+                src="/darkstore-logo.png" 
+                alt="DarkStore Suplementos Logo"
+                width={180} 
+                height={44} 
+                className="object-contain"
+                priority 
+              />
           </Link>
 
-          {/* Search Bar - takes up most space on desktop */}
+          {/* Search Bar */}
           <div className="hidden md:flex flex-grow max-w-2xl mx-auto">
             <SearchBar onSearch={handleSearch} />
           </div>
@@ -251,14 +266,14 @@ export default function Header() {
                   <DropdownMenuLabel className="font-semibold text-foreground">Principais Categorias</DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-border/50" />
                   {mainDropdownCategories.map((mainCat: DropdownCategory) => (
-                    <Link key={mainCat.id} href={mainCat.href || `/products?category=${encodeURIComponent(mainCat.name)}`} passHref>
-                      <DropdownMenuItem
-                        className="text-foreground hover:bg-muted focus:bg-muted"
-                        onClick={handleMenuItemClick}
-                      >
-                        {mainCat.name}
-                      </DropdownMenuItem>
-                    </Link>
+                     <Link key={mainCat.id} href={mainCat.href || `/products?category=${encodeURIComponent(mainCat.name)}`} passHref>
+                        <DropdownMenuItem
+                          className="text-foreground hover:bg-muted focus:bg-muted"
+                          onClick={handleMenuItemClick}
+                        >
+                          {mainCat.name}
+                        </DropdownMenuItem>
+                      </Link>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -294,4 +309,3 @@ export default function Header() {
     </header>
   );
 }
-
