@@ -12,7 +12,7 @@ import { ChevronRight } from "lucide-react"; // Removed MenuIcon
 import Image from "next/image";
 
 export default function HomePage() {
-  const featuredProducts = mockProducts.slice(0, 4);
+  const featuredProducts = mockProducts.slice(0, 8); // Increased to 8 to better demonstrate scrolling
   // Removed topLevelCategories, mainMenuOpen, hoveredCategory, openSubmenus as they moved to Header
 
   return (
@@ -60,9 +60,11 @@ export default function HomePage() {
             </Button>
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex overflow-x-auto space-x-4 pb-4 -mb-4"> {/* Added pb-4 and -mb-4 for scrollbar spacing */}
           {featuredProducts.map((product: Product) => (
-            <ProductCard key={product.id} product={product} />
+            <div key={product.id} className="flex-shrink-0 w-72"> {/* Card width set here */}
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
       </section>
