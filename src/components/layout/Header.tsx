@@ -2,11 +2,11 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, UserCircle, Search, Menu as MenuIcon, LogIn, LayoutDashboard, Home, Package, Info, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { ShoppingCart, UserCircle, Search, Menu as MenuIcon, LogIn, LayoutDashboard, Home, Package, Info, X, ChevronDown, ChevronRight, CreditCard, Phone, Mail, Instagram, Youtube, MessageCircle, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname, useRouter } from 'next/navigation';
 import SearchBar from '@/components/SearchBar';
@@ -19,10 +19,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu";
 import Image from 'next/image';
 
@@ -44,20 +40,42 @@ const NavLink = ({ href, children, onClick }: { href: string; children: React.Re
   );
 };
 
+const topBarMessages = [
+  { text: "Parcelamento em até 3x sem juros!", icon: CreditCard },
+  { text: "Frete Grátis acima de R$199 para todo Brasil!", icon: ShoppingCart },
+  { text: "Novidades toda semana, confira!", icon: Info },
+];
+
 export default function Header() {
   const { getCartItemCount } = useCart();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout } = useAuth(); // user removed as it's not used directly here
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
-  // const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
 
   useEffect(() => {
     setCartItemCount(getCartItemCount());
   }, [getCartItemCount]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % topBarMessages.length);
+    }, 5000); // Change message every 5 seconds
+    return () => clearInterval(timer);
+  }, []);
+
+  const handlePrevMessage = () => {
+    setCurrentMessageIndex((prevIndex) => (prevIndex - 1 + topBarMessages.length) % topBarMessages.length);
+  };
+
+  const handleNextMessage = () => {
+    setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % topBarMessages.length);
+  };
+
 
   const mainSiteLinks = [
     { href: '/', label: 'Home', icon: <Home className="mr-2 h-4 w-4" /> },
@@ -82,26 +100,62 @@ export default function Header() {
 
   const handleMainMenuLeave = () => {
     setMainMenuOpen(false);
-    // setOpenSubmenus({}); 
   };
   
   const handleMenuItemClick = () => {
     setMainMenuOpen(false);
-    // setOpenSubmenus({});
   };
 
-  // const handleSubMenuEnter = (submenuId: string) => {
-  //   setOpenSubmenus(prev => ({ ...prev, [submenuId]: true }));
-  // };
-
-  // const handleSubMenuLeave = (submenuId: string) => {
-  //   setOpenSubmenus(prev => ({ ...prev, [submenuId]: false }));
-  // };
+  const CurrentMessageIcon = topBarMessages[currentMessageIndex].icon;
 
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      {/* Upper Header Part */}
+      {/* Red Top Bar Marquee */}
+      <div className="bg-primary text-primary-foreground">
+        <div className="container mx-auto flex h-10 items-center justify-between px-4 text-xs sm:text-sm">
+          <Button variant="ghost" size="icon" onClick={handlePrevMessage} className="h-full px-2 hover:bg-primary/80">
+            <ChevronLeft className="h-4 w-4" />
+            <span className="sr-only">Previous message</span>
+          </Button>
+          <div className="flex items-center text-center">
+            <CurrentMessageIcon className="mr-2 h-4 w-4" />
+            <span>{topBarMessages[currentMessageIndex].text}</span>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleNextMessage} className="h-full px-2 hover:bg-primary/80">
+            <ChevronRight className="h-4 w-4" />
+            <span className="sr-only">Next message</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Dark Contact Bar */}
+      <div className="bg-card text-card-foreground border-b border-border/40 py-2">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between px-4 text-xs">
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-2 sm:mb-0">
+            <a href="https://wa.me/5514997326263" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-primary transition-colors">
+              <MessageCircle className="h-4 w-4 mr-1 text-primary" /> WhatsApp: (14) 99732-6263
+            </a>
+            <a href="tel:+5514997326263" className="flex items-center hover:text-primary transition-colors">
+              <Phone className="h-4 w-4 mr-1 text-primary" /> (14) 99732-6263
+            </a>
+            <a href="mailto:contato@sportzonesupp.com" className="flex items-center hover:text-primary transition-colors">
+              <Mail className="h-4 w-4 mr-1 text-primary" /> contato@sportzonesupp.com
+            </a>
+          </div>
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <Link href="/about" className="hover:text-primary transition-colors">Sobre Nós</Link>
+            <Link href="/contact" className="hover:text-primary transition-colors">Fale Conosco</Link>
+            <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
+            <div className="flex items-center space-x-2">
+              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={16} /></a>
+              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="text-muted-foreground hover:text-primary transition-colors"><Youtube size={16} /></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Upper Header Part - Logo, Search, Auth, Cart */}
       <div className="bg-background border-b border-border/40">
         <div className="container mx-auto flex h-[88px] items-center justify-between px-4 space-x-4">
           {/* Logo */}
@@ -309,3 +363,4 @@ export default function Header() {
     </header>
   );
 }
+
