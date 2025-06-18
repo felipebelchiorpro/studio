@@ -8,33 +8,33 @@ body {
 
 @layer base {
   :root {
-    --background: 220 17% 95%; /* Light mode background - Lighter Gray for contrast if light mode was used */
-    --foreground: 224 71% 4%; /* Light mode foreground - Dark Blue/Black */
+    --background: 0 0% 96%; /* Hex: #f5f5f5 - light gray */
+    --foreground: 0 0% 10%; /* Hex: #1a1a1a - dark gray for text */
 
-    --card: 220 17% 95%;
-    --card-foreground: 224 71% 4%;
+    --card: 0 0% 100%; /* Hex: #ffffff - white */
+    --card-foreground: 0 0% 10%;
 
-    --popover: 220 17% 95%;
-    --popover-foreground: 224 71% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 8 86% 31%; /* Deep Red for branding */
-    --primary-foreground: 0 0% 98%; /* White/Light Gray text on primary */
+    --primary: 0 80% 50%; /* Hex: #e61919 - vibrant red */
+    --primary-foreground: 0 0% 98%; /* Hex: #fafafa - white */
 
-    --secondary: 215 28% 90%; /* Lighter gray for secondary elements */
-    --secondary-foreground: 224 71% 4%;
+    --secondary: 0 0% 90%; /* Hex: #e6e6e6 - light gray for secondary elements */
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 215 28% 90%;
-    --muted-foreground: 224 71% 25%; /* Slightly lighter text for muted */
+    --muted: 0 0% 85%; /* Hex: #d9d9d9 */
+    --muted-foreground: 0 0% 40%; /* Hex: #666666 */
 
-    --accent: 2 66% 62%; /* Light Red for highlights */
-    --accent-foreground: 0 0% 98%; /* White/Light Gray text on accent */
+    --accent: 0 80% 50%; /* Hex: #e61919 - same vibrant red */
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 72% 51%; /* Standard destructive red */
+    --destructive: 0 70% 45%; /* Hex: #b32424 - strong red for errors */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 215 20% 85%;
-    --input: 215 20% 85%;
-    --ring: 8 86% 31%; /* Ring color to match primary */
+    --border: 0 0% 85%; /* Hex: #d9d9d9 */
+    --input: 0 0% 80%; /* Hex: #cccccc - border for inputs (light theme) */
+    --ring: 0 80% 55%; /* Slightly lighter red for ring focus */
 
     --radius: 0.5rem;
 
@@ -44,45 +44,45 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    /* Sidebar specific vars, can be adjusted if sidebar component is heavily used or customized for dashboard */
-    --sidebar-background: 225 3% 18%; /* Darker shade for sidebar in dark mode */
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 8 86% 31%;
+    /* Sidebar specific vars for light mode - can be adjusted */
+    --sidebar-background: 0 0% 98%; 
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 0 80% 50%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 2 66% 62%;
+    --sidebar-accent: 0 80% 50%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 225 3% 28%;
-    --sidebar-ring: 2 66% 62%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 80% 55%;
   }
 
   .dark {
-    --background: 225 3% 15%; /* Dark Gray #242526 */
-    --foreground: 0 0% 98%; /* Near White */
+    --background: 0 0% 7%; /* Hex: #121212 - very dark gray */
+    --foreground: 0 0% 95%; /* Hex: #f2f2f2 - slightly off-white */
 
-    --card: 225 3% 20%; /* Slightly Lighter Dark Gray for cards */
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 10%; /* Hex: #1a1a1a - slightly lighter dark gray for cards/headers */
+    --card-foreground: 0 0% 95%;
 
-    --popover: 225 3% 12%; /* Darker for popovers */
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 8 86% 31%; /* Deep Red #941B0C */
-    --primary-foreground: 0 0% 98%;
+    --primary: 0 80% 50%; /* Hex: #e61919 - vibrant red */
+    --primary-foreground: 0 0% 98%; /* Hex: #fafafa - white */
 
-    --secondary: 225 3% 25%; /* Medium Dark Gray for secondary elements */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 13%; /* Hex: #212121 - another dark gray shade */
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 225 3% 25%;
-    --muted-foreground: 0 0% 65%; /* Lighter gray for muted text */
+    --muted: 0 0% 20%; /* Hex: #333333 */
+    --muted-foreground: 0 0% 60%; /* Hex: #999999 - lighter gray for muted text */
 
-    --accent: 2 66% 62%; /* Light Red #D9534F */
+    --accent: 0 80% 50%; /* Hex: #e61919 - same vibrant red */
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 63% 40%; /* Darker destructive red for dark mode */
+    --destructive: 0 70% 45%; /* Hex: #b32424 - strong red for errors */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 225 3% 28%; /* Border color for dark mode */
-    --input: 225 3% 28%; /* Input background for dark mode */
-    --ring: 2 66% 62%; /* Ring color to match accent for better visibility in dark mode */
+    --border: 0 0% 15%; /* Hex: #262626 - subtle dark border */
+    --input: 0 0% 20%; /* Hex: #333333 - border for inputs (dark theme, input component uses bg-background) */
+    --ring: 0 80% 55%; /* Slightly lighter red for ring focus */
     
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -90,14 +90,14 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    --sidebar-background: 225 3% 12%; /* Even darker for sidebar background */
+    --sidebar-background: 0 0% 8%; /* Hex: #141414 - even darker for sidebar */
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 8 86% 31%;
+    --sidebar-primary: 0 80% 50%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 2 66% 62%;
+    --sidebar-accent: 0 80% 50%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 225 3% 22%;
-    --sidebar-ring: 2 66% 62%;
+    --sidebar-border: 0 0% 12%; /* Hex: #1f1f1f */
+    --sidebar-ring: 0 80% 55%;
   }
 }
 
