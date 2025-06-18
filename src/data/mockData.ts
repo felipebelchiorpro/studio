@@ -12,7 +12,7 @@ export const mockProducts: Product[] = [
     name: 'Whey Protein Concentrado (1kg)',
     description: 'Proteína de alta qualidade para ganho de massa muscular. Sabor Baunilha.',
     price: 129.90,
-    category: 'Proteínas',
+    category: 'GANHO DE MASSA', // Updated category
     brand: 'Dark Nutrition',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 50,
@@ -24,7 +24,7 @@ export const mockProducts: Product[] = [
     name: 'Creatina Monohidratada (300g)',
     description: 'Aumente sua força e performance nos treinos com nossa creatina pura.',
     price: 79.90,
-    category: 'Aminoácidos',
+    category: 'ENDURANCE', // Updated category
     brand: 'Dark Nutrition',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 100,
@@ -36,7 +36,7 @@ export const mockProducts: Product[] = [
     name: 'Multivitamínico Completo A-Z (90 caps)',
     description: 'Fórmula completa com vitaminas e minerais essenciais para sua saúde.',
     price: 59.90,
-    category: 'Vitaminas',
+    category: 'SAÚDE', // Updated category
     brand: 'Dark Vitality',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 75,
@@ -47,7 +47,7 @@ export const mockProducts: Product[] = [
     name: 'BCAA 2:1:1 (200g)',
     description: 'Aminoácidos de cadeia ramificada para recuperação muscular. Sabor Limão.',
     price: 69.90,
-    category: 'Aminoácidos',
+    category: 'DEFINIÇÃO', // Updated category
     brand: 'Dark Nutrition',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 30,
@@ -58,7 +58,7 @@ export const mockProducts: Product[] = [
     name: 'Pré-Treino Insano (300g)',
     description: 'Energia explosiva e foco para treinos intensos. Sabor Frutas Vermelhas.',
     price: 149.90,
-    category: 'Pré-Treinos',
+    category: 'ENDURANCE', // Updated category (example, Pré-Treinos could also be its own)
     brand: 'Dark Performance',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 40,
@@ -70,22 +70,36 @@ export const mockProducts: Product[] = [
     name: 'Omega 3 (120 caps)',
     description: 'Óleo de peixe concentrado, rico em EPA e DHA, para saúde cardiovascular e cerebral.',
     price: 89.90,
-    category: 'Vitaminas',
+    category: 'SAÚDE', // Updated category
     brand: 'Dark Vitality',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 60,
     rating: 4.6,
   },
+  {
+    id: '7',
+    name: 'Barra de Proteína (Caixa com 12)',
+    description: 'Lanche proteico prático e delicioso para qualquer hora do dia. Sabor Chocolate.',
+    price: 99.90,
+    category: 'GANHO DE MASSA', // Example category
+    brand: 'Dark Nutrition',
+    imageUrl: 'https://placehold.co/600x400.png',
+    stock: 25,
+    rating: 4.3,
+  },
 ];
 
 export const mockCategories: Category[] = [
+  { id: 'catEndurance', name: 'ENDURANCE', imageUrl: 'https://placehold.co/800x400.png' },
+  { id: 'catGanhoMassa', name: 'GANHO DE MASSA', imageUrl: 'https://placehold.co/800x400.png' },
+  { id: 'catEmagrecimento', name: 'EMAGRECIMENTO', imageUrl: 'https://placehold.co/800x400.png' },
+  { id: 'catDefinicao', name: 'DEFINIÇÃO', imageUrl: 'https://placehold.co/800x400.png' },
+  { id: 'catSaude', name: 'SAÚDE', imageUrl: 'https://placehold.co/800x400.png' },
   { id: 'catComboOffers', name: 'COMBO E OFERTAS', imageUrl: 'https://placehold.co/800x400.png' },
-  { id: 'cat1', name: 'Proteínas', imageUrl: 'https://placehold.co/800x400.png' },
-  { id: 'cat2', name: 'Aminoácidos', imageUrl: 'https://placehold.co/800x400.png' },
-  { id: 'cat3', name: 'Vitaminas', imageUrl: 'https://placehold.co/800x400.png' },
-  { id: 'cat4', name: 'Pré-Treinos', imageUrl: 'https://placehold.co/800x400.png' },
-  { id: 'cat5', name: 'Acessórios', imageUrl: 'https://placehold.co/800x400.png' },
+  { id: 'catLojasFisicas', name: 'LOJAS FÍSICAS', imageUrl: 'https://placehold.co/800x400.png' },
+  { id: 'catAtacado', name: 'ATACADO', imageUrl: 'https://placehold.co/800x400.png' },
 ];
+
 
 export const mockPromotions: Promotion[] = [
   {
@@ -93,7 +107,7 @@ export const mockPromotions: Promotion[] = [
     title: 'Combo Ganho de Massa!',
     description: 'Leve Whey + Creatina com 20% de desconto!',
     imageUrl: 'https://placehold.co/1200x400.png',
-    link: '/products?category=Proteínas',
+    link: '/products?category=GANHO%20DE%20MASSA',
   },
   {
     id: 'promo2',

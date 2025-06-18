@@ -16,10 +16,11 @@ export default function HomePage() {
 
   return (
     <div className="space-y-12">
+      {/* Category Menu Section */}
       <section aria-labelledby="category-menu-heading" className="mb-8">
         <h2 id="category-menu-heading" className="sr-only">Navegar por Categorias</h2>
-        <div className="bg-card py-3 border-b border-t border-border/40 shadow-none">
-          <div className="container mx-auto flex justify-center items-center overflow-x-auto space-x-2 md:space-x-4 px-2"> 
+        <div className="bg-muted py-2.5"> {/* Darker bar background, adjusted padding */}
+          <div className="container mx-auto flex items-center overflow-x-auto space-x-1 md:space-x-2 px-2"> 
             {topLevelCategories.map((category: Category) => (
               <Link
                 key={category.id}
@@ -27,11 +28,11 @@ export default function HomePage() {
                 passHref
               >
                 <Button
-                  variant="ghost"
+                  variant="ghost" // Base variant, specific styling below
                   className={
                     category.id === "catComboOffers" 
-                      ? "uppercase text-sm font-medium text-primary border-2 border-primary rounded-full hover:text-primary hover:bg-primary/20 px-4 py-1 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
-                      : "uppercase text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
+                      ? "uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out"
+                      : "uppercase text-xs sm:text-sm font-medium text-foreground hover:text-primary hover:bg-transparent px-2 sm:px-3 py-1.5 h-auto whitespace-nowrap flex items-center"
                   }
                 >
                   {category.name} 
