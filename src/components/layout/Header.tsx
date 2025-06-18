@@ -19,10 +19,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu";
 import Image from 'next/image';
 
@@ -99,7 +95,7 @@ export default function Header() {
               src="/darkstore-logo.png" 
               alt="DarkStore Suplementos Logo"
               width={180} 
-              height={40} 
+              height={44} // Adjusted height
               className="object-contain"
               priority 
             />
@@ -171,7 +167,7 @@ export default function Header() {
                         src="/darkstore-logo.png" 
                         alt="DarkStore Suplementos Logo"
                         width={150}
-                        height={33}
+                        height={37} // Adjusted height
                         className="object-contain"
                       />
                   </Link>
@@ -298,3 +294,4 @@ export default function Header() {
     </header>
   );
 }
+
