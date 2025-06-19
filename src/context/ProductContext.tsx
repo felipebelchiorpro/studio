@@ -21,19 +21,19 @@ const PRODUCT_STORAGE_KEY = 'darkstore-products';
 
 const hydrateProduct = (productData: Partial<Product>): Product => {
   const defaults: Product = {
-    id: productData.id || `prod-temp-${Date.now()}`, // Should always have an id from data or seed
+    id: productData.id || `prod-temp-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
     name: productData.name || 'Nome Indefinido',
     description: productData.description || 'Descrição Indefinida',
-    price: productData.price || 0,
-    originalPrice: productData.originalPrice || undefined,
+    price: typeof productData.price === 'number' ? productData.price : 0,
+    originalPrice: typeof productData.originalPrice === 'number' ? productData.originalPrice : undefined,
     category: productData.category || 'Categoria Indefinida',
     brand: productData.brand || 'Marca Indefinida',
     imageUrl: productData.imageUrl || 'https://placehold.co/600x400.png',
-    stock: productData.stock || 0,
-    reviews: productData.reviews || [],
-    rating: productData.rating || 0,
-    isNewRelease: productData.isNewRelease || false,
-    salesCount: productData.salesCount || 0,
+    stock: typeof productData.stock === 'number' ? productData.stock : 0,
+    reviews: Array.isArray(productData.reviews) ? productData.reviews : [],
+    rating: typeof productData.rating === 'number' ? productData.rating : 0,
+    isNewRelease: typeof productData.isNewRelease === 'boolean' ? productData.isNewRelease : false,
+    salesCount: typeof productData.salesCount === 'number' ? productData.salesCount : 0,
   };
   return { ...defaults, ...productData };
 };
@@ -82,45 +82,37 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   }, [products]);
 
   const addProduct = (productData: Omit<Product, 'id' | 'salesCount' | 'rating' | 'reviews'>) => {
-    const newProductWithDefaults: Product = {
+    const newProductPartial: Partial<Product> = {
       ...productData,
       id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      salesCount: 0,
-      rating: 0,
-      reviews: [],
-      isNewRelease: productData.isNewRelease || false,
-      originalPrice: productData.originalPrice || undefined,
-      // Ensure all other fields from ProductData are present, hydrateProduct would be overkill here
-      // as productData is mostly complete except for id and the defaults above.
-      name: productData.name,
-      description: productData.description,
-      price: productData.price,
-      category: productData.category,
-      brand: productData.brand,
-      imageUrl: productData.imageUrl,
-      stock: productData.stock,
+      // salesCount, rating, reviews will be handled by hydrateProduct defaults
     };
-    const hydratedNewProduct = hydrateProduct(newProductWithDefaults); // Final hydration pass
+    const hydratedNewProduct = hydrateProduct(newProductPartial);
 
-    const newProducts = [hydratedNewProduct, ...products];
-    setProducts(newProducts);
-    persistProducts(newProducts);
+    setProducts(prevProducts => {
+      const newProductsArray = [hydratedNewProduct, ...prevProducts];
+      persistProducts(newProductsArray);
+      return newProductsArray;
+    });
     return hydratedNewProduct;
   };
 
   const updateProduct = (updatedProductData: Product) => {
-    const hydratedUpdatedProduct = hydrateProduct(updatedProductData);
-    const newProducts = products.map(p => (p.id === hydratedUpdatedProduct.id ? hydratedUpdatedProduct : p));
-    setProducts(newProducts);
-    persistProducts(newProducts);
+    const hydratedUpdatedProduct = hydrateProduct(updatedProductData); // Ensure full hydration on update
+    setProducts(prevProducts => {
+      const newProductsArray = prevProducts.map(p => (p.id === hydratedUpdatedProduct.id ? hydratedUpdatedProduct : p));
+      persistProducts(newProductsArray);
+      return newProductsArray;
+    });
   };
 
   const deleteProduct = (productId: string) => {
-    const newProducts = products.filter(p => p.id !== productId);
-    setProducts(newProducts);
-    persistProducts(newProducts);
+    setProducts(prevProducts => {
+      const newProductsArray = prevProducts.filter(p => p.id !== productId);
+      persistProducts(newProductsArray);
+      return newProductsArray;
+    });
   };
-
 
   return (
     <ProductContext.Provider value={{ products, getProducts, getProductById, addProduct, updateProduct, deleteProduct, loading }}>
@@ -136,4 +128,3 @@ export const useProduct = (): ProductContextType => {
   }
   return context;
 };
-
