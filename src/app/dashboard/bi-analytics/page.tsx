@@ -34,6 +34,7 @@ import {
 import type { DateRange } from "react-day-picker";
 import { format, addDays, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { mockCategories, biDashboardSalesChannels, biDashboardStates } from "@/data/mockData";
 
 interface KeyMetricCardProps {
   title: string;
@@ -88,17 +89,21 @@ const topProductsChartConfig = { Vendas: { label: "Quantidade Vendida", color: "
 
 
 const salesByCategoryData = [
-  { name: "GANHO DE MASSA", value: 400, color: "hsl(var(--chart-1))" },
-  { name: "ENDURANCE", value: 300, color: "hsl(var(--chart-2))" },
-  { name: "EMAGRECIMENTO", value: 300, color: "hsl(var(--chart-3))" },
-  { name: "SAÚDE", value: 200, color: "hsl(var(--chart-4))" },
-  { name: "OUTROS", value: 278, color: "hsl(var(--chart-5))" },
+  { category: "GANHO DE MASSA", sales: 400, fill: "var(--chart-1)" },
+  { category: "ENDURANCE", sales: 300, fill: "var(--chart-2)" },
+  { category: "EMAGRECIMENTO", sales: 300, fill: "var(--chart-3)" },
+  { category: "SAÚDE", sales: 200, fill: "var(--chart-4)" },
+  { category: "OUTROS", sales: 278, fill: "var(--chart-5)" },
 ];
-const categoryChartConfig = salesByCategoryData.reduce((acc, cur) => {
-  acc[cur.name] = { label: cur.name, color: cur.color };
-  return acc;
-}, {} as ChartConfig & { value: { label: string }});
-categoryChartConfig.value = { label: "Vendas" };
+
+const categoryChartConfig = {
+  sales: { label: "Vendas" }, // Corresponds to dataKey
+  "GANHO DE MASSA": { label: "GANHO DE MASSA", color: "hsl(var(--chart-1))" },
+  "ENDURANCE": { label: "ENDURANCE", color: "hsl(var(--chart-2))" },
+  "EMAGRECIMENTO": { label: "EMAGRECIMENTO", color: "hsl(var(--chart-3))" },
+  "SAÚDE": { label: "SAÚDE", color: "hsl(var(--chart-4))" },
+  "OUTROS": { label: "OUTROS", color: "hsl(var(--chart-5))" },
+} satisfies ChartConfig;
 
 
 const newCustomersData = [
@@ -186,9 +191,7 @@ export default function BiAnalyticsPage() {
           <Select>
             <SelectTrigger><SelectValue placeholder="Canal de Venda" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="online">Loja Online</SelectItem>
-              <SelectItem value="physical">Loja Física</SelectItem>
-              <SelectItem value="instagram">Instagram</SelectItem>
+              {biDashboardSalesChannels.map(channel => <SelectItem key={channel.id} value={channel.id}>{channel.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select>
@@ -200,9 +203,7 @@ export default function BiAnalyticsPage() {
           <Select>
             <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
-              {/* Add states later */}
-              <SelectItem value="sp">São Paulo</SelectItem>
-              <SelectItem value="rj">Rio de Janeiro</SelectItem>
+              {biDashboardStates.map(state => <SelectItem key={state.id} value={state.id}>{state.name}</SelectItem>)}
             </SelectContent>
           </Select>
            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground h-10">Aplicar Filtros</Button>
@@ -259,13 +260,13 @@ export default function BiAnalyticsPage() {
           <CardContent className="h-[300px] flex items-center justify-center">
             <ChartContainer config={categoryChartConfig} className="mx-auto aspect-square max-h-[250px]">
                 <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
-                    <Pie data={salesByCategoryData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} strokeWidth={2}>
+                    <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
+                    <Pie data={salesByCategoryData} dataKey="sales" nameKey="category" innerRadius={60} outerRadius={80} strokeWidth={2}>
                        {salesByCategoryData.map((entry) => (
-                         <Cell key={`cell-${entry.name}`} fill={entry.color} />
+                         <Cell key={`cell-${entry.category}`} fill={entry.fill} />
                        ))}
                     </Pie>
-                    <RechartsLegend content={<ChartLegendContent nameKey="name" className="flex-wrap" />} verticalAlign="bottom" align="center" />
+                    <RechartsLegend content={<ChartLegendContent nameKey="category" className="flex-wrap" />} verticalAlign="bottom" align="center" />
                 </PieChart>
             </ChartContainer>
           </CardContent>
