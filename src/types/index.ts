@@ -49,10 +49,17 @@ export interface User {
   // For simulated auth, no password stored
 }
 
+// Customer specific user type, can be expanded later
+export interface CustomerUser extends User {
+  // Add customer-specific fields here if needed in the future
+  // e.g., defaultShippingAddressId?: string;
+}
+
+
 // Original Order type for sales reports, etc.
 export interface Order {
   id: string;
-  userId: string;
+  userId: string; // Could be CustomerUser.id
   items: CartItem[]; // These are CartItems, which include full product details + quantity bought
   totalAmount: number;
   orderDate: string;
@@ -93,3 +100,4 @@ export interface PackingOrder {
   items: PackingOrderItem[];
   targetWeight?: number; // For future weight validation feature
 }
+

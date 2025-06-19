@@ -2,10 +2,10 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, UserCircle, Search, Menu as MenuIcon, LogIn, LayoutDashboard, Home, Package, Info, X, ChevronDown, ChevronRight, CreditCard, Phone, Mail, Instagram, Youtube, MessageCircle, ChevronLeft } from 'lucide-react';
+import { ShoppingCart, UserCircle, Search, Menu as MenuIcon, LogIn, LayoutDashboard, Home, Package, Info, X, ChevronDown, ChevronRight, CreditCard, Phone, Mail, Instagram, Youtube, MessageCircle, ChevronLeft, User as UserIcon } from 'lucide-react'; // Added UserIcon
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
+import { useCustomerAuth } from '@/context/CustomerAuthContext'; // Changed to useCustomerAuth
 import React, { useState, useEffect, useCallback } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname, useRouter } from 'next/navigation';
@@ -19,6 +19,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
 import Image from 'next/image';
 
@@ -48,7 +49,7 @@ const topBarMessages = [
 
 export default function Header() {
   const { getCartItemCount } = useCart();
-  const { isAuthenticated, logout } = useAuth(); 
+  const { isCustomerAuthenticated, customerLogout, customer } = useCustomerAuth(); // Changed
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const router = useRouter();
@@ -177,24 +178,42 @@ export default function Header() {
 
           {/* Auth & Cart Links - Desktop */}
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
-            {isAuthenticated ? (
-              <>
-                <Link href="/dashboard" className="flex items-center text-sm text-white hover:text-primary">
-                  <LayoutDashboard className="h-5 w-5 mr-2 text-primary" />
-                  Minha Conta
-                </Link>
-                <Button variant="ghost" size="sm" onClick={logout} className="text-white hover:text-primary text-sm">
-                  Sair
-                </Button>
-              </>
+            {isCustomerAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center text-sm text-white hover:text-primary">
+                    <UserIcon className="h-5 w-5 mr-2 text-primary" />
+                    Olá, {customer?.name?.split(' ')[0] || 'Cliente'}
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-background border-border shadow-lg">
+                  <DropdownMenuLabel className="font-semibold text-foreground">Minha Conta</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-border/50"/>
+                  <DropdownMenuItem asChild>
+                    <Link href="/account/dashboard" className="cursor-pointer flex items-center">
+                      <LayoutDashboard className="mr-2 h-4 w-4 text-primary" /> Painel
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                     <Link href="/account/orders" className="cursor-pointer flex items-center"> {/* Placeholder */}
+                        <Package className="mr-2 h-4 w-4 text-primary" /> Meus Pedidos
+                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-border/50"/>
+                  <DropdownMenuItem onClick={customerLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive-foreground cursor-pointer flex items-center">
+                    <LogIn className="mr-2 h-4 w-4 transform rotate-180" /> Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <>
-                <Link href="/login" className="flex items-center text-sm text-white hover:text-primary">
+                <Link href="/account/login" className="flex items-center text-sm text-white hover:text-primary">
                   <UserCircle className="h-5 w-5 mr-1 text-primary" />
                   Cadastre-se
                 </Link>
                 <span className="text-sm text-gray-400">|</span>
-                <Link href="/login" className="text-sm text-white hover:text-primary">
+                <Link href="/account/login" className="text-sm text-white hover:text-primary">
                   Fazer login
                 </Link>
               </>
@@ -262,27 +281,22 @@ export default function Header() {
                 <hr className="my-3 border-border" />
 
                 <div className="space-y-2">
-                  {isAuthenticated ? (
+                  {isCustomerAuthenticated ? (
                     <>
-                      <Link href="/dashboard" passHref>
+                      <Link href="/account/dashboard" passHref>
                         <Button variant="ghost" className="w-full justify-start text-foreground" onClick={closeSheet}>
-                          <LayoutDashboard className="mr-2 h-4 w-4 text-primary" /> Minha Conta
+                          <LayoutDashboard className="mr-2 h-4 w-4 text-primary" /> Olá, {customer?.name?.split(' ')[0] || 'Cliente'}
                         </Button>
                       </Link>
-                      <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive-foreground hover:bg-destructive" onClick={() => { logout(); closeSheet(); }}>
+                      <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive-foreground hover:bg-destructive" onClick={() => { customerLogout(); closeSheet(); }}>
                         <LogIn className="mr-2 h-4 w-4 transform rotate-180" /> Sair
                       </Button>
                     </>
                   ) : (
                     <>
-                     <Link href="/login" passHref>
+                     <Link href="/account/login" passHref>
                         <Button variant="ghost" className="w-full justify-start text-foreground" onClick={closeSheet}>
-                          <UserCircle className="mr-2 h-4 w-4 text-primary" /> Cadastre-se
-                        </Button>
-                      </Link>
-                      <Link href="/login" passHref>
-                        <Button variant="ghost" className="w-full justify-start text-foreground" onClick={closeSheet}>
-                          <LogIn className="mr-2 h-4 w-4 text-primary" /> Fazer login
+                          <UserCircle className="mr-2 h-4 w-4 text-primary" /> Cadastre-se / Login
                         </Button>
                       </Link>
                     </>
@@ -322,7 +336,7 @@ export default function Header() {
                   {mainDropdownCategories.map((mainCat: DropdownCategory) => (
                      <Link key={mainCat.id} href={mainCat.href || `/products?category=${encodeURIComponent(mainCat.name)}`} passHref>
                         <DropdownMenuItem
-                          className="text-foreground hover:bg-muted focus:bg-muted text-sm sm:text-base"
+                          className="text-foreground hover:bg-muted focus:bg-muted text-sm sm:text-base cursor-pointer"
                           onClick={handleMenuItemClick}
                         >
                           {mainCat.name}
@@ -364,4 +378,3 @@ export default function Header() {
     </header>
   );
 }
-
