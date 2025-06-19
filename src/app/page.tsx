@@ -16,13 +16,12 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-  type CarouselApi, // Import CarouselApi
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import InfoBar from '@/components/InfoBar';
-import { cn } from "@/lib/utils"; // Import cn utility
+import { cn } from "@/lib/utils";
 
-// Helper component for carousel dots
 const CarouselDots = ({ api, onDotClick }: { api: CarouselApi | undefined, onDotClick: (index: number) => void }) => {
   const [snapCount, setSnapCount] = useState(0);
   const [currentSnap, setCurrentSnap] = useState(0);
@@ -38,7 +37,7 @@ const CarouselDots = ({ api, onDotClick }: { api: CarouselApi | undefined, onDot
     
     updateDots();
     api.on("select", updateDots);
-    api.on("reInit", updateDots); // Handle reinitialization, e.g., on resize
+    api.on("reInit", updateDots);
 
     return () => {
       api.off("select", updateDots);
@@ -46,7 +45,7 @@ const CarouselDots = ({ api, onDotClick }: { api: CarouselApi | undefined, onDot
     };
   }, [api, updateDots]);
 
-  if (snapCount <= 1) return null; // Don't show dots if only one page
+  if (snapCount <= 1) return null;
 
   return (
     <div className="flex justify-center items-center space-x-2 mt-3 py-2">
@@ -233,10 +232,10 @@ export default function HomePage() {
         <div className="flex justify-between items-center mb-6">
           <h2 id="featured-categories-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Categorias em Destaque</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Left Big Item: GANHO DE MASSA */}
           <Link href="/products?category=GANHO%20DE%20MASSA" passHref>
-            <div className="group relative aspect-[3/4] md:aspect-auto h-full overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
+            <div className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
               <Image src="https://placehold.co/600x800.png" alt="Ganho de Massa" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75" data-ai-hint="muscle fitness torso"/>
               <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-center">
                 <h3 className="font-headline text-3xl md:text-4xl font-bold text-primary uppercase shadow-md mb-3">GANHO DE MASSA</h3>
@@ -249,7 +248,7 @@ export default function HomePage() {
           <div className="grid grid-rows-2 gap-4 md:gap-6">
             {/* Top Right Item: ENDURANCE */}
             <Link href="/products?category=ENDURANCE" passHref>
-              <div className="group relative aspect-video overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
+              <div className="group relative h-full w-full overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
                 <Image src="https://placehold.co/800x400.png" alt="Endurance" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75" data-ai-hint="runner motion"/>
                 <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center">
                   <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary uppercase shadow-md mb-2">ENDURANCE</h3>
@@ -259,10 +258,10 @@ export default function HomePage() {
             </Link>
 
             {/* Bottom Right Items Container */}
-            <div className="grid grid-cols-2 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 gap-4 md:gap-6 h-full">
               {/* Bottom Left of Right: EMAGRECIMENTO */}
               <Link href="/products?category=EMAGRECIMENTO" passHref>
-                <div className="group relative aspect-square overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
+                <div className="group relative h-full w-full overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
                   <Image src="https://placehold.co/400x400.png" alt="Emagrecimento" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75" data-ai-hint="waist measure fitness"/>
                   <div className="absolute inset-0 flex flex-col items-center justify-end p-3 text-center">
                     <h3 className="font-headline text-xl md:text-2xl font-bold text-primary uppercase shadow-md mb-2">EMAGRECIMENTO</h3>
@@ -272,7 +271,7 @@ export default function HomePage() {
               </Link>
               {/* Bottom Right of Right: DEFINIÇÃO */}
               <Link href="/products?category=DEFINIÇÃO" passHref>
-                <div className="group relative aspect-square overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
+                <div className="group relative h-full w-full overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
                   <Image src="https://placehold.co/400x400.png" alt="Definição" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75" data-ai-hint="abs fitness definition"/>
                   <div className="absolute inset-0 flex flex-col items-center justify-end p-3 text-center">
                     <h3 className="font-headline text-xl md:text-2xl font-bold text-primary uppercase shadow-md mb-2">DEFINIÇÃO</h3>
