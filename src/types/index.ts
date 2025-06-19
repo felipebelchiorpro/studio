@@ -13,6 +13,7 @@ export interface Product {
   reviews?: Review[];
   rating?: number; // Average rating
   isNewRelease?: boolean; // Added for new releases
+  salesCount?: number; // For Top 5 Products
 }
 
 export interface Review {
@@ -27,6 +28,7 @@ export interface Category {
   id: string;
   name: string;
   imageUrl?: string; // Optional: for category banners
+  totalRevenue?: number; // For Top 5 Categories
 }
 
 export interface CartItem extends Product {
@@ -65,3 +67,4 @@ export interface DropdownCategory {
   hasSubmenu?: boolean;
   subItems?: Array<{ id: string; name: string; href: string }>;
 }
+
