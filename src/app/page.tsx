@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Banner } from "@/components/Banner";
 import ProductCard from "@/components/ProductCard";
 import { mockProducts, mockCategories, mockPromotions } from "@/data/mockData";
@@ -16,30 +16,85 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi, // Import CarouselApi
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import InfoBar from '@/components/InfoBar';
+import { cn } from "@/lib/utils"; // Import cn utility
+
+// Helper component for carousel dots
+const CarouselDots = ({ api, onDotClick }: { api: CarouselApi | undefined, onDotClick: (index: number) => void }) => {
+  const [snapCount, setSnapCount] = useState(0);
+  const [currentSnap, setCurrentSnap] = useState(0);
+
+  const updateDots = useCallback(() => {
+    if (!api) return;
+    setSnapCount(api.scrollSnapList().length);
+    setCurrentSnap(api.selectedScrollSnap());
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+    
+    updateDots();
+    api.on("select", updateDots);
+    api.on("reInit", updateDots); // Handle reinitialization, e.g., on resize
+
+    return () => {
+      api.off("select", updateDots);
+      api.off("reInit", updateDots);
+    };
+  }, [api, updateDots]);
+
+  if (snapCount <= 1) return null; // Don't show dots if only one page
+
+  return (
+    <div className="flex justify-center items-center space-x-2 mt-3 py-2">
+      {Array.from({ length: snapCount }).map((_, index) => (
+        <button
+          key={index}
+          onClick={() => onDotClick(index)}
+          className={cn(
+            "h-2.5 w-2.5 rounded-full transition-all duration-300 ease-in-out",
+            index === currentSnap ? "bg-primary scale-125" : "bg-primary/40 hover:bg-primary/60"
+          )}
+          aria-label={`Ir para slide ${index + 1}`}
+        />
+      ))}
+    </div>
+  );
+};
+
 
 export default function HomePage() {
-  const featuredProducts = mockProducts.slice(0, 8); // Using more products for demonstration
+  const featuredProducts = mockProducts.slice(0, 8); 
   const popularProductsPlugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
   );
+  const [apiPopular, setApiPopular] = useState<CarouselApi>();
+  const handlePopularDotClick = useCallback((index: number) => apiPopular?.scrollTo(index), [apiPopular]);
+
 
   const newReleaseProducts = mockProducts.filter(p => p.isNewRelease).slice(0, 8);
   const newReleasesPlugin = useRef(
     Autoplay({ delay: 4500, stopOnInteraction: true })
   );
+  const [apiNewReleases, setApiNewReleases] = useState<CarouselApi>();
+  const handleNewReleasesDotClick = useCallback((index: number) => apiNewReleases?.scrollTo(index), [apiNewReleases]);
 
   const bestSellingProducts = mockProducts.filter(p => (p.rating || 0) >= 4.5).slice(0, 8);
   const bestSellersPlugin = useRef(
     Autoplay({ delay: 5500, stopOnInteraction: true })
   );
+  const [apiBestSellers, setApiBestSellers] = useState<CarouselApi>();
+  const handleBestSellersDotClick = useCallback((index: number) => apiBestSellers?.scrollTo(index), [apiBestSellers]);
 
   const onSaleProducts = mockProducts.filter(p => p.originalPrice && p.originalPrice > p.price).slice(0, 8);
   const onSaleProductsPlugin = useRef(
     Autoplay({ delay: 6000, stopOnInteraction: true })
   );
+  const [apiOnSale, setApiOnSale] = useState<CarouselApi>();
+  const handleOnSaleDotClick = useCallback((index: number) => apiOnSale?.scrollTo(index), [apiOnSale]);
 
 
   return (
@@ -88,28 +143,32 @@ export default function HomePage() {
           </Link>
         </div>
         {featuredProducts.length > 0 ? (
-          <Carousel
-            plugins={[popularProductsPlugin.current]}
-            className="w-full"
-            opts={{
-              align: "start",
-              loop: featuredProducts.length > 3, 
-            }}
-            onMouseEnter={popularProductsPlugin.current.stop}
-            onMouseLeave={popularProductsPlugin.current.reset}
-          >
-            <CarouselContent className="-ml-4">
-              {featuredProducts.map((product: Product) => (
-                <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                  <div className="h-full p-1">
-                    <ProductCard product={product} />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-            <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-          </Carousel>
+          <>
+            <Carousel
+              setApi={setApiPopular}
+              plugins={[popularProductsPlugin.current]}
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: featuredProducts.length > 3, 
+              }}
+              onMouseEnter={popularProductsPlugin.current.stop}
+              onMouseLeave={popularProductsPlugin.current.reset}
+            >
+              <CarouselContent className="-ml-4">
+                {featuredProducts.map((product: Product) => (
+                  <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <div className="h-full p-1">
+                      <ProductCard product={product} />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+              <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+            </Carousel>
+            <CarouselDots api={apiPopular} onDotClick={handlePopularDotClick} />
+          </>
         ) : (
           <p className="text-muted-foreground">Nenhum produto popular encontrado.</p>
         )}
@@ -125,28 +184,32 @@ export default function HomePage() {
           </Link>
         </div>
         {newReleaseProducts.length > 0 ? (
-          <Carousel
-            plugins={[newReleasesPlugin.current]}
-            className="w-full"
-            opts={{
-              align: "start",
-              loop: newReleaseProducts.length > 3,
-            }}
-            onMouseEnter={newReleasesPlugin.current.stop}
-            onMouseLeave={newReleasesPlugin.current.reset}
-          >
-            <CarouselContent className="-ml-4">
-              {newReleaseProducts.map((product: Product) => (
-                <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                  <div className="h-full p-1">
-                    <ProductCard product={product} />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-            <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-          </Carousel>
+          <>
+            <Carousel
+              setApi={setApiNewReleases}
+              plugins={[newReleasesPlugin.current]}
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: newReleaseProducts.length > 3,
+              }}
+              onMouseEnter={newReleasesPlugin.current.stop}
+              onMouseLeave={newReleasesPlugin.current.reset}
+            >
+              <CarouselContent className="-ml-4">
+                {newReleaseProducts.map((product: Product) => (
+                  <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <div className="h-full p-1">
+                      <ProductCard product={product} />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+              <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+            </Carousel>
+            <CarouselDots api={apiNewReleases} onDotClick={handleNewReleasesDotClick} />
+          </>
         ) : (
            <p className="text-muted-foreground">Nenhum lançamento encontrado.</p>
         )}
@@ -162,28 +225,32 @@ export default function HomePage() {
           </Link>
         </div>
         {bestSellingProducts.length > 0 ? (
-          <Carousel
-            plugins={[bestSellersPlugin.current]}
-            className="w-full"
-            opts={{
-              align: "start",
-              loop: bestSellingProducts.length > 3,
-            }}
-            onMouseEnter={bestSellersPlugin.current.stop}
-            onMouseLeave={bestSellersPlugin.current.reset}
-          >
-            <CarouselContent className="-ml-4">
-              {bestSellingProducts.map((product: Product) => (
-                <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                  <div className="h-full p-1">
-                    <ProductCard product={product} />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-            <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-          </Carousel>
+          <>
+            <Carousel
+              setApi={setApiBestSellers}
+              plugins={[bestSellersPlugin.current]}
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: bestSellingProducts.length > 3,
+              }}
+              onMouseEnter={bestSellersPlugin.current.stop}
+              onMouseLeave={bestSellersPlugin.current.reset}
+            >
+              <CarouselContent className="-ml-4">
+                {bestSellingProducts.map((product: Product) => (
+                  <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <div className="h-full p-1">
+                      <ProductCard product={product} />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+              <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+            </Carousel>
+            <CarouselDots api={apiBestSellers} onDotClick={handleBestSellersDotClick} />
+          </>
         ) : (
            <p className="text-muted-foreground">Nenhum produto mais vendido encontrado.</p>
         )}
@@ -199,28 +266,32 @@ export default function HomePage() {
           </Link>
         </div>
         {onSaleProducts.length > 0 ? (
-          <Carousel
-            plugins={[onSaleProductsPlugin.current]}
-            className="w-full"
-            opts={{
-              align: "start",
-              loop: onSaleProducts.length > 3,
-            }}
-            onMouseEnter={onSaleProductsPlugin.current.stop}
-            onMouseLeave={onSaleProductsPlugin.current.reset}
-          >
-            <CarouselContent className="-ml-4">
-              {onSaleProducts.map((product: Product) => (
-                <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                  <div className="h-full p-1">
-                    <ProductCard product={product} />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-            <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
-          </Carousel>
+          <>
+            <Carousel
+              setApi={setApiOnSale}
+              plugins={[onSaleProductsPlugin.current]}
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: onSaleProducts.length > 3,
+              }}
+              onMouseEnter={onSaleProductsPlugin.current.stop}
+              onMouseLeave={onSaleProductsPlugin.current.reset}
+            >
+              <CarouselContent className="-ml-4">
+                {onSaleProducts.map((product: Product) => (
+                  <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <div className="h-full p-1">
+                      <ProductCard product={product} />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="absolute left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+              <CarouselNext className="absolute right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
+            </Carousel>
+            <CarouselDots api={apiOnSale} onDotClick={handleOnSaleDotClick} />
+          </>
         ) : (
           <p className="text-muted-foreground">Nenhum produto em promoção encontrado.</p>
         )}
@@ -242,3 +313,4 @@ export default function HomePage() {
     </div>
   );
 }
+
