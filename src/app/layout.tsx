@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
+import ConditionalLayout from '@/components/layout/ConditionalLayout'; // Added
 
 export const metadata: Metadata = {
   title: 'DarkStore Suplementos',
@@ -28,11 +27,9 @@ export default function RootLayout({
       <body className="font-body antialiased bg-background text-foreground min-h-screen flex flex-col">
         <AuthProvider>
           <CartProvider>
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8">
+            <ConditionalLayout>
               {children}
-            </main>
-            <Footer />
+            </ConditionalLayout>
             <Toaster />
           </CartProvider>
         </AuthProvider>
