@@ -53,6 +53,7 @@ export interface User {
 export interface CustomerUser extends User {
   // Add customer-specific fields here if needed in the future
   // e.g., defaultShippingAddressId?: string;
+  registeredAt?: string; // Added for customer management
 }
 
 
@@ -100,4 +101,5 @@ export interface PackingOrder {
   items: PackingOrderItem[];
   targetWeight?: number; // For future weight validation feature
 }
+
 

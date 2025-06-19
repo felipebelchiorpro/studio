@@ -1,9 +1,10 @@
 
+
 "use client";
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck } from 'lucide-react'; 
+import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck, Users } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Separator } from '@/components/ui/separator';
@@ -49,6 +50,7 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
     { href: '/dashboard/sales', icon: BarChart3, label: 'Relatório de Vendas' },
     { href: '/dashboard/stock', icon: Layers, label: 'Controle de Estoque' },
     { href: '/dashboard/quick-edit', icon: Edit, label: 'Edição Rápida' },
+    { href: '/dashboard/customers', icon: Users, label: 'Clientes' },
     { href: '/dashboard/categories', icon: LayoutGrid, label: 'Gerenciar Categorias' },
     { href: '/dashboard/brands', icon: Tags, label: 'Gerenciar Marcas' },
     { href: '/dashboard/shipping/pack-station', icon: Truck, label: 'Estação de Embalagem' }, 
@@ -95,7 +97,11 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
         </div>
       </div>
       <nav className="flex-grow space-y-1">
-        {navItems.map(item => (
+        {navItems.sort((a, b) => { // Simple sort to put "Visão Geral" first
+            if (a.label === 'Visão Geral') return -1;
+            if (b.label === 'Visão Geral') return 1;
+            return a.label.localeCompare(b.label);
+          }).map(item => (
           <NavItem key={item.href} {...item} currentPath={pathname} onClick={onNavItemClick}/>
         ))}
       </nav>
