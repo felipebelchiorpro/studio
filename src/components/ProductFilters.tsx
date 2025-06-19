@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { mockCategories } from '@/data/mockData'; // For category names
 import { useProduct } from '@/context/ProductContext'; // Import useProduct
+import { useBrand } from '@/context/BrandContext'; // Import useBrand
 import type { Product } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -27,11 +28,12 @@ const ALL_CATEGORIES = mockCategories.map(cat => cat.name); // Keep static categ
 
 export default function ProductFilters({ initialFilters = {}, onFilterChange }: ProductFiltersProps) {
   const { products: allProducts, loading: productsLoading } = useProduct();
+  const { getBrands, brands: contextBrands } = useBrand(); // Use useBrand
 
+  // ALL_BRANDS will now be derived from BrandContext
   const ALL_BRANDS = useMemo(() => {
-    if (productsLoading || allProducts.length === 0) return [];
-    return Array.from(new Set(allProducts.map(p => p.brand))).sort();
-  }, [allProducts, productsLoading]);
+    return getBrands().sort(); // getBrands already returns sorted unique brands
+  }, [contextBrands, getBrands]); // Depend on contextBrands to re-memoize when brands change
   
   const MAX_PRICE = useMemo(() => {
     if (productsLoading || allProducts.length === 0) return 1000; // Default max if no products or loading
@@ -42,7 +44,6 @@ export default function ProductFilters({ initialFilters = {}, onFilterChange }: 
   const [priceRange, setPriceRange] = useState<[number, number]>(initialFilters.priceRange || [0, MAX_PRICE]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>(initialFilters.brands || []);
   
-  // Effect to update priceRange if MAX_PRICE changes after products load
   useEffect(() => {
     if (!productsLoading) {
       setPriceRange(prev => [prev[0], MAX_PRICE]);
@@ -76,7 +77,7 @@ export default function ProductFilters({ initialFilters = {}, onFilterChange }: 
   
   const clearFilters = () => {
     setSelectedCategories([]);
-    setPriceRange([0, MAX_PRICE]); // Reset to current max price
+    setPriceRange([0, MAX_PRICE]); 
     setSelectedBrands([]);
     onFilterChange({
       categories: [],
@@ -85,7 +86,7 @@ export default function ProductFilters({ initialFilters = {}, onFilterChange }: 
     });
   };
 
-  if (productsLoading) {
+  if (productsLoading) { // Still show skeleton if products are loading (for MAX_PRICE)
     return (
       <div className="space-y-6 p-4 bg-card rounded-lg shadow-md">
         <Skeleton className="h-6 w-3/4 mb-4" />
@@ -145,7 +146,7 @@ export default function ProductFilters({ initialFilters = {}, onFilterChange }: 
         <AccordionItem value="brands">
           <AccordionTrigger className="text-base font-medium hover:text-primary">Marcas</AccordionTrigger>
           <AccordionContent className="pt-2 space-y-2">
-            {ALL_BRANDS.map(brand => (
+            {ALL_BRANDS.length > 0 ? ALL_BRANDS.map(brand => (
               <div key={brand} className="flex items-center space-x-2">
                 <Checkbox
                   id={`brand-${brand}`}
@@ -155,8 +156,9 @@ export default function ProductFilters({ initialFilters = {}, onFilterChange }: 
                 />
                 <Label htmlFor={`brand-${brand}`} id={`label-brand-${brand}`} className="text-sm font-normal cursor-pointer">{brand}</Label>
               </div>
-            ))}
-            {ALL_BRANDS.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma marca disponível.</p>}
+            )) : (
+                 <p className="text-xs text-muted-foreground">Nenhuma marca disponível. Adicione marcas no painel.</p>
+            )}
           </AccordionContent>
         </AccordionItem>
       </Accordion>
