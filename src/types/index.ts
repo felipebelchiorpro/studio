@@ -66,6 +66,7 @@ export interface Order {
   orderDate: string;
   status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
   shippingAddress?: string; // Simplified
+  channel?: string; // Added for BI Dashboard
 }
 
 export interface Promotion {
@@ -100,6 +101,20 @@ export interface PackingOrder {
   customerName?: string; // Optional, for display
   items: PackingOrderItem[];
   targetWeight?: number; // For future weight validation feature
+}
+
+// Types for BI Dashboard
+export interface BiCategoryFilterItem {
+    id: string;
+    name: string;
+}
+export interface BiSalesChannelFilterItem {
+    id: string;
+    name: string;
+}
+export interface BiGeoFilterItem {
+    id: string; // e.g., 'SP', 'RJ'
+    name: string; // e.g., 'São Paulo', 'Rio de Janeiro'
 }
 
 

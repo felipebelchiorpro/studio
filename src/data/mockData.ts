@@ -235,6 +235,7 @@ export const mockOrders: Order[] = [
     totalAmount: (mockProducts[0].price * 1) + (mockProducts[1].price * 2),
     orderDate: '2024-07-21',
     status: 'Delivered',
+    channel: 'Loja Online',
   },
   {
     id: 'order-dk002-beta',
@@ -243,6 +244,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[4].price * 1,
     orderDate: '2024-07-20',
     status: 'Shipped',
+    channel: 'Instagram',
   },
   {
     id: 'order-dk003-gamma',
@@ -254,6 +256,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[2].price + mockProducts[5].price,
     orderDate: '2024-07-19',
     status: 'Pending',
+    channel: 'Loja Online',
   },
   {
     id: 'order-dk004-delta',
@@ -265,6 +268,7 @@ export const mockOrders: Order[] = [
     totalAmount: (mockProducts[0].price * 2) + mockProducts[8].price,
     orderDate: '2024-07-18',
     status: 'Delivered',
+    channel: 'Loja Física',
   },
    {
     id: 'order-dk005-epsilon',
@@ -276,6 +280,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[1].price + mockProducts[4].price,
     orderDate: '2024-07-17',
     status: 'Cancelled',
+    channel: 'Loja Online',
   },
   {
     id: 'order-dk006-zeta',
@@ -287,6 +292,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[6].price + mockProducts[7].price,
     orderDate: '2024-07-16',
     status: 'Shipped',
+    channel: 'Loja Online',
   },
   {
     id: 'order-dk007-eta',
@@ -297,6 +303,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[9].price * 3,
     orderDate: '2024-07-15',
     status: 'Pending',
+    channel: 'Instagram',
   },
   {
     id: 'order-dk008-theta',
@@ -308,6 +315,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[10].price + mockProducts[11].price,
     orderDate: '2024-07-14',
     status: 'Delivered',
+    channel: 'Loja Física',
   },
   {
     id: 'order-dk009-iota',
@@ -318,6 +326,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[3].price * 2,
     orderDate: '2024-07-13',
     status: 'Cancelled',
+    channel: 'Loja Online',
   },
   {
     id: 'order-dk010-kappa',
@@ -330,6 +339,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[0].price + mockProducts[2].price + mockProducts[5].price,
     orderDate: '2024-07-12',
     status: 'Shipped',
+    channel: 'Loja Online',
   },
   {
     id: 'order-dk011-lambda',
@@ -340,6 +350,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[1].price * 5,
     orderDate: '2024-07-11',
     status: 'Pending',
+    channel: 'Instagram',
   },
   {
     id: 'order-dk012-mu',
@@ -350,6 +361,7 @@ export const mockOrders: Order[] = [
     totalAmount: mockProducts[8].price * 2,
     orderDate: '2024-07-10',
     status: 'Delivered',
+    channel: 'Loja Física',
   }
 ];
 
@@ -395,5 +407,30 @@ export const mockPackingOrders: PackingOrder[] = [
       { productId: '7', name: mockProducts[6].name, barcode: mockProducts[6].barcode!, imageUrl: mockProducts[6].imageUrl, expectedQuantity: 1, packedQuantity: 0, sku: mockProducts[6].id },
     ],
   }
+];
+
+// Used for BI Dashboard's category filter
+export const biDashboardCategories = mockCategories.map(c => ({id: c.id, name: c.name}));
+
+// Used for BI Dashboard's sales channel filter
+export const biDashboardSalesChannels = [
+  {id: "online", name: "Loja Online"},
+  {id: "physical", name: "Loja Física"},
+  {id: "instagram", name: "Instagram"},
+  {id: "whatsapp", name: "WhatsApp"},
+  {id: "marketplace", name: "Marketplace"},
+];
+
+// Used for BI Dashboard's geo filter (States)
+export const biDashboardStates = [
+    { id: "AC", name: "Acre" }, { id: "AL", name: "Alagoas" }, { id: "AP", name: "Amapá" }, 
+    { id: "AM", name: "Amazonas" }, { id: "BA", name: "Bahia" }, { id: "CE", name: "Ceará" },
+    { id: "DF", name: "Distrito Federal" }, { id: "ES", name: "Espírito Santo" }, { id: "GO", name: "Goiás" },
+    { id: "MA", name: "Maranhão" }, { id: "MT", name: "Mato Grosso" }, { id: "MS", name: "Mato Grosso do Sul" },
+    { id: "MG", name: "Minas Gerais" }, { id: "PA", name: "Pará" }, { id: "PB", name: "Paraíba" },
+    { id: "PR", name: "Paraná" }, { id: "PE", name: "Pernambuco" }, { id: "PI", name: "Piauí" },
+    { id: "RJ", name: "Rio de Janeiro" }, { id: "RN", name: "Rio Grande do Norte" }, { id: "RS", name: "Rio Grande do Sul" },
+    { id: "RO", name: "Rondônia" }, { id: "RR", name: "Roraima" }, { id: "SC", name: "Santa Catarina" },
+    { id: "SP", name: "São Paulo" }, { id: "SE", name: "Sergipe" }, { id: "TO", name: "Tocantins" }
 ];
 

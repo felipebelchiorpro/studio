@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck, Users } from 'lucide-react'; 
+import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck, Users, TrendingUp } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Separator } from '@/components/ui/separator';
@@ -46,6 +46,7 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Visão Geral' },
+    { href: '/dashboard/bi-analytics', icon: TrendingUp, label: 'BI Analytics' },
     { href: '/dashboard/products', icon: Package, label: 'Gerenciar Produtos' },
     { href: '/dashboard/sales', icon: BarChart3, label: 'Relatório de Vendas' },
     { href: '/dashboard/stock', icon: Layers, label: 'Controle de Estoque' },
@@ -97,9 +98,11 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
         </div>
       </div>
       <nav className="flex-grow space-y-1">
-        {navItems.sort((a, b) => { // Simple sort to put "Visão Geral" first
+        {navItems.sort((a, b) => { 
             if (a.label === 'Visão Geral') return -1;
             if (b.label === 'Visão Geral') return 1;
+            if (a.label === 'BI Analytics' && b.label !== 'Visão Geral') return -1;
+            if (b.label === 'BI Analytics' && a.label !== 'Visão Geral') return 1;
             return a.label.localeCompare(b.label);
           }).map(item => (
           <NavItem key={item.href} {...item} currentPath={pathname} onClick={onNavItemClick}/>
