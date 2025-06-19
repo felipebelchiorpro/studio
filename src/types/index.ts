@@ -10,6 +10,7 @@ export interface Product {
   brand: string;
   imageUrl: string;
   stock: number;
+  barcode?: string; // Added for barcode scanning
   reviews?: Review[];
   rating?: number; // Average rating
   isNewRelease?: boolean; // Para destacar novos produtos
@@ -48,10 +49,11 @@ export interface User {
   // For simulated auth, no password stored
 }
 
+// Original Order type for sales reports, etc.
 export interface Order {
   id: string;
   userId: string;
-  items: CartItem[];
+  items: CartItem[]; // These are CartItems, which include full product details + quantity bought
   totalAmount: number;
   orderDate: string;
   status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
@@ -74,3 +76,20 @@ export interface DropdownCategory {
   subItems?: Array<{ id: string; name: string; href: string }>;
 }
 
+// Types for Packing Station
+export interface PackingOrderItem {
+  productId: string;
+  name: string;
+  sku?: string; // Or use product.id if SKU isn't a separate field
+  barcode: string;
+  imageUrl: string;
+  expectedQuantity: number;
+  packedQuantity: number;
+}
+
+export interface PackingOrder {
+  orderId: string; // This could be the scannable barcode for the whole order
+  customerName?: string; // Optional, for display
+  items: PackingOrderItem[];
+  targetWeight?: number; // For future weight validation feature
+}

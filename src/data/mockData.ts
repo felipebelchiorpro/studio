@@ -1,5 +1,5 @@
 
-import type { Product, Category, Promotion, Order, Review, DropdownCategory } from '@/types';
+import type { Product, Category, Promotion, Order, Review, DropdownCategory, PackingOrder, PackingOrderItem } from '@/types';
 
 export const mockReviews: Review[] = [
   { id: 'r1', author: 'Carlos S.', rating: 5, comment: 'Excelente produto, recomendo!', date: '2024-07-15' },
@@ -13,11 +13,12 @@ export const mockProducts: Product[] = [
     name: 'Whey Protein Concentrado (1kg)',
     description: 'Proteína de alta qualidade para ganho de massa muscular. Sabor Baunilha.',
     price: 129.90,
-    originalPrice: 159.90, // Added original price
+    originalPrice: 159.90, 
     category: 'GANHO DE MASSA', 
     brand: 'Dark Nutrition',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 50,
+    barcode: 'WHEYCONC1KG',
     reviews: [mockReviews[0], mockReviews[1]],
     rating: 4.5,
     salesCount: 125,
@@ -28,14 +29,14 @@ export const mockProducts: Product[] = [
     name: 'Creatina Monohidratada (300g)',
     description: 'Aumente sua força e performance nos treinos com nossa creatina pura.',
     price: 79.90,
-    // No originalPrice, so it's not on sale
     category: 'ENDURANCE', 
     brand: 'Dark Nutrition',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 100,
+    barcode: 'CREATINA300G',
     reviews: [mockReviews[2]],
     rating: 5,
-    isNewRelease: true, // Marked as new release
+    isNewRelease: true, 
     salesCount: 210,
   },
   {
@@ -47,6 +48,7 @@ export const mockProducts: Product[] = [
     brand: 'Dark Vitality',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 75,
+    barcode: 'MULTIVIT90CAP',
     rating: 4.0,
     salesCount: 80,
     isNewRelease: false,
@@ -56,11 +58,12 @@ export const mockProducts: Product[] = [
     name: 'BCAA 2:1:1 (200g)',
     description: 'Aminoácidos de cadeia ramificada para recuperação muscular. Sabor Limão.',
     price: 69.90,
-    originalPrice: 89.90, // Added original price
+    originalPrice: 89.90,
     category: 'DEFINIÇÃO', 
     brand: 'Dark Nutrition',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 30,
+    barcode: 'BCAA200GLIMAO',
     rating: 4.2,
     salesCount: 65,
   },
@@ -73,9 +76,10 @@ export const mockProducts: Product[] = [
     brand: 'Dark Performance',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 40,
+    barcode: 'PRETREINOINSANO',
     reviews: [mockReviews[0]],
     rating: 4.8,
-    isNewRelease: true, // Marked as new release
+    isNewRelease: true, 
     salesCount: 150,
   },
   {
@@ -87,6 +91,7 @@ export const mockProducts: Product[] = [
     brand: 'Dark Vitality',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 60,
+    barcode: 'OMEGA3120CAP',
     rating: 4.6,
     salesCount: 90,
   },
@@ -95,11 +100,12 @@ export const mockProducts: Product[] = [
     name: 'Barra de Proteína (Caixa com 12)',
     description: 'Lanche proteico prático e delicioso para qualquer hora do dia. Sabor Chocolate.',
     price: 99.90,
-    originalPrice: 119.90, // Added original price
+    originalPrice: 119.90, 
     category: 'Proteínas', 
     brand: 'Dark Nutrition',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 25,
+    barcode: 'BARRAPROT12CHOC',
     rating: 4.3,
     salesCount: 75,
   },
@@ -112,6 +118,7 @@ export const mockProducts: Product[] = [
     brand: 'Dark Nutrition',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 35,
+    barcode: 'GLUTAMINA300G',
     rating: 4.7,
     isNewRelease: true,
     salesCount: 110,
@@ -125,12 +132,12 @@ export const mockProducts: Product[] = [
     brand: 'Dark Performance',
     imageUrl: 'https://placehold.co/600x400.png',
     stock: 20,
+    barcode: 'TERMOGENICO60CAP',
     rating: 4.4,
     salesCount: 60,
   },
 ];
 
-// For the horizontal top bar
 export const mockCategories: Category[] = [
   { id: 'catEndurance', name: 'ENDURANCE', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 8500.00 },
   { id: 'catGanhoMassa', name: 'GANHO DE MASSA', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 12300.50 },
@@ -138,15 +145,13 @@ export const mockCategories: Category[] = [
   { id: 'catDefinicao', name: 'DEFINIÇÃO', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 4800.00 },
   { id: 'catSaude', name: 'SAÚDE', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 3200.75 },
   { id: 'catComboOffers', name: 'COMBO E OFERTAS', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 9500.00 },
-  { id: 'catLojasFisicas', name: 'LOJAS FÍSICAS', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 1500.00 }, // Placeholder revenue
-  { id: 'catAtacado', name: 'ATACADO', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 20000.00 }, // Placeholder revenue
+  { id: 'catLojasFisicas', name: 'LOJAS FÍSICAS', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 1500.00 }, 
+  { id: 'catAtacado', name: 'ATACADO', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 20000.00 }, 
   { id: 'catPreTreino', name: 'Pré Treino', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 7800.00 },
   { id: 'catVitaminasSaude', name: 'Vitaminas e Saude', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 5100.00 },
   { id: 'catProteinas', name: 'Proteínas', imageUrl: 'https://placehold.co/800x400.png', totalRevenue: 10500.00 },
 ];
 
-
-// For the main "CATEGORIAS" dropdown
 export const mainDropdownCategories: DropdownCategory[] = [
   { id: 'dd-proteinas', name: 'Proteínas', href: '/products?category=Proteínas' },
   { id: 'dd-creatina', name: 'Creatina', href: '/products?category=Creatina' },
@@ -159,7 +164,6 @@ export const mainDropdownCategories: DropdownCategory[] = [
   { id: 'dd-lancamentos', name: 'Lançamentos', href: '/products?tag=lancamentos' },
   { id: 'dd-objetivos', name: 'Objetivos', href: '/products' }, 
 ];
-
 
 export const mockPromotions: Promotion[] = [
   {
@@ -202,8 +206,8 @@ export const mockOrders: Order[] = [
     id: 'order3',
     userId: 'user789',
     items: [
-      { ...mockProducts[2], quantity: 1 }, // No originalPrice
-      { ...mockProducts[5], quantity: 1 }, // No originalPrice
+      { ...mockProducts[2], quantity: 1 }, 
+      { ...mockProducts[5], quantity: 1 }, 
     ],
     totalAmount: mockProducts[2].price + mockProducts[5].price,
     orderDate: '2024-07-15',
@@ -233,13 +237,12 @@ export const mockOrders: Order[] = [
   },
 ];
 
-
 export const mockDashboardMetrics = {
   totalSessions: 7530,
   newCustomers: 65,
   returningCustomers: mockOrders.map(o => o.userId).filter((v, i, a) => a.indexOf(v) === i).length - 65 > 0 
                       ? mockOrders.map(o => o.userId).filter((v, i, a) => a.indexOf(v) === i).length - 65 
-                      : 30, // ensure returning is not negative if newCustomers > uniqueUserIds
+                      : 30, 
   funnelData: [
     { name: 'Visitantes', value: 7530 },
     { name: 'Visualizaram Produto', value: 4200 },
@@ -247,3 +250,33 @@ export const mockDashboardMetrics = {
     { name: 'Finalizaram Compra', value: mockOrders.length },
   ],
 };
+
+
+// Mock data for Packing Station
+export const mockPackingOrders: PackingOrder[] = [
+  {
+    orderId: 'PACK-ORD-001', // This is what the user "scans"
+    customerName: 'João Silva',
+    items: [
+      { productId: '1', name: mockProducts[0].name, barcode: mockProducts[0].barcode!, imageUrl: mockProducts[0].imageUrl, expectedQuantity: 2, packedQuantity: 0, sku: mockProducts[0].id },
+      { productId: '2', name: mockProducts[1].name, barcode: mockProducts[1].barcode!, imageUrl: mockProducts[1].imageUrl, expectedQuantity: 1, packedQuantity: 0, sku: mockProducts[1].id },
+    ],
+    targetWeight: 2.3, // kg
+  },
+  {
+    orderId: 'PACK-ORD-002',
+    customerName: 'Maria Oliveira',
+    items: [
+      { productId: '5', name: mockProducts[4].name, barcode: mockProducts[4].barcode!, imageUrl: mockProducts[4].imageUrl, expectedQuantity: 1, packedQuantity: 0, sku: mockProducts[4].id },
+      { productId: '3', name: mockProducts[2].name, barcode: mockProducts[2].barcode!, imageUrl: mockProducts[2].imageUrl, expectedQuantity: 1, packedQuantity: 0, sku: mockProducts[2].id },
+    ],
+    targetWeight: 0.4, // kg
+  },
+  {
+    orderId: 'PACK-ORD-003',
+    customerName: 'Carlos Pereira',
+    items: [
+      { productId: '7', name: mockProducts[6].name, barcode: mockProducts[6].barcode!, imageUrl: mockProducts[6].imageUrl, expectedQuantity: 1, packedQuantity: 0, sku: mockProducts[6].id },
+    ],
+  }
+];

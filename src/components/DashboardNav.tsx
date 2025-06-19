@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid } from 'lucide-react'; // Adicionado Tags, LayoutGrid
+import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck } from 'lucide-react'; // Adicionado Truck
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Separator } from '@/components/ui/separator';
@@ -44,6 +44,7 @@ export default function DashboardNav() {
     { href: '/dashboard/quick-edit', icon: Edit, label: 'Edição Rápida' },
     { href: '/dashboard/categories', icon: LayoutGrid, label: 'Gerenciar Categorias' },
     { href: '/dashboard/brands', icon: Tags, label: 'Gerenciar Marcas' },
+    { href: '/dashboard/shipping/pack-station', icon: Truck, label: 'Estação de Embalagem' }, // Nova rota
     // { href: '/dashboard/settings', icon: Settings, label: 'Configurações' }, // Example for future expansion
   ];
 
