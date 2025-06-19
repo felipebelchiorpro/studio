@@ -97,7 +97,7 @@ const salesByCategoryData = [
 ];
 
 const categoryChartConfig = {
-  sales: { label: "Vendas" }, // Corresponds to dataKey
+  sales: { label: "Vendas" }, 
   "GANHO DE MASSA": { label: "GANHO DE MASSA", color: "hsl(var(--chart-1))" },
   "ENDURANCE": { label: "ENDURANCE", color: "hsl(var(--chart-2))" },
   "EMAGRECIMENTO": { label: "EMAGRECIMENTO", color: "hsl(var(--chart-3))" },
@@ -258,15 +258,31 @@ export default function BiAnalyticsPage() {
             <CardTitle className="flex items-center text-lg"><PieChartLucide className="mr-2 h-5 w-5 text-primary" />Vendas por Categoria</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] flex items-center justify-center">
-            <ChartContainer config={categoryChartConfig} className="mx-auto aspect-square max-h-[250px]">
+            <ChartContainer 
+              config={categoryChartConfig} 
+              className="mx-auto aspect-square max-h-[300px]"
+            >
                 <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
-                    <Pie data={salesByCategoryData} dataKey="sales" nameKey="category" innerRadius={60} outerRadius={80} strokeWidth={2}>
-                       {salesByCategoryData.map((entry) => (
-                         <Cell key={`cell-${entry.category}`} fill={entry.fill} />
+                    <ChartTooltip 
+                      cursor={false}
+                      content={<ChartTooltipContent hideLabel nameKey="category" />} 
+                    />
+                    <Pie 
+                      data={salesByCategoryData} 
+                      dataKey="sales" 
+                      nameKey="category" 
+                      innerRadius={60} 
+                      strokeWidth={5}
+                    >
+                       {salesByCategoryData.map((entry, index) => (
+                         <Cell key={`cell-${index}`} fill={entry.fill} />
                        ))}
                     </Pie>
-                    <RechartsLegend content={<ChartLegendContent nameKey="category" className="flex-wrap" />} verticalAlign="bottom" align="center" />
+                    <RechartsLegend 
+                      content={<ChartLegendContent nameKey="category" className="flex-wrap" />} 
+                      verticalAlign="bottom" 
+                      align="center" 
+                    />
                 </PieChart>
             </ChartContainer>
           </CardContent>
@@ -343,5 +359,3 @@ export default function BiAnalyticsPage() {
     </div>
   );
 }
-
-    
