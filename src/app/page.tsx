@@ -70,6 +70,26 @@ const CarouselDots = ({ api, onDotClick }: { api: CarouselApi | undefined, onDot
 
 export default function HomePage() {
   const { products: allProducts, loading: productsLoading } = useProduct();
+  const [carouselLoopThreshold, setCarouselLoopThreshold] = useState(3); // Default for desktop (lg screens, 4 items)
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window !== 'undefined') {
+        if (window.innerWidth < 768) { // Corresponds to 'md' breakpoint (where 2 or sm 2 items are shown)
+          setCarouselLoopThreshold(1); // Loop if more than 1 product (2 items visible)
+        } else if (window.innerWidth < 1024) { // Corresponds to 'lg' breakpoint (where 3 items are shown)
+          setCarouselLoopThreshold(2); // Loop if more than 2 products (3 items visible)
+        } else {
+          setCarouselLoopThreshold(3); // Loop if more than 3 products (4 items visible)
+        }
+      }
+    };
+
+    handleResize(); // Set initial value on client-side mount
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   const featuredProducts = useMemo(() => allProducts.slice(0, 8), [allProducts]);
   const popularProductsPlugin = useRef(
@@ -150,7 +170,7 @@ export default function HomePage() {
               className="w-full"
               opts={{
                 align: "start",
-                loop: featuredProducts.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : (window.innerWidth < 768 ? 2 : 3)),
+                loop: featuredProducts.length > carouselLoopThreshold,
               }}
               onMouseEnter={popularProductsPlugin.current.stop}
               onMouseLeave={popularProductsPlugin.current.reset}
@@ -191,7 +211,7 @@ export default function HomePage() {
               className="w-full"
               opts={{
                 align: "start",
-                loop: newReleaseProducts.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : (window.innerWidth < 768 ? 2 : 3)),
+                loop: newReleaseProducts.length > carouselLoopThreshold,
               }}
               onMouseEnter={newReleasesPlugin.current.stop}
               onMouseLeave={newReleasesPlugin.current.reset}
@@ -232,7 +252,7 @@ export default function HomePage() {
               className="w-full"
               opts={{
                 align: "start",
-                loop: bestSellingProducts.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : (window.innerWidth < 768 ? 2 : 3)),
+                loop: bestSellingProducts.length > carouselLoopThreshold,
               }}
               onMouseEnter={bestSellersPlugin.current.stop}
               onMouseLeave={bestSellersPlugin.current.reset}
@@ -323,7 +343,7 @@ export default function HomePage() {
               className="w-full"
               opts={{
                 align: "start",
-                loop: onSaleProducts.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : (window.innerWidth < 768 ? 2 : 3)),
+                loop: onSaleProducts.length > carouselLoopThreshold,
               }}
               onMouseEnter={onSaleProductsPlugin.current.stop}
               onMouseLeave={onSaleProductsPlugin.current.reset}
@@ -363,4 +383,6 @@ export default function HomePage() {
     </div>
   );
 }
+    
+
     
