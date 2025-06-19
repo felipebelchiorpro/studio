@@ -105,34 +105,7 @@ export default function HomePage() {
       </section>
 
       <InfoBar />
-
-      <section aria-labelledby="featured-categories-heading">
-        <div className="flex justify-between items-center mb-6">
-          <h2 id="featured-categories-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Categorias em Destaque</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {mockCategories.filter(cat => cat.id !== "catComboOffers").slice(0, 4).map((category: TopCategoryType) => (
-            <Link key={category.id} href={`/products?category=${encodeURIComponent(category.name)}`} passHref>
-              <div className="group relative aspect-video overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
-                {category.imageUrl && (
-                  <Image
-                    src={category.imageUrl}
-                    alt={category.name}
-                    layout="fill"
-                    objectFit="cover"
-                    className="transition-transform duration-300 group-hover:scale-105 brightness-75 group-hover:brightness-90"
-                    data-ai-hint="fitness category"
-                  />
-                )}
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-2">
-                  <h3 className="font-headline text-lg md:text-xl font-bold text-white text-center uppercase">{category.name.toUpperCase()}</h3>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
+      
       <section aria-labelledby="popular-products-heading">
         <div className="flex justify-between items-center mb-6">
           <h2 id="popular-products-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Produtos Populares</h2>
@@ -254,6 +227,62 @@ export default function HomePage() {
         ) : (
            <p className="text-muted-foreground">Nenhum produto mais vendido encontrado.</p>
         )}
+      </section>
+
+      <section aria-labelledby="featured-categories-heading">
+        <div className="flex justify-between items-center mb-6">
+          <h2 id="featured-categories-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Categorias em Destaque</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
+          {/* Left Big Item: GANHO DE MASSA */}
+          <Link href="/products?category=GANHO%20DE%20MASSA" passHref>
+            <div className="group relative aspect-[3/4] md:aspect-auto h-full overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
+              <Image src="https://placehold.co/600x800.png" alt="Ganho de Massa" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75" data-ai-hint="muscle fitness torso"/>
+              <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-center">
+                <h3 className="font-headline text-3xl md:text-4xl font-bold text-primary uppercase shadow-md mb-3">GANHO DE MASSA</h3>
+                <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-6 py-2">Ver Agora</Button>
+              </div>
+            </div>
+          </Link>
+
+          {/* Right Column Container */}
+          <div className="grid grid-rows-2 gap-4 md:gap-6">
+            {/* Top Right Item: ENDURANCE */}
+            <Link href="/products?category=ENDURANCE" passHref>
+              <div className="group relative aspect-video overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
+                <Image src="https://placehold.co/800x400.png" alt="Endurance" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75" data-ai-hint="runner motion"/>
+                <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center">
+                  <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary uppercase shadow-md mb-2">ENDURANCE</h3>
+                  <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-5 py-1.5">Ver Agora</Button>
+                </div>
+              </div>
+            </Link>
+
+            {/* Bottom Right Items Container */}
+            <div className="grid grid-cols-2 gap-4 md:gap-6">
+              {/* Bottom Left of Right: EMAGRECIMENTO */}
+              <Link href="/products?category=EMAGRECIMENTO" passHref>
+                <div className="group relative aspect-square overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
+                  <Image src="https://placehold.co/400x400.png" alt="Emagrecimento" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75" data-ai-hint="waist measure fitness"/>
+                  <div className="absolute inset-0 flex flex-col items-center justify-end p-3 text-center">
+                    <h3 className="font-headline text-xl md:text-2xl font-bold text-primary uppercase shadow-md mb-2">EMAGRECIMENTO</h3>
+                    <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-4 py-1">Ver Agora</Button>
+                  </div>
+                </div>
+              </Link>
+              {/* Bottom Right of Right: DEFINIÇÃO */}
+              <Link href="/products?category=DEFINIÇÃO" passHref>
+                <div className="group relative aspect-square overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
+                  <Image src="https://placehold.co/400x400.png" alt="Definição" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75" data-ai-hint="abs fitness definition"/>
+                  <div className="absolute inset-0 flex flex-col items-center justify-end p-3 text-center">
+                    <h3 className="font-headline text-xl md:text-2xl font-bold text-primary uppercase shadow-md mb-2">DEFINIÇÃO</h3>
+                    <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-4 py-1">Ver Agora</Button>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section aria-labelledby="on-sale-products-heading">
