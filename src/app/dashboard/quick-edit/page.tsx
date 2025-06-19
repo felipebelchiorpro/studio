@@ -25,12 +25,11 @@ export default function QuickEditPage() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<EditFormData>({ price: '', stock: '' });
 
-  // Local state to manage products for this page, initialized from context
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     if (!productsLoading) {
-      setLocalProducts(contextProducts.map(p => ({...p}))); // Create a shallow copy for local modifications before saving to context
+      setLocalProducts(contextProducts.map(p => ({...p}))); 
     }
   }, [contextProducts, productsLoading]);
 
@@ -69,8 +68,8 @@ export default function QuickEditPage() {
     }
 
     const updatedProduct = { ...productToUpdate, price: priceNum, stock: stockNum };
-    contextUpdateProduct(updatedProduct); // Update in context
-    setLocalProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p)); // Update local copy
+    contextUpdateProduct(updatedProduct); 
+    setLocalProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p)); 
 
     toast({ title: "Salvo!", description: `${updatedProduct.name} atualizado com sucesso.` });
     setEditingProductId(null);
@@ -83,17 +82,17 @@ export default function QuickEditPage() {
 
   if (productsLoading) {
      return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-1/3" />
-        <Skeleton className="h-12 w-full" />
+      <div className="space-y-4 sm:space-y-6">
+        <Skeleton className="h-9 sm:h-10 w-full sm:w-1/3" />
+        <Skeleton className="h-10 sm:h-12 w-full" />
         <div className="bg-card p-0 rounded-lg shadow-md overflow-x-auto">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center space-x-4 p-4 border-b">
-              <Skeleton className="h-10 w-10 rounded-md" />
-              <Skeleton className="h-4 w-1/4" />
-              <Skeleton className="h-8 w-20 ml-auto" />
-              <Skeleton className="h-8 w-20" />
-              <Skeleton className="h-8 w-24" />
+            <div key={i} className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 border-b">
+              <Skeleton className="h-9 w-9 sm:h-10 sm:w-10 rounded-md" />
+              <Skeleton className="h-3.5 sm:h-4 w-1/4" />
+              <Skeleton className="h-7 sm:h-8 w-16 sm:w-20 ml-auto" />
+              <Skeleton className="h-7 sm:h-8 w-16 sm:w-20" />
+              <Skeleton className="h-7 sm:h-8 w-20 sm:w-24" />
             </div>
           ))}
         </div>
@@ -103,18 +102,18 @@ export default function QuickEditPage() {
 
 
   return (
-    <div className="space-y-6">
-      <h1 className="font-headline text-3xl font-bold text-foreground">Edição Rápida de Produtos</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <h1 className="font-headline text-2xl sm:text-3xl font-bold text-foreground">Edição Rápida de Produtos</h1>
       
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center p-4 bg-card rounded-lg shadow">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-center p-3 sm:p-4 bg-card rounded-lg shadow">
         <div className="relative w-full sm:max-w-md">
-          <PackageSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <PackageSearch className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Buscar produtos por nome ou marca..."
+            placeholder="Buscar produtos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-8 sm:pl-10 text-sm sm:text-base"
           />
         </div>
       </div>
@@ -123,73 +122,74 @@ export default function QuickEditPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[60px]">Imagem</TableHead>
-              <TableHead>Produto</TableHead>
-              <TableHead className="w-[150px] text-right">Preço Venda (R$)</TableHead>
-              <TableHead className="w-[120px] text-center">Estoque</TableHead>
-              <TableHead className="w-[200px] text-center">Ações</TableHead>
+              <TableHead className="w-[50px] sm:w-[60px] px-2 py-3 sm:px-4">Imagem</TableHead>
+              <TableHead className="px-2 py-3 sm:px-4">Produto</TableHead>
+              <TableHead className="w-[120px] sm:w-[150px] text-right px-2 py-3 sm:px-4">Preço (R$)</TableHead>
+              <TableHead className="w-[100px] sm:w-[120px] text-center px-2 py-3 sm:px-4">Estoque</TableHead>
+              <TableHead className="w-[180px] sm:w-[200px] text-center px-2 py-3 sm:px-4">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredProducts.length > 0 ? filteredProducts.map((product) => (
               <TableRow key={product.id} className={editingProductId === product.id ? 'bg-muted/60' : ''}>
-                <TableCell>
-                  <div className="relative h-10 w-10 rounded-md overflow-hidden bg-muted">
+                <TableCell className="px-2 py-3 sm:px-4">
+                  <div className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-md overflow-hidden bg-muted">
                     <Image src={product.imageUrl || "https://placehold.co/600x400.png"} alt={product.name} layout="fill" objectFit="cover" data-ai-hint="supplement product" />
                   </div>
                 </TableCell>
-                <TableCell>
-                  <p className="font-medium text-sm">{product.name}</p>
-                  <p className="text-xs text-muted-foreground">{product.brand}</p>
+                <TableCell className="px-2 py-3 sm:px-4">
+                  <p className="font-medium text-xs sm:text-sm">{product.name}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{product.brand}</p>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right px-2 py-3 sm:px-4">
                   {editingProductId === product.id ? (
                     <Input
                       type="number"
                       name="price"
                       value={editFormData.price}
                       onChange={handleInputChange}
-                      className="h-9 w-28 text-right ml-auto"
+                      className="h-8 sm:h-9 w-20 sm:w-24 text-right ml-auto text-xs sm:text-sm"
                       step="0.01"
                     />
                   ) : (
-                    <span className="font-semibold text-primary">
+                    <span className="font-semibold text-primary text-xs sm:text-sm">
                       {product.price.toFixed(2).replace('.', ',')}
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center px-2 py-3 sm:px-4">
                   {editingProductId === product.id ? (
                     <Input
                       type="number"
                       name="stock"
                       value={editFormData.stock}
                       onChange={handleInputChange}
-                      className="h-9 w-20 text-center mx-auto"
+                      className="h-8 sm:h-9 w-16 sm:w-20 text-center mx-auto text-xs sm:text-sm"
                     />
                   ) : (
-                    <span className={`font-semibold text-sm ${product.stock < 10 ? 'text-red-500' : 'text-green-600'}`}>
-                       {product.stock < 10 && <AlertTriangleIcon className="inline h-4 w-4 mr-1 mb-0.5" />}
+                    <span className={`font-semibold text-xs sm:text-sm ${product.stock < 10 ? 'text-red-500' : 'text-green-600'}`}>
+                       {product.stock < 10 && <AlertTriangleIcon className="inline h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 mb-0.5" />}
                       {product.stock}
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center px-2 py-3 sm:px-4">
                   {editingProductId === product.id ? (
-                    <div className="flex gap-2 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-center">
                       <Button
                         size="sm"
                         onClick={() => handleSave(product.id)}
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-2 py-1 sm:px-3"
                       >
-                        <Save className="mr-1.5 h-4 w-4" /> Salvar
+                        <Save className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Salvar
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={handleCancel}
+                        className="text-xs sm:text-sm px-2 py-1 sm:px-3"
                       >
-                        <XCircle className="mr-1.5 h-4 w-4" /> Cancelar
+                        <XCircle className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Cancelar
                       </Button>
                     </div>
                   ) : (
@@ -197,17 +197,17 @@ export default function QuickEditPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(product)}
-                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-xs sm:text-sm px-2 py-1 sm:px-3"
                     >
-                      <Edit className="mr-1.5 h-4 w-4" /> Editar Preço/Estoque
+                      <Edit className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Editar
                     </Button>
                   )}
                 </TableCell>
               </TableRow>
             )) : (
                <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  Nenhum produto encontrado com o termo pesquisado.
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground text-sm sm:text-base">
+                  Nenhum produto encontrado.
                 </TableCell>
               </TableRow>
             )}
@@ -217,3 +217,4 @@ export default function QuickEditPage() {
     </div>
   );
 }
+

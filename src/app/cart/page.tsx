@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCart } from '@/context/CartContext';
@@ -16,19 +17,14 @@ export default function CartPage() {
 
   const cartTotal = getCartTotal();
   const itemCount = getCartItemCount();
-  // Simulate shipping - could be more complex
   const shippingCost = cartTotal > 199 || cartTotal === 0 ? 0 : 25.00; 
   const finalTotal = cartTotal + shippingCost;
 
   const handleCheckout = () => {
-    // In a real app, this would redirect to a checkout flow or payment gateway
     toast({
       title: "Pedido Simulado!",
       description: "Seu pedido foi 'finalizado' com sucesso. (Simulação)",
     });
-    // Potentially clear cart after "checkout" or redirect to an order confirmation page
-    // clearCart(); 
-    // router.push('/order-confirmation'); // if such page exists
   };
 
   const handleClearCart = () => {
@@ -41,37 +37,37 @@ export default function CartPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8 text-center">
-        <h1 className="font-headline text-4xl font-bold text-foreground">Seu Carrinho</h1>
+    <div className="container mx-auto py-6 sm:py-8">
+      <div className="mb-6 sm:mb-8 text-center">
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold text-foreground">Seu Carrinho</h1>
         {itemCount > 0 ? (
-          <p className="text-lg text-muted-foreground mt-2">
+          <p className="text-base sm:text-lg text-muted-foreground mt-1 sm:mt-2">
             Você tem {itemCount} item(ns) no seu carrinho.
           </p>
         ) : null}
       </div>
 
       {cartItems.length === 0 ? (
-        <div className="text-center py-12 bg-card rounded-lg shadow-md">
-          <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold text-foreground mb-2">Seu carrinho está vazio.</h2>
-          <p className="text-muted-foreground mb-6">Adicione produtos ao seu carrinho para vê-los aqui.</p>
+        <div className="text-center py-10 sm:py-12 bg-card rounded-lg shadow-md">
+          <ShoppingBag className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-3 sm:mb-4" />
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-1.5 sm:mb-2">Seu carrinho está vazio.</h2>
+          <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">Adicione produtos para vê-los aqui.</p>
           <Link href="/products" passHref>
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base">
               Explorar Produtos
             </Button>
           </Link>
         </div>
       ) : (
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-card p-6 rounded-lg shadow-md">
-            <div className="flex justify-between items-center mb-4 pb-4 border-b border-border/40">
-              <h2 className="text-xl font-semibold">Itens do Carrinho</h2>
-              <Button variant="outline" onClick={handleClearCart} className="text-sm text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
-                <Trash2 className="mr-2 h-4 w-4" /> Limpar Carrinho
+        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="lg:col-span-2 bg-card p-4 sm:p-6 rounded-lg shadow-md">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-border/40">
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Itens do Carrinho</h2>
+              <Button variant="outline" onClick={handleClearCart} className="text-xs sm:text-sm text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground w-full sm:w-auto">
+                <Trash2 className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Limpar Carrinho
               </Button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {cartItems.map(item => (
                 <CartItemDisplay key={item.id} item={item} />
               ))}
@@ -79,11 +75,11 @@ export default function CartPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <Card className="sticky top-24 shadow-lg">
+            <Card className="sticky top-20 sm:top-24 shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline text-2xl">Resumo do Pedido</CardTitle>
+                <CardTitle className="font-headline text-xl sm:text-2xl">Resumo do Pedido</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal ({itemCount} itens):</span>
                   <span className="text-foreground font-medium">R$ {cartTotal.toFixed(2).replace('.', ',')}</span>
@@ -97,18 +93,18 @@ export default function CartPage() {
                 {shippingCost > 0 && cartTotal <= 199 && (
                      <p className="text-xs text-green-500 text-center">Frete grátis para compras acima de R$ 199,00!</p>
                 )}
-                <hr className="my-2 border-border/40" />
-                <div className="flex justify-between text-xl font-bold">
+                <hr className="my-1.5 sm:my-2 border-border/40" />
+                <div className="flex justify-between text-lg sm:text-xl font-bold">
                   <span>Total:</span>
                   <span>R$ {finalTotal.toFixed(2).replace('.', ',')}</span>
                 </div>
               </CardContent>
-              <CardFooter className="flex flex-col gap-3">
-                <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-3" onClick={handleCheckout}>
-                  <CreditCard className="mr-2 h-5 w-5" /> Finalizar Compra (Simulado)
+              <CardFooter className="flex flex-col gap-2.5 sm:gap-3">
+                <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-base sm:text-lg py-2.5 sm:py-3" onClick={handleCheckout}>
+                  <CreditCard className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Finalizar Compra (Simulado)
                 </Button>
                 <Link href="/products" className="w-full" passHref>
-                  <Button variant="outline" size="lg" className="w-full">
+                  <Button variant="outline" size="lg" className="w-full text-sm sm:text-base">
                     Continuar Comprando
                   </Button>
                 </Link>
@@ -120,3 +116,4 @@ export default function CartPage() {
     </div>
   );
 }
+

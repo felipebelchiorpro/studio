@@ -48,7 +48,7 @@ const topBarMessages = [
 
 export default function Header() {
   const { getCartItemCount } = useCart();
-  const { isAuthenticated, logout } = useAuth(); // user removed as it's not used directly here
+  const { isAuthenticated, logout } = useAuth(); 
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const router = useRouter();
@@ -64,7 +64,7 @@ export default function Header() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % topBarMessages.length);
-    }, 5000); // Change message every 5 seconds
+    }, 5000); 
     return () => clearInterval(timer);
   }, []);
 
@@ -113,16 +113,16 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full">
       {/* Red Top Bar Marquee */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto flex h-8 items-center justify-between px-4 text-xs sm:text-sm">
-          <Button variant="ghost" size="icon" onClick={handlePrevMessage} className="h-full px-2 hover:bg-primary/80">
+        <div className="container mx-auto flex h-8 items-center justify-between px-2 sm:px-4 text-xs sm:text-sm">
+          <Button variant="ghost" size="icon" onClick={handlePrevMessage} className="h-full px-1 sm:px-2 hover:bg-primary/80">
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Previous message</span>
           </Button>
-          <div className="flex items-center text-center">
-            <CurrentMessageIcon className="mr-2 h-4 w-4" />
-            <span>{topBarMessages[currentMessageIndex].text}</span>
+          <div className="flex items-center text-center overflow-hidden whitespace-nowrap">
+            <CurrentMessageIcon className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="truncate">{topBarMessages[currentMessageIndex].text}</span>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleNextMessage} className="h-full px-2 hover:bg-primary/80">
+          <Button variant="ghost" size="icon" onClick={handleNextMessage} className="h-full px-1 sm:px-2 hover:bg-primary/80">
             <ChevronRight className="h-4 w-4" />
             <span className="sr-only">Next message</span>
           </Button>
@@ -130,26 +130,26 @@ export default function Header() {
       </div>
 
       {/* Dark Contact Bar */}
-      <div className="bg-background text-card-foreground border-b border-border/40 py-2">
-        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between px-4 text-xs">
-          <div className="flex items-center space-x-3 sm:space-x-4 mb-2 sm:mb-0">
+      <div className="bg-background text-card-foreground border-b border-border/40 py-1.5 sm:py-2">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between px-4 text-[11px] sm:text-xs">
+          <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-0 flex-wrap justify-center">
             <a href="https://wa.me/5514997326263" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-primary transition-colors">
-              <MessageCircle className="h-4 w-4 mr-1 text-primary" /> WhatsApp: (14) 99732-6263
+              <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 text-primary" /> WhatsApp: (14) 99732-6263
             </a>
             <a href="tel:+5514997326263" className="flex items-center hover:text-primary transition-colors">
-              <Phone className="h-4 w-4 mr-1 text-primary" /> (14) 99732-6263
+              <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 text-primary" /> (14) 99732-6263
             </a>
             <a href="mailto:contato@sportzonesupp.com" className="flex items-center hover:text-primary transition-colors">
-              <Mail className="h-4 w-4 mr-1 text-primary" /> contato@sportzonesupp.com
+              <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 text-primary" /> contato@sportzonesupp.com
             </a>
           </div>
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <Link href="/about" className="hover:text-primary transition-colors">Sobre Nós</Link>
             <Link href="/contact" className="hover:text-primary transition-colors">Fale Conosco</Link>
             <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
-            <div className="flex items-center space-x-2">
-              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={16} /></a>
-              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="text-muted-foreground hover:text-primary transition-colors"><Youtube size={16} /></a>
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={14} /></a>
+              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="text-muted-foreground hover:text-primary transition-colors"><Youtube size={14} /></a>
             </div>
           </div>
         </div>
@@ -157,15 +157,15 @@ export default function Header() {
       
       {/* Upper Header Part - Logo, Search, Auth, Cart */}
       <div className="bg-background border-b border-border/40">
-        <div className="container mx-auto flex h-[88px] items-center justify-between px-4 space-x-4">
+        <div className="container mx-auto flex h-[72px] sm:h-[88px] items-center justify-between px-4 space-x-2 sm:space-x-4">
           {/* Logo */}
           <Link href="/" className="flex items-center flex-shrink-0" aria-label="DarkStore Suplementos Home">
              <Image
                 src="/darkstore-logo.png" 
                 alt="DarkStore Suplementos Logo"
-                width={180} 
-                height={44} 
-                className="object-contain"
+                width={150} 
+                height={37}
+                className="object-contain sm:w-[180px] sm:h-[44px]"
                 priority 
               />
           </Link>
@@ -214,7 +214,7 @@ export default function Header() {
           {/* Mobile: Cart and Menu Trigger */}
           <div className="md:hidden flex items-center">
             <Link href="/cart" passHref>
-              <Button variant="ghost" size="icon" className="mr-2 text-primary hover:text-primary/80" aria-label={`Carrinho com ${cartItemCount} itens`}>
+              <Button variant="ghost" size="icon" className="mr-1 sm:mr-2 text-primary hover:text-primary/80" aria-label={`Carrinho com ${cartItemCount} itens`}>
                 <ShoppingCart className="h-5 w-5" />
                 {cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
@@ -229,29 +229,29 @@ export default function Header() {
                   <MenuIcon className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-background p-6 flex flex-col">
-                <div className="flex justify-between items-center mb-6">
+              <SheetContent side="right" className="w-[300px] sm:w-[320px] bg-background p-4 sm:p-6 flex flex-col">
+                <div className="flex justify-between items-center mb-4 sm:mb-6">
                   <Link href="/" className="flex items-center" onClick={closeSheet}>
                      <Image
                         src="/darkstore-logo.png" 
                         alt="DarkStore Suplementos Logo"
-                        width={150}
-                        height={37} 
+                        width={130} 
+                        height={32}
                         className="object-contain"
                       />
                   </Link>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" aria-label="Fechar menu" className="text-primary">
-                      <X className="h-6 w-6" />
+                      <X className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
                   </SheetTrigger>
                 </div>
                 
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   <SearchBar onSearch={handleSearch} />
                 </div>
 
-                <nav className="flex flex-col space-y-3 flex-grow">
+                <nav className="flex flex-col space-y-2 sm:space-y-3 flex-grow">
                   {mainSiteLinks.map(link => (
                     <NavLink key={link.href} href={link.href} onClick={closeSheet}>
                       {link.icon} {link.label}
@@ -295,9 +295,9 @@ export default function Header() {
       </div>
 
       {/* Lower Header Part (Category Navigation) */}
-      <nav aria-labelledby="category-menu-heading" className="bg-card py-2.5 border-b border-border/40">
+      <nav aria-labelledby="category-menu-heading" className="bg-card py-2 sm:py-2.5 border-b border-border/40">
         <h2 id="category-menu-heading" className="sr-only">Navegar por Categorias</h2>
-        <div className="container mx-auto px-2 flex items-center space-x-2">
+        <div className="container mx-auto px-2 flex items-center space-x-1 sm:space-x-2">
            <div
               className="relative"
               onMouseLeave={handleMainMenuLeave}
@@ -305,24 +305,24 @@ export default function Header() {
               <DropdownMenu open={mainMenuOpen} onOpenChange={setMainMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    className="uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-3 sm:px-4 py-2 sm:py-2.5 h-auto flex items-center whitespace-nowrap"
+                    className="uppercase text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-2.5 sm:px-4 py-1.5 sm:py-2.5 h-auto flex items-center whitespace-nowrap"
                     onMouseEnter={handleMainMenuEnter}
                   >
-                    <MenuIcon className="h-4 w-4 mr-2" />
+                    <MenuIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                     CATEGORIAS
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="start"
-                  className="w-64 bg-background border-border shadow-lg"
+                  className="w-56 sm:w-64 bg-background border-border shadow-lg"
                   onMouseEnter={handleMainMenuEnter} 
                 >
-                  <DropdownMenuLabel className="font-semibold text-foreground">Principais Categorias</DropdownMenuLabel>
+                  <DropdownMenuLabel className="font-semibold text-foreground text-sm sm:text-base">Principais Categorias</DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-border/50" />
                   {mainDropdownCategories.map((mainCat: DropdownCategory) => (
                      <Link key={mainCat.id} href={mainCat.href || `/products?category=${encodeURIComponent(mainCat.name)}`} passHref>
                         <DropdownMenuItem
-                          className="text-foreground hover:bg-muted focus:bg-muted"
+                          className="text-foreground hover:bg-muted focus:bg-muted text-sm sm:text-base"
                           onClick={handleMenuItemClick}
                         >
                           {mainCat.name}
@@ -336,7 +336,7 @@ export default function Header() {
             <div className="flex-1 flex justify-start items-center overflow-x-auto whitespace-nowrap space-x-1 md:space-x-2 min-w-0">
               {topLevelCategories.map((category: TopCategoryType) => {
                 const isComboOffer = category.id === "catComboOffers";
-                const buttonClassName = `uppercase text-xs sm:text-sm font-semibold rounded-full px-4 sm:px-5 py-1.5 sm:py-2 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out ${
+                const buttonClassName = `uppercase text-[10px] sm:text-xs font-semibold rounded-full px-3 sm:px-4 py-1 sm:py-1.5 h-auto whitespace-nowrap flex items-center transition-all duration-150 ease-in-out ${
                   isComboOffer
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "text-foreground hover:text-primary bg-transparent hover:bg-transparent"
@@ -351,6 +351,7 @@ export default function Header() {
                     <Button
                       variant={isComboOffer ? "default": "ghost"}
                       className={buttonClassName}
+                      size="sm"
                     >
                       {category.name.toUpperCase()}
                     </Button>
