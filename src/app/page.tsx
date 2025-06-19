@@ -4,8 +4,8 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { Banner } from "@/components/Banner";
 import ProductCard from "@/components/ProductCard";
-import { mockCategories, mockPromotions } from "@/data/mockData"; // mockProducts removed
-import type { Product, Category as TopCategoryType } from "@/types";
+import { mockPromotions } from "@/data/mockData"; 
+import type { Product } from "@/types";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
@@ -21,7 +21,7 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import InfoBar from '@/components/InfoBar';
 import { cn } from "@/lib/utils";
-import { useProduct } from '@/context/ProductContext'; // Import useProduct
+import { useProduct } from '@/context/ProductContext'; 
 import { Skeleton } from '@/components/ui/skeleton';
 
 
@@ -86,7 +86,11 @@ export default function HomePage() {
   const [apiNewReleases, setApiNewReleases] = useState<CarouselApi>();
   const handleNewReleasesDotClick = useCallback((index: number) => apiNewReleases?.scrollTo(index), [apiNewReleases]);
 
-  const bestSellingProducts = useMemo(() => allProducts.filter(p => (p.rating || 0) >= 4.5).slice(0, 8), [allProducts]);
+  const bestSellingProducts = useMemo(() => 
+    [...allProducts]
+      .sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0))
+      .slice(0, 8), 
+  [allProducts]);
   const bestSellersPlugin = useRef(
     Autoplay({ delay: 5500, stopOnInteraction: true })
   );
@@ -105,7 +109,7 @@ export default function HomePage() {
       <div className="space-y-12">
         <Skeleton className="h-[40vh] w-full rounded-lg" />
         <Skeleton className="h-16 w-full" />
-        {[...Array(3)].map((_, i) => (
+        {[...Array(4)].map((_, i) => ( // Increased to 4 sections for skeletons
           <section key={i}>
             <div className="flex justify-between items-center mb-6">
               <Skeleton className="h-8 w-1/3" />
@@ -214,7 +218,7 @@ export default function HomePage() {
        <section aria-labelledby="best-selling-products-heading">
         <div className="flex justify-between items-center mb-6">
           <h2 id="best-selling-products-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Mais Vendidos</h2>
-          <Link href="/products" passHref>
+          <Link href="/products?filter=best-sellers" passHref>
             <Button variant="ghost" className="text-primary hover:text-primary/90">
               Ver Todos <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
@@ -251,7 +255,6 @@ export default function HomePage() {
            <p className="text-muted-foreground">Nenhum produto mais vendido encontrado.</p>
         )}
       </section>
-
 
       <section aria-labelledby="featured-categories-heading">
         <div className="flex justify-between items-center mb-6">
@@ -312,7 +315,7 @@ export default function HomePage() {
       <section aria-labelledby="on-sale-products-heading">
         <div className="flex justify-between items-center mb-6">
           <h2 id="on-sale-products-heading" className="font-headline text-3xl font-semibold text-foreground uppercase">Em Promoção</h2>
-          <Link href="/products" passHref>
+          <Link href="/products?filter=on-sale" passHref>
             <Button variant="ghost" className="text-primary hover:text-primary/90">
               Ver Todos <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
@@ -366,3 +369,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
