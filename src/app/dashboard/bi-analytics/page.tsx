@@ -9,28 +9,29 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LineChart as LineChartIcon, BarChartBig, Users, MapPin, CalendarDays, Filter, Download, TrendingUp, DollarSign, ShoppingCart, Percent, Users2, PieChart as PieChartLucide } from "lucide-react";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-  type ChartConfig
-} from "@/components/ui/chart";
-import {
-  LineChart,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend as RechartsLegend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts";
+// Chart-specific imports are commented out or removed if not used by placeholders
+// import {
+//   ChartContainer,
+//   ChartTooltip,
+//   ChartTooltipContent,
+//   ChartLegend,
+//   ChartLegendContent,
+//   type ChartConfig
+// } from "@/components/ui/chart";
+// import {
+//   LineChart,
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip as RechartsTooltip,
+//   Legend as RechartsLegend,
+//   ResponsiveContainer,
+//   PieChart,
+//   Pie,
+//   Cell
+// } from "recharts";
 import type { DateRange } from "react-day-picker";
 import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -62,55 +63,6 @@ const KeyMetricCard: React.FC<KeyMetricCardProps> = ({ title, value, change, cha
     </Card>
   );
 };
-
-// Mock Data for Charts
-const salesOverTimeData = [
-  { name: "Jan", Receita: 4000, Anterior: 2400 },
-  { name: "Fev", Receita: 3000, Anterior: 1398 },
-  { name: "Mar", Receita: 2000, Anterior: 9800 },
-  { name: "Abr", Receita: 2780, Anterior: 3908 },
-  { name: "Mai", Receita: 1890, Anterior: 4800 },
-  { name: "Jun", Receita: 2390, Anterior: 3800 },
-  { name: "Jul", Receita: 3490, Anterior: 4300 },
-];
-const salesChartConfig = {
-  Receita: { label: "Receita Atual (R$)", color: "hsl(var(--primary))" },
-  Anterior: { label: "Receita Anterior (R$)", color: "hsl(var(--muted-foreground))" },
-} satisfies ChartConfig;
-
-const topProductsData = [
-  { name: "Whey Protein Concentrado", Vendas: 400 },
-  { name: "Creatina Monohidratada", Vendas: 300 },
-  { name: "Pré-Treino Insano", Vendas: 200 },
-  { name: "Multivitamínico Completo", Vendas: 278 },
-  { name: "BCAA 2:1:1", Vendas: 189 },
-];
-const topProductsChartConfig = { Vendas: { label: "Quantidade Vendida", color: "hsl(var(--accent))" } } satisfies ChartConfig;
-
-
-const salesByCategoryData = [
-  { category: "GANHO DE MASSA", sales: 400, fill: "var(--chart-1)" },
-  { category: "ENDURANCE", sales: 300, fill: "var(--chart-2)" },
-  { category: "EMAGRECIMENTO", sales: 300, fill: "var(--chart-3)" },
-  { category: "SAÚDE", sales: 200, fill: "var(--chart-4)" },
-  { category: "OUTROS", sales: 278, fill: "var(--chart-5)" },
-];
-
-const categoryChartConfig = {
-  sales: { label: "Vendas" },
-  "GANHO DE MASSA": { label: "GANHO DE MASSA", color: "hsl(var(--chart-1))" },
-  "ENDURANCE": { label: "ENDURANCE", color: "hsl(var(--chart-2))" },
-  "EMAGRECIMENTO": { label: "EMAGRECIMENTO", color: "hsl(var(--chart-3))" },
-  "SAÚDE": { label: "SAÚDE", color: "hsl(var(--chart-4))" },
-  "OUTROS": { label: "OUTROS", color: "hsl(var(--chart-5))" },
-} satisfies ChartConfig;
-
-
-const newCustomersData = [
-  { name: "Jan", NovosClientes: 120 }, { name: "Fev", NovosClientes: 200 }, { name: "Mar", NovosClientes: 150 },
-  { name: "Abr", NovosClientes: 170 }, { name: "Mai", NovosClientes: 130 }, { name: "Jun", NovosClientes: 190 },
-];
-const customersChartConfig = { NovosClientes: { label: "Novos Clientes", color: "hsl(var(--primary))" } } satisfies ChartConfig;
 
 const recentOrdersData = [
   { id: "ORD001", date: "2024-07-28", customer: "Carlos Silva", total: "R$ 129,90", status: "Entregue", channel: "Loja Online" },
@@ -221,18 +173,8 @@ export default function BiAnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center text-lg"><LineChartIcon className="mr-2 h-5 w-5 text-primary" />Análise de Vendas ao Longo do Tempo</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
-            <ChartContainer config={salesChartConfig} className="h-full w-full">
-              <LineChart data={salesOverTimeData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}> {/* Adjusted left margin */}
-                <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `R$${value/1000}k`} />
-                <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                <RechartsLegend content={<ChartLegendContent />} />
-                <Line type="monotone" dataKey="Receita" stroke="var(--color-Receita)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="Anterior" stroke="var(--color-Anterior)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-              </LineChart>
-            </ChartContainer>
+          <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
+            <p className="text-muted-foreground">Visualização de gráfico de linha aqui.</p>
           </CardContent>
         </Card>
 
@@ -240,16 +182,8 @@ export default function BiAnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center text-lg"><BarChartBig className="mr-2 h-5 w-5 text-primary" />Top 10 Produtos Mais Vendidos</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
-             <ChartContainer config={topProductsChartConfig} className="h-full w-full">
-                <BarChart data={topProductsData} layout="vertical" margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" tickLine={false} axisLine={false} tickMargin={8} />
-                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={120} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="Vendas" fill="var(--color-Vendas)" radius={[0, 4, 4, 0]} barSize={20}/>
-                </BarChart>
-            </ChartContainer>
+          <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
+             <p className="text-muted-foreground">Visualização de gráfico de barras aqui.</p>
           </CardContent>
         </Card>
 
@@ -257,34 +191,8 @@ export default function BiAnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center text-lg"><PieChartLucide className="mr-2 h-5 w-5 text-primary" />Vendas por Categoria</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center">
-            <ChartContainer
-              config={categoryChartConfig}
-              className="mx-auto aspect-square max-h-[300px]"
-            >
-                <PieChart>
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel nameKey="category" />}
-                    />
-                    <Pie
-                      data={salesByCategoryData}
-                      dataKey="sales"
-                      nameKey="category"
-                      innerRadius={60}
-                      strokeWidth={5}
-                    >
-                       {salesByCategoryData.map((entry, index) => (
-                         <Cell key={`cell-${index}`} fill={entry.fill} />
-                       ))}
-                    </Pie>
-                    <RechartsLegend
-                      content={<ChartLegendContent nameKey="category" className="flex-wrap" />}
-                      verticalAlign="bottom"
-                      align="center"
-                    />
-                </PieChart>
-            </ChartContainer>
+          <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
+            <p className="text-muted-foreground">Visualização de gráfico de pizza aqui.</p>
           </CardContent>
         </Card>
 
@@ -292,16 +200,8 @@ export default function BiAnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center text-lg"><Users className="mr-2 h-5 w-5 text-primary" />Aquisição de Novos Clientes</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
-             <ChartContainer config={customersChartConfig} className="h-full w-full">
-                <LineChart data={newCustomersData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}> {/* Adjusted left margin */}
-                    <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-                    <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-                    <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                    <Line type="monotone" dataKey="NovosClientes" stroke="var(--color-NovosClientes)" strokeWidth={2} dot={false} />
-                </LineChart>
-            </ChartContainer>
+          <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
+             <p className="text-muted-foreground">Visualização de gráfico de linha/barras aqui.</p>
           </CardContent>
         </Card>
       </div>
@@ -359,3 +259,5 @@ export default function BiAnalyticsPage() {
     </div>
   );
 }
+
+    
