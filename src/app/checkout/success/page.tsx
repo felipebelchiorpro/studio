@@ -17,7 +17,7 @@ export default function CheckoutSuccessPage() {
                 Seu pedido foi recebido com sucesso.
             </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <p className="text-muted-foreground">
             Obrigado pela sua compra! Preparamos seu pedido para envio e você receberá uma notificação por e-mail com os detalhes e o código de rastreamento em breve.
           </p>
