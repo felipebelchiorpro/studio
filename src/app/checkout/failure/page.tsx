@@ -15,7 +15,7 @@ export default function CheckoutFailurePage() {
             <CardTitle className="font-headline text-3xl text-destructive">Falha no Pagamento</CardTitle>
             <CardDescription className="text-lg text-muted-foreground pt-1">
                 Não foi possível processar seu pagamento.
-            </redacted>
+            </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">

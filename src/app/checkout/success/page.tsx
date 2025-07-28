@@ -15,7 +15,7 @@ export default function CheckoutSuccessPage() {
             <CardTitle className="font-headline text-3xl text-primary">Pagamento Aprovado!</CardTitle>
             <CardDescription className="text-lg text-muted-foreground pt-1">
                 Seu pedido foi recebido com sucesso.
-            </redacted>
+            </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
