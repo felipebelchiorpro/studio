@@ -91,8 +91,8 @@ export default function CustomerLoginForm() {
             )}
           </div>
           <div className="text-sm text-right">
-            <Link href="/account/forgot-password" legacyBehavior>
-                <a className="font-medium text-primary hover:underline">Esqueceu sua senha?</a>
+            <Link href="/account/forgot-password" className="font-medium text-primary hover:underline">
+              Esqueceu sua senha?
             </Link>
           </div>
         </CardContent>
@@ -108,8 +108,8 @@ export default function CustomerLoginForm() {
           </Button>
            <div className="text-center text-sm text-muted-foreground">
             Não tem uma conta?{' '}
-            <Link href="/account/register" legacyBehavior>
-                <a className="font-medium text-primary hover:underline">Cadastre-se aqui</a>
+            <Link href="/account/register" className="font-medium text-primary hover:underline">
+              Cadastre-se aqui
             </Link>
           </div>
         </CardFooter>
