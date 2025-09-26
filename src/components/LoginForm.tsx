@@ -34,9 +34,11 @@ export default function LoginForm() {
 
   const onSubmit = (data: LoginFormValues) => {
     // Simulate login - In a real app, this would call an API
-    // For this demo, any valid email/password will "log in"
     // Basic check for a demo merchant account.
-    if (data.email === "merchant@darkstore.com" && data.password === "password") {
+    const isOldUser = data.email === "merchant@darkstore.com" && data.password === "password";
+    const isNewUser = data.email === "contatofelipebelchior@gmail.com" && data.password === "3595157";
+
+    if (isOldUser || isNewUser) {
       login(data.email);
       toast({
         title: "Login bem-sucedido!",
@@ -46,7 +48,7 @@ export default function LoginForm() {
     } else {
        toast({
         title: "Falha no Login",
-        description: "Email ou senha inválidos. Use merchant@darkstore.com e password.",
+        description: "Email ou senha inválidos. Verifique suas credenciais.",
         variant: "destructive",
       });
     }
