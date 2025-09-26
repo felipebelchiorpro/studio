@@ -1,5 +1,6 @@
 
 
+
 export interface Product {
   id: string;
   name: string;
@@ -116,5 +117,6 @@ export interface BiGeoFilterItem {
     id: string; // e.g., 'SP', 'RJ'
     name: string; // e.g., 'São Paulo', 'Rio de Janeiro'
 }
+
 
 

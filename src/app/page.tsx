@@ -4,7 +4,6 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { Banner } from "@/components/Banner";
 import ProductCard from "@/components/ProductCard";
-import { mockPromotions } from "@/data/mockData"; 
 import type { Product } from "@/types";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,7 @@ import InfoBar from '@/components/InfoBar';
 import BrandCarousel from '@/components/BrandCarousel'; // Import the new component
 import { cn } from "@/lib/utils";
 import { useProduct } from '@/context/ProductContext'; 
+import { usePromotion } from '@/context/PromotionContext'; // Added
 import { Skeleton } from '@/components/ui/skeleton';
 
 
@@ -71,6 +71,7 @@ const CarouselDots = ({ api, onDotClick }: { api: CarouselApi | undefined, onDot
 
 export default function HomePage() {
   const { products: allProducts, loading: productsLoading } = useProduct();
+  const { promotions, loading: promotionsLoading } = usePromotion();
   const [carouselLoopThreshold, setCarouselLoopThreshold] = useState(3); // Default for desktop (lg screens, 4 items)
 
   useEffect(() => {
@@ -125,7 +126,7 @@ export default function HomePage() {
   const [apiOnSale, setApiOnSale] = useState<CarouselApi>();
   const handleOnSaleDotClick = useCallback((index: number) => apiOnSale?.scrollTo(index), [apiOnSale]);
 
-  if (productsLoading) {
+  if (productsLoading || promotionsLoading) {
     return (
       <div className="space-y-8 sm:space-y-12">
         <Skeleton className="h-[30vh] sm:h-[40vh] w-full rounded-lg" />
@@ -149,7 +150,7 @@ export default function HomePage() {
     <div className="space-y-8 sm:space-y-12">
       <section aria-labelledby="banner-heading">
         <h2 id="banner-heading" className="sr-only">Promoções e Destaques</h2>
-        <Banner promotions={mockPromotions} />
+        <Banner promotions={promotions} />
       </section>
 
       <InfoBar />

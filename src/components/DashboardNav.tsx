@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck, Users, TrendingUp } from 'lucide-react'; 
+import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck, Users, TrendingUp, Palette } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Separator } from '@/components/ui/separator';
@@ -46,6 +46,7 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Visão Geral' },
+    { href: '/dashboard/appearance', icon: Palette, label: 'Aparência da Loja' },
     { href: '/dashboard/bi-analytics', icon: TrendingUp, label: 'BI Analytics' },
     { href: '/dashboard/products', icon: Package, label: 'Gerenciar Produtos' },
     { href: '/dashboard/sales', icon: BarChart3, label: 'Relatório de Vendas' },
@@ -120,4 +121,5 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
     </aside>
   );
 }
+
 
