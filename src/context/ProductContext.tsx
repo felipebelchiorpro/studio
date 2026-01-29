@@ -50,7 +50,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Race between fetch and 10s timeout
       const timeoutPromise = new Promise<Product[]>((_, reject) =>
-        setTimeout(() => reject(new Error('Request timed out')), 10000)
+        setTimeout(() => reject(new Error('Request timed out')), 30000)
       );
 
       const fetchedProducts = await Promise.race([
