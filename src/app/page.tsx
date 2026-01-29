@@ -163,7 +163,7 @@ export default function HomePage() {
 
       {/* Container for the rest of the content */}
       <div className="container mx-auto px-4 space-y-8 sm:space-y-12 pb-8">
-        <InfoBar />
+
 
 
 
@@ -397,6 +397,8 @@ export default function HomePage() {
           </div>
         </section>
       </div>
+
+      <InfoBar />
     </div>
   );
 }
