@@ -163,6 +163,9 @@ export default function HomePage() {
 
       {/* Container for the rest of the content */}
       <div className="container mx-auto px-4 space-y-8 sm:space-y-12 pb-8">
+        <div className="hidden md:block">
+          <InfoBar />
+        </div>
 
 
 
@@ -398,7 +401,9 @@ export default function HomePage() {
         </section>
       </div>
 
-      <InfoBar />
+      <div className="md:hidden">
+        <InfoBar />
+      </div>
     </div>
   );
 }
