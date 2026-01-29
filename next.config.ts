@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -21,3 +21,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// Deploy Timestamp: 2026-01-29 22:45
