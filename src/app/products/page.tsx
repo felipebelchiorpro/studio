@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import ProductCard from '@/components/ProductCard';
 import SearchBar from '@/components/SearchBar';
 import ProductFilters, { type Filters } from '@/components/ProductFilters';
@@ -9,7 +9,7 @@ import type { Product } from '@/types';
 import { useSearchParams } from 'next/navigation';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useProduct } from '@/context/ProductContext'; 
+import { useProduct } from '@/context/ProductContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button'; // For mobile filter toggle
 import { Filter as FilterIcon, X as XIcon } from 'lucide-react'; // For mobile filter toggle
@@ -18,7 +18,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'; // Fo
 
 const ITEMS_PER_PAGE = 8; // Could be adjusted for mobile vs desktop if desired
 
-export default function ProductsPage() {
+function ProductsContent() {
   const { products: allProductsFromContext, loading: productsLoading } = useProduct();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category');
@@ -28,7 +28,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '');
   const [filters, setFilters] = useState<Filters>({
     categories: initialCategory ? [initialCategory] : [],
-    priceRange: [0, 1000], 
+    priceRange: [0, 1000],
     brands: [],
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,7 +50,7 @@ export default function ProductsPage() {
   useEffect(() => {
     if (productsLoading) return;
 
-    let result = [...allProductsFromContext]; 
+    let result = [...allProductsFromContext];
 
     if (searchQuery) {
       result = result.filter(product =>
@@ -69,7 +69,7 @@ export default function ProductsPage() {
     result = result.filter(product =>
       product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
     );
-    
+
     switch (sortOption) {
       case 'price-asc':
         result.sort((a, b) => a.price - b.price);
@@ -88,7 +88,7 @@ export default function ProductsPage() {
     }
 
     setFilteredProducts(result);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   }, [searchQuery, filters, allProductsFromContext, sortOption, productsLoading]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
@@ -103,7 +103,7 @@ export default function ProductsPage() {
       window.scrollTo(0, 0);
     }
   };
-  
+
   const handleFilterChange = (newFilters: Filters) => {
     setFilters(newFilters);
     // Optionally close sheet if filters are applied from within a sheet
@@ -146,8 +146,8 @@ export default function ProductsPage() {
       <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
         {/* Desktop Filters */}
         <aside className="hidden md:block w-full md:w-1/4 lg:w-1/5">
-          <ProductFilters 
-            onFilterChange={handleFilterChange} 
+          <ProductFilters
+            onFilterChange={handleFilterChange}
           />
         </aside>
 
@@ -165,17 +165,17 @@ export default function ProductsPage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px] p-0">
-                   <div className="p-4 h-full overflow-y-auto">
+                  <div className="p-4 h-full overflow-y-auto">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-headline text-lg text-primary">Filtrar Produtos</h3>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon"><XIcon className="h-5 w-5"/></Button>
-                        </SheetTrigger>
+                      <h3 className="font-headline text-lg text-primary">Filtrar Produtos</h3>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon"><XIcon className="h-5 w-5" /></Button>
+                      </SheetTrigger>
                     </div>
-                    <ProductFilters 
-                        onFilterChange={handleFilterChange} 
+                    <ProductFilters
+                      onFilterChange={handleFilterChange}
                     />
-                   </div>
+                  </div>
                 </SheetContent>
               </Sheet>
 
@@ -212,9 +212,9 @@ export default function ProductsPage() {
             <Pagination className="mt-8 sm:mt-12">
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious 
-                    href="#" 
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} 
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : undefined}
                     aria-disabled={currentPage === 1}
                   />
@@ -225,8 +225,8 @@ export default function ProductsPage() {
                   if (totalPages <= 5 || page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1) {
                     return (
                       <PaginationItem key={page}>
-                        <PaginationLink 
-                          href="#" 
+                        <PaginationLink
+                          href="#"
                           onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
                           isActive={currentPage === page}
                           aria-current={currentPage === page ? "page" : undefined}
@@ -237,15 +237,15 @@ export default function ProductsPage() {
                       </PaginationItem>
                     );
                   } else if (page === currentPage - 2 || page === currentPage + 2) {
-                    return <PaginationEllipsis key={`ellipsis-${page}`} className="hidden sm:flex"/>;
+                    return <PaginationEllipsis key={`ellipsis-${page}`} className="hidden sm:flex" />;
                   }
                   return null;
                 })}
                 <PaginationItem>
-                  <PaginationNext 
-                    href="#" 
+                  <PaginationNext
+                    href="#"
                     onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : undefined} 
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : undefined}
                     aria-disabled={currentPage === totalPages}
                   />
                 </PaginationItem>
@@ -255,5 +255,20 @@ export default function ProductsPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8 text-center">
+          <Skeleton className="h-9 sm:h-10 w-3/5 sm:w-1/2 mx-auto mb-2" />
+          <Skeleton className="h-5 sm:h-6 w-4/5 sm:w-3/4 mx-auto" />
+        </div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }
