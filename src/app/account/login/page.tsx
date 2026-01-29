@@ -1,3 +1,5 @@
+"use client";
+
 import CustomerLoginForm from '@/components/CustomerLoginForm';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
