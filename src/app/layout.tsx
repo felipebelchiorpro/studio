@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/context/AuthContext';
+import NextTopLoader from 'nextjs-toploader';
 import { CustomerAuthProvider } from '@/context/CustomerAuthContext'; // Added
 import { CartProvider } from '@/context/CartContext';
 import { BrandProvider } from '@/context/BrandContext';
@@ -31,6 +32,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background text-foreground min-h-screen flex flex-col">
+        <NextTopLoader color="#E11D48" showSpinner={false} />
         <AuthProvider>
           <CustomerAuthProvider> {/* Added CustomerAuthProvider */}
             <BrandProvider>
