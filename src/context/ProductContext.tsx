@@ -72,6 +72,9 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     loadProducts();
+    // Safety fallback: if nothing happens in 35 seconds, stop loading
+    const safetyTimer = setTimeout(() => setLoading(false), 35000);
+    return () => clearTimeout(safetyTimer);
   }, []);
 
   const getProducts = useCallback(() => {

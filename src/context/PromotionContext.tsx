@@ -31,7 +31,7 @@ export const PromotionProvider = ({ children }: { children: ReactNode }) => {
         const { fetchPromotionsService } = await import('@/services/promotionService');
 
         const timeoutPromise = new Promise<Promotion[]>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timed out')), 10000)
+          setTimeout(() => reject(new Error('Request timed out')), 30000)
         );
 
         const data = await Promise.race([
