@@ -14,6 +14,7 @@ import { useEffect } from "react";
 const customerSchema = z.object({
   name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
   email: z.string().email({ message: "Por favor, insira um email válido." }),
+  phone: z.string().optional(),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -32,12 +33,13 @@ export default function CustomerFormDialog({ open, onOpenChange, onCustomerAdded
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
     },
   });
 
   useEffect(() => {
     if (open) {
-      form.reset({ name: "", email: "" }); // Reset form when dialog opens
+      form.reset({ name: "", email: "", phone: "" }); // Reset form when dialog opens
     }
   }, [open, form]);
 
@@ -77,17 +79,23 @@ export default function CustomerFormDialog({ open, onOpenChange, onCustomerAdded
                 {form.formState.errors.email && <p className="text-xs text-destructive mt-1">{form.formState.errors.email.message}</p>}
               </div>
             </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phone" className="text-right col-span-1">Telefone</Label>
+              <div className="col-span-3">
+                <Input id="phone" {...form.register("phone")} placeholder="(11) 99999-9999" />
+              </div>
+            </div>
           </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancelar</Button>
-            </DialogClose>
-            <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              {form.formState.isSubmitting ? "Adicionando..." : "Adicionar Cliente"}
-            </Button>
-          </DialogFooter>
         </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="outline">Cancelar</Button>
+          </DialogClose>
+          <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            {form.formState.isSubmitting ? "Adicionando..." : "Adicionar Cliente"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

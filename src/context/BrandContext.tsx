@@ -7,9 +7,9 @@ import { useToast } from '@/hooks/use-toast';
 
 interface BrandContextType {
   brands: Brand[];
-  addBrand: (brandName: string) => void;
+  addBrand: (brandData: Omit<Brand, 'id'>) => void;
+  removeBrand: (brandId: string) => void;
   getBrands: () => Brand[];
-  // removeBrand might be added later if needed
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
@@ -24,12 +24,19 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedBrands = localStorage.getItem(BRAND_STORAGE_KEY);
       if (storedBrands) {
-        setBrands(JSON.parse(storedBrands));
+        const parsed = JSON.parse(storedBrands);
+        // Migration check: if stored items are strings, clear them or convert
+        if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+          // Basic migration for legacy strings if wanted, or just reset. 
+          // Let's reset to empty to enforce new format as per plan.
+          localStorage.removeItem(BRAND_STORAGE_KEY);
+          setBrands([]);
+        } else {
+          setBrands(parsed);
+        }
       } else {
-        // Initialize with some default brands if none are stored
-        const initialBrands = ["Dark Nutrition", "Dark Vitality", "Dark Performance"];
-        setBrands(initialBrands);
-        persistBrands(initialBrands);
+        // No default brands initially to encourage adding real logos
+        setBrands([]);
       }
     } catch (error) {
       console.error("Failed to parse brands from localStorage", error);
@@ -45,34 +52,55 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const addBrand = (brandName: string) => {
-    if (!brandName.trim()) {
+  const addBrand = (brandData: Omit<Brand, 'id'>) => {
+    if (!brandData.name.trim()) {
       toast({ title: "Erro", description: "Nome da marca não pode ser vazio.", variant: "destructive" });
       return;
     }
+    if (!brandData.imageUrl) {
+      toast({ title: "Erro", description: "Logo da marca é obrigatória.", variant: "destructive" });
+      return;
+    }
+
     setBrands(prevBrands => {
-      const normalizedNewBrand = brandName.trim();
+      const normalizedNewBrandName = brandData.name.trim();
       const brandExists = prevBrands.some(
-        b => b.toLowerCase() === normalizedNewBrand.toLowerCase()
+        b => b.name.toLowerCase() === normalizedNewBrandName.toLowerCase()
       );
 
       if (brandExists) {
-        toast({ title: "Marca Existente", description: `A marca "${normalizedNewBrand}" já existe.`, variant: "default" });
+        toast({ title: "Marca Existente", description: `A marca "${normalizedNewBrandName}" já existe.`, variant: "default" });
         return prevBrands;
       }
-      const newBrands = [...prevBrands, normalizedNewBrand].sort((a, b) => a.localeCompare(b));
+
+      const newBrand: Brand = {
+        id: crypto.randomUUID(), // Modern browsers support this
+        name: normalizedNewBrandName,
+        imageUrl: brandData.imageUrl
+      };
+
+      const newBrands = [...prevBrands, newBrand].sort((a, b) => a.name.localeCompare(b.name));
       persistBrands(newBrands);
-      toast({ title: "Marca Adicionada", description: `Marca "${normalizedNewBrand}" adicionada com sucesso.` });
+      toast({ title: "Marca Adicionada", description: `Marca "${normalizedNewBrandName}" adicionada com sucesso.` });
       return newBrands;
     });
   };
 
+  const removeBrand = (brandId: string) => {
+    setBrands(prevBrands => {
+      const newBrands = prevBrands.filter(b => b.id !== brandId);
+      persistBrands(newBrands);
+      toast({ title: "Marca Removida", description: "Marca removida com sucesso." });
+      return newBrands;
+    });
+  }
+
   const getBrands = useCallback(() => {
-    return [...brands].sort((a, b) => a.localeCompare(b));
+    return [...brands].sort((a, b) => a.name.localeCompare(b.name));
   }, [brands]);
 
   return (
-    <BrandContext.Provider value={{ brands, addBrand, getBrands }}>
+    <BrandContext.Provider value={{ brands, addBrand, removeBrand, getBrands }}>
       {children}
     </BrandContext.Provider>
   );

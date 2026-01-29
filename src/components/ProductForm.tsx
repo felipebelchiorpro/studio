@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm, Controller } from "react-hook-form";
@@ -12,263 +11,558 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import type { Product } from "@/types";
-import { mockCategories } from "@/data/mockData"; 
-import { useBrand } from "@/context/BrandContext"; // Import useBrand
+import { useBrand } from "@/context/BrandContext";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Trash2, Plus, Upload, Image as ImageIcon, X } from "lucide-react";
 
+// Updated Schema with Pro Features
 const productSchema = z.object({
-  name: z.string().min(3, { message: "Nome do produto deve ter pelo menos 3 caracteres." }),
-  description: z.string().min(10, { message: "Descrição deve ter pelo menos 10 caracteres." }),
-  price: z.coerce.number().positive({ message: "Preço de venda deve ser um número positivo." }),
-  originalPrice: z.coerce.number().positive({ message: "Preço original deve ser um número positivo." }).optional().nullable(),
-  category: z.string().min(1, { message: "Selecione uma categoria." }),
-  brand: z.string().min(1, { message: "Selecione uma marca." }),
-  imageUrl: z.string().min(1, { message: "É necessário uma imagem." }),
-  stock: z.coerce.number().int().min(0, { message: "Estoque não pode ser negativo." }),
-  isNewRelease: z.boolean().optional(),
+    name: z.string().min(3, { message: "Nome do produto deve ter pelo menos 3 caracteres." }),
+    description: z.string().min(10, { message: "Descrição deve ter pelo menos 10 caracteres." }),
+    price: z.coerce.number().positive({ message: "Preço de venda deve ser um número positivo." }),
+    originalPrice: z.coerce.number().positive({ message: "Preço original deve ser um número positivo." }).optional().nullable(),
+    category: z.string().min(1, { message: "Selecione uma categoria." }),
+    brand: z.string().min(1, { message: "Selecione uma marca." }),
+    imageUrl: z.string().min(1, { message: "Imagem de capa é obrigatória." }),
+    stock: z.coerce.number().int().min(0, { message: "Estoque não pode ser negativo." }),
+    isNewRelease: z.boolean().optional(),
+
+    // Variations
+    sizes: z.array(z.string()).optional(),
+    flavors: z.array(z.string()).optional(),
+
+    // Pro Features
+    weights: z.array(z.string()).optional(),
+    gallery: z.array(z.string()).optional(),
+    hoverImageUrl: z.string().optional(), // Added back
+    colorMapping: z.array(z.object({
+        color: z.string().min(1, "Nome da cor obrigatório"),
+        hex: z.string().min(1, "Hex da cor obrigatório"),
+        image: z.string().optional()
+    })).optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
-  product?: Product | null; 
-  onSubmitProduct: (data: Product, isEditing: boolean) => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+    product?: Product | null;
+    onSubmitProduct: (data: Product, isEditing: boolean) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }
 
 const DEFAULT_PLACEHOLDER_IMAGE = "https://placehold.co/600x400.png";
+const AVAILABLE_SIZES = ["PP", "P", "M", "G", "GG", "3G", "4G"];
+const AVAILABLE_WEIGHTS = ["150g", "300g", "450g", "900g", "1kg", "1.8kg", "2kg", "3kg", "5kg"];
+
+const PRODUCT_TYPES = [
+    { id: 'clothing', name: 'Vestuário (Tamanho/Cor)' },
+    { id: 'supplement', name: 'Suplemento (Sabor/Peso)' },
+    { id: 'other', name: 'Outro (Sem variações)' }
+];
 
 export default function ProductForm({ product, onSubmitProduct, open, onOpenChange }: ProductFormProps) {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const { getBrands } = useBrand(); // Use the BrandContext
-  const availableBrands = getBrands(); // Get brands from context
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [hoverImagePreview, setHoverImagePreview] = useState<string | null>(null); // Added back
+    const { getBrands } = useBrand();
+    const availableBrands = getBrands();
+    const [categories, setCategories] = useState<any[]>([]);
+    const [productType, setProductType] = useState<string>('other');
+    const [flavorsInput, setFlavorsInput] = useState<string>("");
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      price: 0,
-      originalPrice: null,
-      category: "",
-      brand: "",
-      imageUrl: DEFAULT_PLACEHOLDER_IMAGE,
-      stock: 0,
-      isNewRelease: false,
-    },
-  });
-  
-  useEffect(() => {
-    if (open) { 
-      if (product) {
-        form.reset({
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          originalPrice: product.originalPrice || null,
-          category: product.category,
-          brand: product.brand,
-          imageUrl: product.imageUrl || DEFAULT_PLACEHOLDER_IMAGE,
-          stock: product.stock,
-          isNewRelease: product.isNewRelease || false,
+    useEffect(() => {
+        import('@/services/categoryService').then(({ fetchCategoriesService }) => {
+            fetchCategoriesService().then(data => setCategories(data)).catch(console.error);
         });
-        setImagePreview(product.imageUrl || DEFAULT_PLACEHOLDER_IMAGE);
-      } else {
-        form.reset({ 
-          name: "",
-          description: "",
-          price: 0,
-          originalPrice: null,
-          category: "",
-          brand: "",
-          imageUrl: DEFAULT_PLACEHOLDER_IMAGE,
-          stock: 0,
-          isNewRelease: false,
-        });
-        setImagePreview(DEFAULT_PLACEHOLDER_IMAGE); 
-      }
-    }
-  }, [product, form, open]);
+    }, []);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUri = reader.result as string;
-        setImagePreview(dataUri);
-        form.setValue("imageUrl", dataUri, { shouldValidate: true });
-      };
-      reader.readAsDataURL(file);
-    } else {
-      const revertUrl = product?.imageUrl || DEFAULT_PLACEHOLDER_IMAGE;
-      setImagePreview(revertUrl);
-      form.setValue("imageUrl", revertUrl);
-    }
-  };
+    const form = useForm<ProductFormValues>({
+        resolver: zodResolver(productSchema),
+        defaultValues: {
+            name: "",
+            description: "",
+            price: 0,
+            originalPrice: null,
+            category: "",
+            brand: "",
+            imageUrl: DEFAULT_PLACEHOLDER_IMAGE,
+            stock: 0,
+            isNewRelease: false,
+            sizes: [],
+            flavors: [],
+            weights: [],
+            gallery: [],
+            hoverImageUrl: "", // Added back
+            colorMapping: [],
+        },
+    });
 
-  const handleSubmit = (data: ProductFormValues) => {
-    const finalData: Product = {
-      ...data,
-      id: product?.id || `prod-${Date.now()}`, 
-      imageUrl: data.imageUrl,
-      originalPrice: data.originalPrice || undefined, 
-      isNewRelease: data.isNewRelease || false,
+    const { watch, setValue } = form;
+    const gallery = watch("gallery") || [];
+    const colorMapping = watch("colorMapping") || [];
+
+    useEffect(() => {
+        if (open) {
+            if (product) {
+                form.reset({
+                    name: product.name,
+                    description: product.description,
+                    price: product.price,
+                    originalPrice: product.originalPrice || null,
+                    category: product.categoryId || "",
+                    brand: product.brand,
+                    imageUrl: product.imageUrl || DEFAULT_PLACEHOLDER_IMAGE,
+                    stock: product.stock,
+                    isNewRelease: product.isNewRelease || false,
+                    sizes: product.sizes || [],
+                    flavors: product.flavors || [],
+                    weights: product.weights || [],
+                    gallery: product.gallery || [],
+                    hoverImageUrl: product.hoverImageUrl || "", // Added back
+                    colorMapping: product.colorMapping || [],
+                });
+
+                // Determine type based on features present
+                if ((product.sizes && product.sizes.length > 0) || (product.colorMapping && product.colorMapping.length > 0)) {
+                    setProductType('clothing');
+                } else if ((product.flavors && product.flavors.length > 0) || (product.weights && product.weights.length > 0)) {
+                    setProductType('supplement');
+                    setFlavorsInput(product.flavors?.join(', ') || "");
+                } else {
+                    setProductType('other');
+                }
+
+                setImagePreview(product.imageUrl || DEFAULT_PLACEHOLDER_IMAGE);
+                setHoverImagePreview(product.hoverImageUrl || null); // Added back
+            } else {
+                form.reset({
+                    name: "",
+                    description: "",
+                    price: 0,
+                    originalPrice: null,
+                    category: "",
+                    brand: "",
+                    imageUrl: DEFAULT_PLACEHOLDER_IMAGE,
+                    stock: 0,
+                    isNewRelease: false,
+                    sizes: [],
+                    flavors: [],
+                    weights: [],
+                    gallery: [],
+                    hoverImageUrl: "", // Added back
+                    colorMapping: [],
+                });
+                setProductType('other');
+                setFlavorsInput("");
+                setImagePreview(DEFAULT_PLACEHOLDER_IMAGE);
+                setHoverImagePreview(null); // Added back
+            }
+        }
+    }, [product, form, open]);
+
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUri = reader.result as string;
+                setImagePreview(dataUri);
+                setValue("imageUrl", dataUri, { shouldValidate: true });
+            };
+            reader.readAsDataURL(file);
+        }
     };
-    onSubmitProduct(finalData, !!product);
-    onOpenChange(false); 
-  };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px] bg-card text-card-foreground max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-headline text-2xl text-primary">
-            {product ? "Editar Produto" : "Adicionar Novo Produto"}
-          </DialogTitle>
-          <DialogDescription>
-            {product ? "Atualize os detalhes do produto." : "Preencha as informações do novo produto."}
-          </DialogDescription>
-        </DialogHeader>
-        <div>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right col-span-1">Nome</Label>
-              <div className="col-span-3">
-                <Input id="name" {...form.register("name")} className={form.formState.errors.name ? "border-destructive" : ""} />
-                {form.formState.errors.name && <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="description" className="text-right col-span-1 pt-2">Descrição</Label>
-              <div className="col-span-3">
-                <Textarea id="description" {...form.register("description")} className={form.formState.errors.description ? "border-destructive" : ""} />
-                {form.formState.errors.description && <p className="text-xs text-destructive mt-1">{form.formState.errors.description.message}</p>}
-              </div>
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="originalPrice" className="text-right col-span-1">Preço Original (R$)</Label>
-              <div className="col-span-3">
-                <Input id="originalPrice" type="number" step="0.01" {...form.register("originalPrice")} placeholder="Opcional" className={form.formState.errors.originalPrice ? "border-destructive" : ""} />
-                 {form.formState.errors.originalPrice && <p className="text-xs text-destructive mt-1">{form.formState.errors.originalPrice.message}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="price" className="text-right col-span-1">Preço Venda (R$)</Label>
-              <div className="col-span-3">
-                <Input id="price" type="number" step="0.01" {...form.register("price")} className={form.formState.errors.price ? "border-destructive" : ""} />
-                 {form.formState.errors.price && <p className="text-xs text-destructive mt-1">{form.formState.errors.price.message}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right col-span-1">Categoria</Label>
-              <div className="col-span-3">
-                <Controller
-                  name="category"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                      <SelectTrigger className={form.formState.errors.category ? "border-destructive" : ""}>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockCategories.map(cat => (
-                          <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {form.formState.errors.category && <p className="text-xs text-destructive mt-1">{form.formState.errors.category.message}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="brand" className="text-right col-span-1">Marca</Label>
-              <div className="col-span-3">
-                 <Controller
-                    name="brand"
-                    control={form.control}
-                    render={({ field }) => (
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                        <SelectTrigger className={form.formState.errors.brand ? "border-destructive" : ""}>
-                            <SelectValue placeholder="Selecione uma marca" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {availableBrands.length > 0 ? (
-                              availableBrands.map(brandName => (
-                                <SelectItem key={brandName} value={brandName}>{brandName}</SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value="" disabled>Nenhuma marca cadastrada</SelectItem>
+    const handleHoverImageChange = (event: React.ChangeEvent<HTMLInputElement>) => { // Added back
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUri = reader.result as string;
+                setHoverImagePreview(dataUri);
+                setValue("hoverImageUrl", dataUri);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            const fileReaders: Promise<string>[] = [];
+
+            Array.from(files).forEach(file => {
+                fileReaders.push(new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        resolve(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                }));
+            });
+
+            const newImages = await Promise.all(fileReaders);
+            setValue("gallery", [...gallery, ...newImages]);
+        }
+    };
+
+    const removeGalleryImage = (index: number) => {
+        const newGallery = [...gallery];
+        newGallery.splice(index, 1);
+        setValue("gallery", newGallery);
+    };
+
+    // Color Mapping Logic
+    const addColor = () => {
+        setValue("colorMapping", [...colorMapping, { color: "Nova Cor", hex: "#000000", image: "" }]);
+    };
+
+    const removeColor = (index: number) => {
+        const newMapping = [...colorMapping];
+        newMapping.splice(index, 1);
+        setValue("colorMapping", newMapping);
+    };
+
+    const updateColor = (index: number, field: keyof typeof colorMapping[0], value: string) => {
+        const newMapping = [...colorMapping];
+        newMapping[index] = { ...newMapping[index], [field]: value };
+        setValue("colorMapping", newMapping);
+    };
+
+    const handleColorImageUpload = (index: number, files: FileList | null) => {
+        if (files && files[0]) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUri = reader.result as string;
+                updateColor(index, 'image', dataUri);
+            };
+            reader.readAsDataURL(files[0]);
+        }
+    };
+
+    const handleSubmit = (data: ProductFormValues) => {
+        const selectedCategory = categories.find(c => c.id === data.category);
+        const categoryName = selectedCategory ? selectedCategory.name : "Categoria Indefinida";
+
+        // Backward compatibility for colors array (legacy)
+        const refinedColors = data.colorMapping?.map(c => c.color) || [];
+
+        const finalData: Product = {
+            ...data,
+            id: product?.id || `prod-${Date.now()}`,
+            imageUrl: data.imageUrl,
+            hoverImageUrl: data.hoverImageUrl || undefined, // Added back
+            originalPrice: data.originalPrice || undefined,
+            isNewRelease: data.isNewRelease || false,
+            categoryId: data.category,
+            category: categoryName,
+            sizes: productType === 'clothing' ? data.sizes : [],
+            colors: refinedColors, // Maintain legacy array for search/filter if needed
+            weights: productType === 'supplement' ? data.weights : [],
+            flavors: productType === 'supplement' ? flavorsInput.split(',').map(s => s.trim()).filter(Boolean) : [],
+            gallery: data.gallery,
+            colorMapping: data.colorMapping,
+        };
+        onSubmitProduct(finalData, !!product);
+        onOpenChange(false);
+    };
+
+    return (
+        <>
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="sm:max-w-[800px] bg-card text-card-foreground max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl text-primary">
+                            {product ? "Editar Produto" : "Adicionar Novo Produto"}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Configure todos os detalhes do produto, incluindo galeria e variações.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-6 py-4">
+
+                        {/* --- SEÇÃO 1: BÁSICO --- */}
+                        <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Nome do Produto</Label>
+                                    <Input id="name" {...form.register("name")} className={form.formState.errors.name ? "border-destructive" : ""} />
+                                    {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="stock">Estoque Total</Label>
+                                    <Input id="stock" type="number" {...form.register("stock")} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Descrição</Label>
+                                <Textarea id="description" {...form.register("description")} className={form.formState.errors.description ? "border-destructive h-24" : "h-24"} />
+                                {form.formState.errors.description && <p className="text-xs text-destructive">{form.formState.errors.description.message}</p>}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="originalPrice">Preço Original (R$)</Label>
+                                    <Input id="originalPrice" type="number" step="0.01" {...form.register("originalPrice")} placeholder="Opcional" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="price">Preço Venda (R$)</Label>
+                                    <Input id="price" type="number" step="0.01" {...form.register("price")} className={form.formState.errors.price ? "border-destructive" : ""} />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Categoria</Label>
+                                    <Controller
+                                        name="category"
+                                        control={form.control}
+                                        render={({ field }) => (
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {categories.map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Marca</Label>
+                                    <Controller
+                                        name="brand"
+                                        control={form.control}
+                                        render={({ field }) => (
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {availableBrands.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* --- SEÇÃO 2: MÍDIA (Capa & Galeria) --- */}
+                        <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                            <h3 className="font-semibold text-lg flex items-center gap-2"><ImageIcon size={20} /> Mídia</h3>
+
+                            <div className="grid grid-cols-4 gap-4">
+                                {/* Capa */}
+                                <div className="col-span-1 space-y-2">
+                                    <Label>Foto de Capa</Label>
+                                    <div className="relative aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition bg-background overflow-hidden group">
+                                        <Input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                                        {imagePreview ? (
+                                            <Image src={imagePreview} alt="Capa" layout="fill" objectFit="cover" />
+                                        ) : (
+                                            <div className="text-center p-2">
+                                                <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                                                <span className="text-xs text-muted-foreground">Capa</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Hover Image */}
+                                <div className="col-span-1 space-y-2">
+                                    <Label>Hover (Opcional)</Label>
+                                    <div className="relative aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition bg-background overflow-hidden group">
+                                        <Input type="file" accept="image/*" onChange={handleHoverImageChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                                        {hoverImagePreview ? (
+                                            <Image src={hoverImagePreview} alt="Hover" layout="fill" objectFit="cover" />
+                                        ) : (
+                                            <div className="text-center p-2">
+                                                <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                                                <span className="text-xs text-muted-foreground">Hover</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Galeria */}
+                                <div className="col-span-2 space-y-2">
+                                    <Label>Galeria de Imagens</Label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {gallery.map((img, idx) => (
+                                            <div key={idx} className="relative aspect-square rounded-md overflow-hidden border bg-background group">
+                                                <Image src={img} alt={`Gallery ${idx}`} layout="fill" objectFit="cover" />
+                                                <button type="button" onClick={() => removeGalleryImage(idx)} className="absolute top-1 right-1 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition">
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <div className="relative aspect-square border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-muted/50 transition">
+                                            <Input type="file" multiple accept="image/*" onChange={handleGalleryUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                            <Plus className="text-muted-foreground" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* --- SEÇÃO 3: VARIAÇÕES --- */}
+                        <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-lg">Configuração de Variação</h3>
+                                <Select value={productType} onValueChange={(val) => setProductType(val)}>
+                                    <SelectTrigger className="w-[200px] h-8">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {PRODUCT_TYPES.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* VESTUÁRIO: Cores e Tamanhos */}
+                            {productType === 'clothing' && (
+                                <div className="space-y-6 pt-2">
+                                    {/* Tamanhos */}
+                                    <div className="space-y-3">
+                                        <Label>Tamanhos Disponíveis</Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {AVAILABLE_SIZES.map((size) => (
+                                                <Controller
+                                                    key={size}
+                                                    name="sizes"
+                                                    control={form.control}
+                                                    render={({ field }) => {
+                                                        const isChecked = field.value?.includes(size);
+                                                        return (
+                                                            <div
+                                                                onClick={() => isChecked ? field.onChange(field.value?.filter(s => s !== size)) : field.onChange([...(field.value || []), size])}
+                                                                className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer border transition-all ${isChecked ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-input hover:border-primary'
+                                                                    }`}
+                                                            >
+                                                                {size}
+                                                            </div>
+                                                        )
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Cores & Mapping */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <Label>Cores & Fotos</Label>
+                                            <Button type="button" variant="secondary" size="sm" onClick={addColor}><Plus size={14} className="mr-1" /> Adicionar Cor</Button>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {colorMapping.length === 0 && <p className="text-sm text-muted-foreground italic">Nenhuma variação de cor adicionada.</p>}
+                                            {colorMapping.map((item, idx) => (
+                                                <div key={idx} className="flex items-center gap-2 p-2 border rounded-md bg-background">
+                                                    <div className="w-8 h-8 rounded-full border shadow-sm cursor-pointer overflow-hidden relative">
+                                                        <Input
+                                                            type="color"
+                                                            value={item.hex}
+                                                            onChange={(e) => updateColor(idx, 'hex', e.target.value)}
+                                                            className="absolute inset-0 w-[150%] h-[150%] -translate-x-1/4 -translate-y-1/4 p-0 cursor-pointer border-none"
+                                                        />
+                                                    </div>
+                                                    <Input
+                                                        placeholder="Nome (ex: Azul Marinho)"
+                                                        value={item.color}
+                                                        onChange={(e) => updateColor(idx, 'color', e.target.value)}
+                                                        className="h-8 flex-1"
+                                                    />
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="relative w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80">
+                                                            <Input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleColorImageUpload(idx, e.target.files)} />
+                                                            {item.image ? (
+                                                                <Image src={item.image} alt={item.color} layout="fill" objectFit="cover" />
+                                                            ) : <Upload size={14} className="text-muted-foreground" />}
+                                                        </div>
+                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => removeColor(idx)}>
+                                                            <Trash2 size={16} />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             )}
-                        </SelectContent>
-                        </Select>
-                    )}
-                 />
-                {form.formState.errors.brand && <p className="text-xs text-destructive mt-1">{form.formState.errors.brand.message}</p>}
-              </div>
-            </div>
 
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="imageUpload" className="text-right col-span-1 pt-2">Imagem</Label>
-              <div className="col-span-3">
-                <Input 
-                  id="imageUpload" 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleImageChange}
-                  className={form.formState.errors.imageUrl ? "border-destructive" : ""} 
-                />
-                {imagePreview && (
-                  <div className="mt-2 relative w-32 h-32 rounded border border-muted overflow-hidden bg-muted">
-                    <Image src={imagePreview} alt="Pré-visualização do produto" layout="fill" objectFit="contain" data-ai-hint="product preview"/>
-                  </div>
-                )}
-                {form.formState.errors.imageUrl && !imagePreview && (
-                   <p className="text-xs text-destructive mt-1">{form.formState.errors.imageUrl.message}</p>
-                )}
-                <input type="hidden" {...form.register("imageUrl")} />
-              </div>
-            </div>
+                            {/* SUPLEMENTO: Sabores e Pesos */}
+                            {productType === 'supplement' && (
+                                <div className="space-y-6 pt-2">
+                                    {/* Sabores */}
+                                    <div className="space-y-2">
+                                        <Label>Sabores</Label>
+                                        <Input
+                                            placeholder="Separe por vírgula (ex: Chocolate, Baunilha, Morango)"
+                                            value={flavorsInput}
+                                            onChange={(e) => setFlavorsInput(e.target.value)}
+                                        />
+                                    </div>
 
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="stock" className="text-right col-span-1">Estoque</Label>
-              <div className="col-span-3">
-                <Input id="stock" type="number" {...form.register("stock")} className={form.formState.errors.stock ? "border-destructive" : ""} />
-                {form.formState.errors.stock && <p className="text-xs text-destructive mt-1">{form.formState.errors.stock.message}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="isNewRelease" className="text-right col-span-1">Lançamento?</Label>
-                <div className="col-span-3 flex items-center">
-                    <Controller
-                        name="isNewRelease"
-                        control={form.control}
-                        render={({ field }) => (
-                            <Checkbox
-                                id="isNewRelease"
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                className="mr-2"
-                            />
-                        )}
-                    />
-                    <Label htmlFor="isNewRelease" className="font-normal">Marcar como novo lançamento</Label>
-                </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancelar</Button>
-            </DialogClose>
-            <Button type="button" onClick={form.handleSubmit(handleSubmit)} disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              {form.formState.isSubmitting ? "Salvando..." : "Salvar Produto"}
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+                                    {/* Pesos */}
+                                    <div className="space-y-3">
+                                        <Label>Opções de Peso</Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {AVAILABLE_WEIGHTS.map((weight) => (
+                                                <Controller
+                                                    key={weight}
+                                                    name="weights"
+                                                    control={form.control}
+                                                    render={({ field }) => {
+                                                        const isChecked = field.value?.includes(weight);
+                                                        return (
+                                                            <div
+                                                                onClick={() => isChecked ? field.onChange(field.value?.filter(s => s !== weight)) : field.onChange([...(field.value || []), weight])}
+                                                                className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer border transition-all ${isChecked ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-input hover:border-primary'
+                                                                    }`}
+                                                            >
+                                                                {weight}
+                                                            </div>
+                                                        )
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex items-center pt-4">
+                                <Controller
+                                    name="isNewRelease"
+                                    control={form.control}
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id="isNewRelease"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                            className="mr-2"
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="isNewRelease" className="font-normal cursor-pointer">Marcar como "Novo Lançamento"</Label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">Cancelar</Button>
+                        </DialogClose>
+                        <Button type="button" onClick={form.handleSubmit(handleSubmit)} disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                            {form.formState.isSubmitting ? "Salvando..." : "Salvar Produto"}
+                        </Button>
+                    </DialogFooter>
+
+                </DialogContent>
+            </Dialog>
+        </>
+    );
 }

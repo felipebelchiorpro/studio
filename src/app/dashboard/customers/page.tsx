@@ -41,7 +41,7 @@ export default function ManageCustomersPage() {
 
   // Re-fetch customers when one is added to see it immediately
   const handleCustomerAdded = () => {
-     if (!customerAuthLoading) {
+    if (!customerAuthLoading) {
       setCustomers(getAllRegisteredCustomers());
     }
   };
@@ -103,6 +103,7 @@ export default function ManageCustomersPage() {
               <TableRow>
                 <TableHead className="px-2 py-3 sm:px-4">Nome</TableHead>
                 <TableHead className="px-2 py-3 sm:px-4">Email</TableHead>
+                <TableHead className="hidden sm:table-cell px-2 py-3 sm:px-4">Telefone</TableHead>
                 <TableHead className="hidden md:table-cell px-2 py-3 sm:px-4">ID Cliente</TableHead>
                 <TableHead className="hidden lg:table-cell px-2 py-3 sm:px-4">Registrado em</TableHead>
                 <TableHead className="text-center px-2 py-3 sm:px-4">Ações</TableHead>
@@ -113,6 +114,7 @@ export default function ManageCustomersPage() {
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.name}</TableCell>
                   <TableCell className="px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.email}</TableCell>
+                  <TableCell className="hidden sm:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.phone || '-'}</TableCell>
                   <TableCell className="hidden md:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.id}</TableCell>
                   <TableCell className="hidden lg:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{formatDate(customer.registeredAt)}</TableCell>
                   <TableCell className="text-center px-2 py-3 sm:px-4">
@@ -158,7 +160,7 @@ export default function ManageCustomersPage() {
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 placeholder="********"
-                onKeyDown={(e) => { if (e.key === 'Enter') handlePasswordSubmit();}}
+                onKeyDown={(e) => { if (e.key === 'Enter') handlePasswordSubmit(); }}
               />
             </div>
           </div>
@@ -195,6 +197,10 @@ export default function ManageCustomersPage() {
                 <span className="text-muted-foreground">{selectedCustomer.email}</span>
               </div>
               <div>
+                <span className="font-semibold text-foreground">Telefone: </span>
+                <span className="text-muted-foreground">{selectedCustomer.phone || 'Não informado'}</span>
+              </div>
+              <div>
                 <span className="font-semibold text-foreground">ID Cliente: </span>
                 <span className="text-muted-foreground">{selectedCustomer.id}</span>
               </div>
@@ -202,11 +208,11 @@ export default function ManageCustomersPage() {
                 <span className="font-semibold text-foreground">Registrado em: </span>
                 <span className="text-muted-foreground">{formatDate(selectedCustomer.registeredAt)}</span>
               </div>
-               <div className="mt-4 pt-3 border-t border-border/40">
-                 <p className="text-xs text-muted-foreground italic">
-                   Nota: Em um sistema real, apenas dados não críticos seriam exibidos aqui. Senhas de clientes NUNCA são armazenadas ou exibidas.
-                 </p>
-               </div>
+              <div className="mt-4 pt-3 border-t border-border/40">
+                <p className="text-xs text-muted-foreground italic">
+                  Nota: Em um sistema real, apenas dados não críticos seriam exibidos aqui. Senhas de clientes NUNCA são armazenadas ou exibidas.
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <DialogClose asChild>

@@ -23,7 +23,12 @@ interface ProductFiltersProps {
   onFilterChange: (filters: Filters) => void;
 }
 
-const ALL_CATEGORIES = mockCategories.map(cat => cat.name); // Keep static categories for now
+// const ALL_CATEGORIES = mockCategories.map(cat => cat.name); // Keep static categories for now
+// Replaced by dynamic fetching below inside component or separate hook.
+
+// Moved inside component to use state, or fetched outside.
+// For now, let's fetch inside to ensure it's up to date.
+
 
 export default function ProductFilters({ onFilterChange }: ProductFiltersProps) {
   const { products: allProducts, loading: productsLoading } = useProduct();
@@ -33,7 +38,7 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
   const ALL_BRANDS = useMemo(() => {
     return getBrands().sort(); // getBrands already returns sorted unique brands
   }, [contextBrands, getBrands]); // Depend on contextBrands to re-memoize when brands change
-  
+
   const MAX_PRICE = useMemo(() => {
     if (productsLoading || allProducts.length === 0) return 1000; // Default max if no products or loading
     return Math.max(...allProducts.map(p => p.price), 100);
@@ -42,7 +47,21 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, MAX_PRICE]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const { fetchCategoriesService } = await import('@/services/categoryService');
+        const cats = await fetchCategoriesService();
+        setAvailableCategories(cats.map(c => c.name));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchCats();
+  }, []);
+
   useEffect(() => {
     if (!productsLoading) {
       setPriceRange(prev => [prev[0], MAX_PRICE]);
@@ -73,10 +92,10 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
       brands: selectedBrands,
     });
   };
-  
+
   const clearFilters = () => {
     setSelectedCategories([]);
-    setPriceRange([0, MAX_PRICE]); 
+    setPriceRange([0, MAX_PRICE]);
     setSelectedBrands([]);
     onFilterChange({
       categories: [],
@@ -111,7 +130,7 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
         <AccordionItem value="categories">
           <AccordionTrigger className="text-base font-medium hover:text-primary">Categorias</AccordionTrigger>
           <AccordionContent className="pt-2 space-y-2">
-            {ALL_CATEGORIES.map(category => (
+            {availableCategories.map(category => (
               <div key={category} className="flex items-center space-x-2">
                 <Checkbox
                   id={`cat-${category}`}
@@ -156,7 +175,7 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
                 <Label htmlFor={`brand-${brand}`} id={`label-brand-${brand}`} className="text-sm font-normal cursor-pointer">{brand}</Label>
               </div>
             )) : (
-                 <p className="text-xs text-muted-foreground">Nenhuma marca disponível. Adicione marcas no painel.</p>
+              <p className="text-xs text-muted-foreground">Nenhuma marca disponível. Adicione marcas no painel.</p>
             )}
           </AccordionContent>
         </AccordionItem>

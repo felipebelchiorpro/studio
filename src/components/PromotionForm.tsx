@@ -1,37 +1,50 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import type { Promotion } from "@/types";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Promotion } from "@/types";
 
 const promotionSchema = z.object({
-  title: z.string().min(3, { message: "O título deve ter pelo menos 3 caracteres." }),
-  description: z.string().min(10, { message: "A descrição deve ter pelo menos 10 caracteres." }),
-  link: z.string().min(1, { message: "O link é obrigatório." }).url({ message: "Por favor, insira uma URL válida." }),
-  imageUrl: z.string().min(1, { message: "É necessário uma imagem." }),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  imageUrl: z.string().url({ message: "URL inválida" }),
+  link: z.string().optional(),
+  position: z.enum(['main_carousel', 'grid_left', 'grid_top_right', 'grid_bottom_left', 'grid_bottom_right']).default('main_carousel'),
 });
 
 type PromotionFormValues = z.infer<typeof promotionSchema>;
 
+const DEFAULT_PLACEHOLDER_IMAGE = "https://placehold.co/800x400?text=Banner+Preview";
+
 interface PromotionFormProps {
-  promotion?: Promotion | null; 
-  onSubmit: (data: Promotion, isEditing: boolean) => void;
+  promotion?: Promotion | null;
+  onSubmitPromotion: (data: Promotion) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const DEFAULT_PLACEHOLDER_IMAGE = "https://placehold.co/1200x400.png";
-
-export default function PromotionForm({ promotion, onSubmit, open, onOpenChange }: PromotionFormProps) {
+export default function PromotionForm({ promotion, onSubmitPromotion, open, onOpenChange }: PromotionFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<PromotionFormValues>({
@@ -39,29 +52,32 @@ export default function PromotionForm({ promotion, onSubmit, open, onOpenChange 
     defaultValues: {
       title: "",
       description: "",
+      imageUrl: "",
       link: "",
-      imageUrl: DEFAULT_PLACEHOLDER_IMAGE,
+      position: "main_carousel",
     },
   });
-  
+
   useEffect(() => {
-    if (open) { 
+    if (open) {
       if (promotion) {
         form.reset({
           title: promotion.title,
-          description: promotion.description,
+          description: promotion.description || "",
+          imageUrl: promotion.imageUrl,
           link: promotion.link,
-          imageUrl: promotion.imageUrl || DEFAULT_PLACEHOLDER_IMAGE,
+          position: promotion.position || "main_carousel",
         });
-        setImagePreview(promotion.imageUrl || DEFAULT_PLACEHOLDER_IMAGE);
+        setImagePreview(promotion.imageUrl);
       } else {
-        form.reset({ 
+        form.reset({
           title: "",
           description: "",
+          imageUrl: "",
           link: "",
-          imageUrl: DEFAULT_PLACEHOLDER_IMAGE,
+          position: "main_carousel",
         });
-        setImagePreview(DEFAULT_PLACEHOLDER_IMAGE); 
+        setImagePreview(DEFAULT_PLACEHOLDER_IMAGE);
       }
     }
   }, [promotion, form, open]);
@@ -73,93 +89,155 @@ export default function PromotionForm({ promotion, onSubmit, open, onOpenChange 
       reader.onloadend = () => {
         const dataUri = reader.result as string;
         setImagePreview(dataUri);
-        form.setValue("imageUrl", dataUri, { shouldValidate: true });
+        form.setValue("imageUrl", dataUri);
+        form.clearErrors("imageUrl");
       };
       reader.readAsDataURL(file);
-    } else {
-      const revertUrl = promotion?.imageUrl || DEFAULT_PLACEHOLDER_IMAGE;
-      setImagePreview(revertUrl);
-      form.setValue("imageUrl", revertUrl);
     }
   };
 
   const handleSubmit = (data: PromotionFormValues) => {
     const finalData: Promotion = {
-      ...data,
-      id: promotion?.id || `promo-temp-${Date.now()}`, 
+      id: promotion?.id || "",
+      title: data.title,
+      description: data.description || "",
       imageUrl: data.imageUrl,
+      link: data.link,
+      position: data.position as any,
     };
-    onSubmit(finalData, !!promotion);
-    onOpenChange(false); 
+    onSubmitPromotion(finalData);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px] bg-card text-card-foreground max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-headline text-2xl text-primary">
-            {promotion ? "Editar Banner" : "Adicionar Novo Banner"}
-          </DialogTitle>
-          <DialogDescription>
-            Preencha as informações do banner promocional.
-          </DialogDescription>
-        </DialogHeader>
-        <div>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right col-span-1">Título</Label>
-              <div className="col-span-3">
-                <Input id="title" {...form.register("title")} className={form.formState.errors.title ? "border-destructive" : ""} />
-                {form.formState.errors.title && <p className="text-xs text-destructive mt-1">{form.formState.errors.title.message}</p>}
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="overflow-y-auto w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle>{promotion ? "Editar Banner" : "Novo Banner"}</SheetTitle>
+          <SheetDescription>
+            {promotion ? "Altere as informações do banner." : "Preencha os dados do novo banner."}
+          </SheetDescription>
+        </SheetHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 mt-6">
+
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título Principal <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Queima de Estoque" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subtítulo / Descrição <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Até 50% OFF em selecionados" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="link"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link de Destino <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: /products?category=WHEY" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="position"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Posição de Exibição</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione onde o banner vai aparecer" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="main_carousel">Carrossel Principal (Topo)</SelectItem>
+                      <SelectItem value="grid_left">Destaque Esquerda (Grande)</SelectItem>
+                      <SelectItem value="grid_top_right">Destaque Topo Direita (Largo)</SelectItem>
+                      <SelectItem value="grid_bottom_left">Destaque Baixo Esquerda (Pequeno)</SelectItem>
+                      <SelectItem value="grid_bottom_right">Destaque Baixo Direita (Pequeno)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex flex-col gap-4">
+              <FormLabel>Imagem do Banner (URL ou Upload)</FormLabel>
+
+              <div className="flex justify-center bg-muted/30 p-4 rounded-md border border-dashed border-muted-foreground/25">
+                <div className="relative w-full aspect-[2/1]">
+                  <Image
+                    src={imagePreview || DEFAULT_PLACEHOLDER_IMAGE}
+                    alt="Preview"
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-md"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="description" className="text-right col-span-1 pt-2">Descrição</Label>
-              <div className="col-span-3">
-                <Textarea id="description" {...form.register("description")} className={form.formState.errors.description ? "border-destructive" : ""} />
-                {form.formState.errors.description && <p className="text-xs text-destructive mt-1">{form.formState.errors.description.message}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="link" className="text-right col-span-1">Link</Label>
-              <div className="col-span-3">
-                <Input id="link" placeholder="/products?category=GANHO%20DE%20MASSA" {...form.register("link")} className={form.formState.errors.link ? "border-destructive" : ""} />
-                {form.formState.errors.link && <p className="text-xs text-destructive mt-1">{form.formState.errors.link.message}</p>}
-              </div>
+
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="cursor-pointer"
+              />
+              <p className="text-xs text-muted-foreground text-center">Ou cole uma URL abaixo:</p>
+
+              <FormField
+                control={form.control}
+                name="imageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="https://exemplo.com/banner.png"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          if (e.target.value) setImagePreview(e.target.value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="imageUpload" className="text-right col-span-1 pt-2">Imagem</Label>
-              <div className="col-span-3">
-                <Input 
-                  id="imageUpload" 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleImageChange}
-                  className={form.formState.errors.imageUrl ? "border-destructive" : ""} 
-                />
-                {imagePreview && (
-                  <div className="mt-2 relative w-full aspect-[16/7] rounded border border-muted overflow-hidden bg-muted">
-                    <Image src={imagePreview} alt="Pré-visualização do banner" layout="fill" objectFit="cover" data-ai-hint="promotion banner preview"/>
-                  </div>
-                )}
-                {form.formState.errors.imageUrl && !imagePreview && (
-                   <p className="text-xs text-destructive mt-1">{form.formState.errors.imageUrl.message}</p>
-                )}
-                <input type="hidden" {...form.register("imageUrl")} />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancelar</Button>
-            </DialogClose>
-            <Button type="button" onClick={form.handleSubmit(handleSubmit)} disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              {form.formState.isSubmitting ? "Salvando..." : "Salvar Banner"}
+            <Button type="submit" className="w-full">
+              {promotion ? "Salvar Banner" : "Criar Banner"}
             </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
   );
 }

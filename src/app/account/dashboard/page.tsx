@@ -84,6 +84,8 @@ export default function CustomerDashboardPage() {
           Sair da Conta
         </Button>
       </div>
+
+
     </div>
   );
 }

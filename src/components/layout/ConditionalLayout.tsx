@@ -15,10 +15,12 @@ export default function ConditionalLayout({ children }: { children: ReactNode })
   }
 
   // For non-dashboard routes, render the standard store layout.
+  const isHomePage = pathname === '/';
+
   return (
     <>
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className={`flex-grow ${isHomePage ? '' : 'container mx-auto px-4 py-8'}`}>
         {children}
       </main>
       <Footer />

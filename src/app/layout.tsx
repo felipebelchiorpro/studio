@@ -8,6 +8,7 @@ import { CartProvider } from '@/context/CartContext';
 import { BrandProvider } from '@/context/BrandContext';
 import { ProductProvider } from '@/context/ProductContext';
 import { PromotionProvider } from '@/context/PromotionContext'; // Added
+import { FavoritesProvider } from '@/context/FavoritesContext';
 import ConditionalLayout from '@/components/layout/ConditionalLayout';
 
 export const metadata: Metadata = {
@@ -35,12 +36,14 @@ export default function RootLayout({
             <BrandProvider>
               <ProductProvider>
                 <PromotionProvider>
-                  <CartProvider>
-                    <ConditionalLayout>
-                      {children}
-                    </ConditionalLayout>
-                    <Toaster />
-                  </CartProvider>
+                  <FavoritesProvider>
+                    <CartProvider>
+                      <ConditionalLayout>
+                        {children}
+                      </ConditionalLayout>
+                      <Toaster />
+                    </CartProvider>
+                  </FavoritesProvider>
                 </PromotionProvider>
               </ProductProvider>
             </BrandProvider>

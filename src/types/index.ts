@@ -8,8 +8,10 @@ export interface Product {
   price: number;
   originalPrice?: number; // Preço original para mostrar desconto
   category: string;
+  categoryId?: string; // Added for linking to backend
   brand: string;
   imageUrl: string;
+  hoverImageUrl?: string; // Image to show on hover
   stock: number;
   barcode?: string; // Added for barcode scanning
   reviews?: Review[];
@@ -17,12 +19,30 @@ export interface Product {
   isNewRelease?: boolean; // Para destacar novos produtos
   salesCount?: number; // For Top 5 Products
 
+  // Variations (Mock/Future visuals)
+  colors?: string[];
+  sizes?: string[];
+  flavors?: string[];
+
+  // Advanced Features (Pro)
+  weights?: string[];
+  gallery?: string[];
+  colorMapping?: Array<{ color: string; hex: string; image?: string }>;
+
   // For dashboard stock page - transient property, not persisted ideally
   currentEditStock?: number;
 }
 
+export interface Partner {
+  id: string;
+  name: string;
+  code: string;
+  score: number;
+  created_at: string;
+}
+
 export interface Review {
-  id:string;
+  id: string;
   author: string;
   rating: number;
   comment: string;
@@ -34,13 +54,22 @@ export interface Category {
   name: string;
   imageUrl?: string; // Optional: for category banners
   totalRevenue?: number; // For Top 5 Categories
+  parentId?: string;
+  type?: 'supplement' | 'clothing' | 'other'; // Added type
+  children?: Category[];
 }
 
 // Simple Brand type, could be expanded later if needed
-export type Brand = string;
+// Brand type with image support
+export interface Brand {
+  id: string;
+  name: string;
+  imageUrl: string;
+}
 
 export interface CartItem extends Product {
   quantity: number;
+  couponCode?: string; // Track applied coupon
 }
 
 export interface User {
@@ -55,6 +84,7 @@ export interface CustomerUser extends User {
   // Add customer-specific fields here if needed in the future
   // e.g., defaultShippingAddressId?: string;
   registeredAt?: string; // Added for customer management
+  phone?: string; // Added for contact info
 }
 
 
@@ -68,6 +98,7 @@ export interface Order {
   status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
   shippingAddress?: string; // Simplified
   channel?: string; // Added for BI Dashboard
+  userPhone?: string; // Added for WhatsApp Integration
 }
 
 export interface Promotion {
@@ -76,6 +107,7 @@ export interface Promotion {
   description: string;
   imageUrl: string;
   link: string; // e.g., link to a category or product
+  position?: 'main_carousel' | 'grid_left' | 'grid_top_right' | 'grid_bottom_left' | 'grid_bottom_right';
 }
 
 export interface DropdownCategory {
@@ -106,16 +138,16 @@ export interface PackingOrder {
 
 // Types for BI Dashboard
 export interface BiCategoryFilterItem {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 export interface BiSalesChannelFilterItem {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 export interface BiGeoFilterItem {
-    id: string; // e.g., 'SP', 'RJ'
-    name: string; // e.g., 'São Paulo', 'Rio de Janeiro'
+  id: string; // e.g., 'SP', 'RJ'
+  name: string; // e.g., 'São Paulo', 'Rio de Janeiro'
 }
 
 

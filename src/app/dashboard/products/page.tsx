@@ -13,11 +13,11 @@ import ProductForm from "@/components/ProductForm";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useProduct } from '@/context/ProductContext'; 
+import { useProduct } from '@/context/ProductContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ManageProductsPage() {
-  const { products: contextProducts, addProduct: contextAddProduct, updateProduct: contextUpdateProduct, deleteProduct: contextDeleteProduct, loading: productsLoading } = useProduct(); 
+  const { products: contextProducts, addProduct: contextAddProduct, updateProduct: contextUpdateProduct, deleteProduct: contextDeleteProduct, loading: productsLoading } = useProduct();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -38,33 +38,43 @@ export default function ManageProductsPage() {
     setProductToDelete(product);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (productToDelete) {
-      contextDeleteProduct(productToDelete.id);
-      toast({ title: "Produto Removido", description: `${productToDelete.name} foi removido com sucesso.` });
-      setProductToDelete(null);
+      try {
+        await contextDeleteProduct(productToDelete.id);
+        toast({ title: "Produto Removido", description: `${productToDelete.name} foi removido com sucesso.` });
+      } catch (error) {
+        console.error("Erro ao remover produto:", error);
+        toast({ title: "Erro na Remoção", description: "Não foi possível remover o produto. Verifique se ele está em uso ou se você tem permissão.", variant: "destructive" });
+      } finally {
+        setProductToDelete(null);
+      }
     }
   };
 
-  const handleSubmitProduct = (data: Product, isEditing: boolean) => {
+  const handleSubmitProduct = async (data: Product, isEditing: boolean) => {
     const { id, ...productDataForContext } = data;
-    
-    if (isEditing && data.id) { 
-      contextUpdateProduct(data);
-      toast({ title: "Produto Atualizado", description: `${data.name} foi atualizado com sucesso.` });
-    } else {
-      contextAddProduct(productDataForContext as Omit<Product, 'id' | 'salesCount' | 'rating' | 'reviews'>);
-      toast({ title: "Produto Adicionado", description: `${data.name} foi adicionado com sucesso.` });
+
+    try {
+      if (isEditing && data.id) {
+        await contextUpdateProduct(data);
+        toast({ title: "Produto Atualizado", description: `${data.name} foi atualizado com sucesso.` });
+      } else {
+        await contextAddProduct(productDataForContext as Omit<Product, 'id' | 'salesCount' | 'rating' | 'reviews'>);
+        toast({ title: "Produto Adicionado", description: `${data.name} foi adicionado com sucesso.` });
+      }
+      setIsFormOpen(false);
+      setEditingProduct(null);
+    } catch (error) {
+      toast({ title: "Erro", description: "Ocorreu um erro ao salvar o produto.", variant: "destructive" });
     }
-    setIsFormOpen(false);
-    setEditingProduct(null);
   };
 
   const filteredProducts = useMemo(() => contextProducts.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
-  ).sort((a,b) => a.name.localeCompare(b.name)), [contextProducts, searchTerm]);
+  ).sort((a, b) => a.name.localeCompare(b.name)), [contextProducts, searchTerm]);
 
   if (productsLoading) {
     return (
@@ -101,7 +111,7 @@ export default function ManageProductsPage() {
 
       <div className="relative">
         <Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-        <Input 
+        <Input
           type="text"
           placeholder="Buscar produtos..."
           value={searchTerm}
@@ -189,8 +199,8 @@ export default function ManageProductsPage() {
         onSubmitProduct={handleSubmitProduct}
         open={isFormOpen}
         onOpenChange={(isOpen) => {
-            setIsFormOpen(isOpen);
-            if (!isOpen) setEditingProduct(null); 
+          setIsFormOpen(isOpen);
+          if (!isOpen) setEditingProduct(null);
         }}
       />
 

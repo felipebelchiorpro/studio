@@ -41,23 +41,23 @@ export default function BrandCarousel() {
           onMouseLeave={plugin.current.reset}
         >
           <CarouselContent className="-ml-4">
-            {brands.map((brandName) => (
+            {brands.map((brand) => (
               <CarouselItem
-                key={brandName}
+                key={brand.id}
                 className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
               >
-                <Link href={`/products?brands=${encodeURIComponent(brandName)}`} passHref>
+                <Link href={`/products?brands=${encodeURIComponent(brand.name)}`} passHref>
                   <div className="group cursor-pointer">
                     <Card className="overflow-hidden bg-white/90 hover:bg-white transition-colors duration-300">
                       <CardContent className="p-4 flex items-center justify-center aspect-[2/1]">
                         <div className="relative w-full h-full">
                           <Image
-                            src="https://placehold.co/150x80.png"
-                            alt={brandName}
+                            src={brand.imageUrl}
+                            alt={brand.name}
                             layout="fill"
                             objectFit="contain"
                             className="grayscale group-hover:grayscale-0 transition-all duration-300"
-                            data-ai-hint={`${brandName.toLowerCase()} supplement logo`}
+                            data-ai-hint={`${brand.name.toLowerCase()} supplement logo`}
                           />
                         </div>
                       </CardContent>

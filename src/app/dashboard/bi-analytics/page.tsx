@@ -1,41 +1,12 @@
-
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LineChart as LineChartIcon, BarChartBig, Users, MapPin, CalendarDays, Filter, Download, TrendingUp, DollarSign, ShoppingCart, Percent, Users2, PieChart as PieChartLucide } from "lucide-react";
-// Chart-specific imports are commented out or removed if not used by placeholders
-// import {
-//   ChartContainer,
-//   ChartTooltip,
-//   ChartTooltipContent,
-//   ChartLegend,
-//   ChartLegendContent,
-//   type ChartConfig
-// } from "@/components/ui/chart";
-// import {
-//   LineChart,
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip as RechartsTooltip,
-//   Legend as RechartsLegend,
-//   ResponsiveContainer,
-//   PieChart,
-//   Pie,
-//   Cell
-// } from "recharts";
-import type { DateRange } from "react-day-picker";
-import { format, subDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { mockCategories, biDashboardSalesChannels, biDashboardStates } from "@/data/mockData";
+import { Download, DollarSign, ShoppingCart, Percent, Users2 } from "lucide-react";
+import { subDays } from "date-fns";
+import { getAnalyticsData } from "@/actions/analytics";
+import { AnalyticsFilters } from "@/components/dashboard/AnalyticsFilters";
+import { AnalyticsCharts } from "@/components/dashboard/AnalyticsCharts";
 
 interface KeyMetricCardProps {
   title: string;
@@ -64,25 +35,28 @@ const KeyMetricCard: React.FC<KeyMetricCardProps> = ({ title, value, change, cha
   );
 };
 
-const recentOrdersData = [
-  { id: "ORD001", date: "2024-07-28", customer: "Carlos Silva", total: "R$ 129,90", status: "Entregue", channel: "Loja Online" },
-  { id: "ORD002", date: "2024-07-28", customer: "Ana Pereira", total: "R$ 79,90", status: "Enviado", channel: "Instagram" },
-  { id: "ORD003", date: "2024-07-27", customer: "Lucas Martins", total: "R$ 245,50", status: "Pendente", channel: "Loja Online" },
-  { id: "ORD004", date: "2024-07-26", customer: "Mariana Costa", total: "R$ 59,90", status: "Entregue", channel: "Loja Física" },
-];
+export default async function BiAnalyticsPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const searchParams = await props.searchParams;
+  const from = typeof searchParams.from === 'string' ? new Date(searchParams.from) : undefined;
+  const to = typeof searchParams.to === 'string' ? new Date(searchParams.to) : undefined;
 
-export default function BiAnalyticsPage() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 29),
-    to: new Date(),
+  const data = await getAnalyticsData({
+    from: from || subDays(new Date(), 30),
+    to: to || new Date()
   });
 
-  const kpis: KeyMetricCardProps[] = [
-    { title: "Receita Total", value: "R$ 1.250.340", icon: DollarSign, change: "+15.2%", changeType: "positive" },
-    { title: "Ticket Médio", value: "R$ 285,70", icon: ShoppingCart, change: "+2.1%", changeType: "positive" },
-    { title: "Novos Clientes", value: "1.280", icon: Users2, change: "+8.5%", changeType: "positive" },
-    { title: "Taxa de Conversão", value: "3.45%", icon: Percent, change: "-0.5%", changeType: "negative" },
-    { title: "Total de Pedidos", value: "4.378", icon: ShoppingCart, change: "+12.0%", changeType: "positive" },
+  if (!data) {
+    return <div className="p-8">Erro ao carregar dados de analytics.</div>;
+  }
+
+  const { kpis, charts, recentOrders } = data;
+
+  const kpiCards: KeyMetricCardProps[] = [
+    { title: "Receita Total", value: `R$ ${kpis.totalRevenue.toFixed(2).replace('.', ',')}`, icon: DollarSign, change: "+0%", changeType: "positive" },
+    { title: "Ticket Médio", value: `R$ ${kpis.averageTicket.toFixed(2).replace('.', ',')}`, icon: ShoppingCart, change: "+0%", changeType: "positive" },
+    { title: "Novos Clientes", value: kpis.newCustomers.toString(), icon: Users2, change: "+0%", changeType: "positive" },
+    { title: "Taxa de Conversão (Simulado)", value: "3.45%", icon: Percent, change: "-0.5%", changeType: "negative" },
+    { title: "Total de Pedidos", value: kpis.totalOrders.toString(), icon: ShoppingCart, change: "+0%", changeType: "positive" },
   ];
 
   const getStatusColorClass = (status: string): string => {
@@ -103,118 +77,14 @@ export default function BiAnalyticsPage() {
         </Button>
       </div>
 
-      {/* 1. Global Filters Bar */}
-      <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl"><Filter className="mr-2 h-5 w-5 text-primary" />Filtros Globais</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                id="date"
-                variant={"outline"}
-                className="w-full justify-start text-left font-normal"
-              >
-                <CalendarDays className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    `${format(dateRange.from, "LLL dd, y", { locale: ptBR })} - ${format(dateRange.to, "LLL dd, y", { locale: ptBR })}`
-                  ) : (
-                    format(dateRange.from, "LLL dd, y", { locale: ptBR })
-                  )
-                ) : (
-                  <span>Escolha um período</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange?.from}
-                selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
-                locale={ptBR}
-              />
-            </PopoverContent>
-          </Popover>
-          <Select>
-            <SelectTrigger><SelectValue placeholder="Canal de Venda" /></SelectTrigger>
-            <SelectContent>
-              {biDashboardSalesChannels.map(channel => <SelectItem key={channel.id} value={channel.id}>{channel.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select>
-            <SelectTrigger><SelectValue placeholder="Categoria de Produto" /></SelectTrigger>
-            <SelectContent>
-              {mockCategories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select>
-            <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
-            <SelectContent>
-              {biDashboardStates.map(state => <SelectItem key={state.id} value={state.id}>{state.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-           <Button className="bg-primary hover:bg-primary/90 text-primary-foreground h-10">Aplicar Filtros</Button>
-        </CardContent>
-      </Card>
+      <AnalyticsFilters />
 
-      {/* 2. KPIs Section */}
+      {/* KPIs Section */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-        {kpis.map(kpi => <KeyMetricCard key={kpi.title} {...kpi} />)}
+        {kpiCards.map(kpi => <KeyMetricCard key={kpi.title} {...kpi} />)}
       </div>
 
-      {/* 3. Visualizations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg"><LineChartIcon className="mr-2 h-5 w-5 text-primary" />Análise de Vendas ao Longo do Tempo</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-            <p className="text-muted-foreground">Visualização de gráfico de linha aqui.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg"><BarChartBig className="mr-2 h-5 w-5 text-primary" />Top 10 Produtos Mais Vendidos</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-             <p className="text-muted-foreground">Visualização de gráfico de barras aqui.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg"><PieChartLucide className="mr-2 h-5 w-5 text-primary" />Vendas por Categoria</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-            <p className="text-muted-foreground">Visualização de gráfico de pizza aqui.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg"><Users className="mr-2 h-5 w-5 text-primary" />Aquisição de Novos Clientes</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-             <p className="text-muted-foreground">Visualização de gráfico de linha/barras aqui.</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl"><MapPin className="mr-2 h-5 w-5 text-primary" />Vendas por Região (Simulado)</CardTitle>
-          <CardDescription>Distribuição geográfica das vendas.</CardDescription>
-        </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-          <p className="text-muted-foreground">Visualização de Mapa de Calor Geográfico aqui.</p>
-        </CardContent>
-      </Card>
+      <AnalyticsCharts salesByDate={charts.salesByDate} topProducts={charts.topProducts} />
 
       <Card className="shadow-lg">
         <CardHeader>
@@ -233,15 +103,15 @@ export default function BiAnalyticsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentOrdersData.map((order) => (
+              {recentOrders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
+                  <TableCell className="font-medium">{order.id.slice(0, 8)}...</TableCell>
                   <TableCell>{order.date}</TableCell>
                   <TableCell>{order.customer}</TableCell>
                   <TableCell className="text-right">{order.total}</TableCell>
                   <TableCell className="text-center">
-                     <span className={`px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColorClass(order.status)}`}>
-                        {order.status}
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColorClass(order.status)}`}>
+                      {order.status}
                     </span>
                   </TableCell>
                   <TableCell>{order.channel}</TableCell>
@@ -249,11 +119,6 @@ export default function BiAnalyticsPage() {
               ))}
             </TableBody>
           </Table>
-          {/* Basic Pagination Placeholder */}
-          <div className="flex justify-center mt-4">
-            <Button variant="outline" size="sm" className="mr-2">Anterior</Button>
-            <Button variant="outline" size="sm">Próxima</Button>
-          </div>
         </CardContent>
       </Card>
     </div>

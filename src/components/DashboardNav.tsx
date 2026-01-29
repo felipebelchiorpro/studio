@@ -1,10 +1,11 @@
-
-
 "use client";
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck, Users, TrendingUp, Palette } from 'lucide-react'; 
+import { cn } from '@/lib/utils';
+import { useCart } from '@/context/CartContext';
+import { CartSheet } from './CartSheet';
+import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck, Users, TrendingUp, Palette, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Separator } from '@/components/ui/separator';
@@ -46,16 +47,18 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Visão Geral' },
-    { href: '/dashboard/appearance', icon: Palette, label: 'Aparência da Loja' },
+    { href: '/dashboard/promotions', icon: Palette, label: 'Banners da Loja' },
+    { href: '/dashboard/appearance', icon: LayoutGrid, label: 'Aparência da Loja' }, // Changed Icon to distinguish
     { href: '/dashboard/bi-analytics', icon: TrendingUp, label: 'BI Analytics' },
     { href: '/dashboard/products', icon: Package, label: 'Gerenciar Produtos' },
     { href: '/dashboard/sales', icon: BarChart3, label: 'Relatório de Vendas' },
     { href: '/dashboard/stock', icon: Layers, label: 'Controle de Estoque' },
     { href: '/dashboard/quick-edit', icon: Edit, label: 'Edição Rápida' },
     { href: '/dashboard/customers', icon: Users, label: 'Clientes' },
-    { href: '/dashboard/categories', icon: LayoutGrid, label: 'Gerenciar Categorias' },
+    { href: '/dashboard/categories', icon: Tags, label: 'Gerenciar Categorias' },
     { href: '/dashboard/brands', icon: Tags, label: 'Gerenciar Marcas' },
-    { href: '/dashboard/shipping/pack-station', icon: Truck, label: 'Estação de Embalagem' }, 
+    { href: '/dashboard/shipping/pack-station', icon: Truck, label: 'Estação de Embalagem' },
+    { href: '/dashboard/coupons', icon: Ticket, label: 'Cupons' },
   ];
 
   const getInitials = (name?: string) => {
@@ -74,20 +77,22 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
       {/* Logo for mobile sheet header */}
       <div className="md:hidden p-4 mb-2 border-b border-border/60 flex justify-center">
         <Link href="/dashboard" onClick={onNavItemClick}>
-            <Image
-                src="/darkstore-logo.png" 
-                alt="DarkStore Suplementos Logo"
-                width={150} 
-                height={37} 
-                className="object-contain"
-            />
+          <Image
+            src="/darkstore-logo.png"
+            alt="DarkStore Suplementos Logo"
+            width={150}
+            height={37}
+            className="object-contain"
+          />
         </Link>
+        {/* Replaced Link with CartSheet and UserMenu as per instruction */}
+        <CartSheet />
       </div>
 
       <div className="p-4 mb-4 border-b border-border/60">
         <div className="flex items-center space-x-3">
-           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.email === "merchant@darkstore.com" ? "https://placehold.co/100x100.png" : undefined} alt={user?.name || "User"} data-ai-hint="user profile"/>
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={user?.email === "merchant@darkstore.com" ? "https://placehold.co/100x100.png" : undefined} alt={user?.name || "User"} data-ai-hint="user profile" />
             <AvatarFallback className="bg-primary text-primary-foreground font-bold">
               {getInitials(user?.name || user?.email)}
             </AvatarFallback>
@@ -99,14 +104,14 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
         </div>
       </div>
       <nav className="flex-grow space-y-1">
-        {navItems.sort((a, b) => { 
-            if (a.label === 'Visão Geral') return -1;
-            if (b.label === 'Visão Geral') return 1;
-            if (a.label === 'BI Analytics' && b.label !== 'Visão Geral') return -1;
-            if (b.label === 'BI Analytics' && a.label !== 'Visão Geral') return 1;
-            return a.label.localeCompare(b.label);
-          }).map(item => (
-          <NavItem key={item.href} {...item} currentPath={pathname} onClick={onNavItemClick}/>
+        {navItems.sort((a, b) => {
+          if (a.label === 'Visão Geral') return -1;
+          if (b.label === 'Visão Geral') return 1;
+          if (a.label === 'BI Analytics' && b.label !== 'Visão Geral') return -1;
+          if (b.label === 'BI Analytics' && a.label !== 'Visão Geral') return 1;
+          return a.label.localeCompare(b.label);
+        }).map(item => (
+          <NavItem key={item.href} {...item} currentPath={pathname} onClick={onNavItemClick} />
         ))}
       </nav>
       <Separator className="my-4" />

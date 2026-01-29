@@ -33,72 +33,88 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const installmentPrice = (product.price / 3).toFixed(2).replace('.', ',');
 
+  const discountValue = hasDiscount && product.originalPrice
+    ? (product.originalPrice - product.price).toFixed(2).replace('.', ',')
+    : '0,00';
+
   return (
-    <Card className="flex flex-col h-full overflow-hidden rounded-lg bg-card border-border shadow-sm hover:shadow-md transition-shadow duration-300">
-      <div className="relative p-2">
-        <Link href={`/products/${product.id}`} passHref className="block aspect-square w-full relative overflow-hidden rounded-md group">
+    <div className="flex flex-col h-full group select-none relative">
+      <div className="relative aspect-[3/4] w-full bg-[#f0f0f0] mb-3 overflow-hidden rounded-lg shadow-sm group-hover:shadow-md transition-all duration-300">
+
+        <Link href={`/products/${product.id}`} passHref className="block w-full h-full relative cursor-pointer">
+          {/* Main Image */}
           <Image
             src={product.imageUrl}
             alt={product.name}
             layout="fill"
-            objectFit="contain"
-            className="transition-transform duration-300 group-hover:scale-105 p-2"
-            data-ai-hint="supplement product"
+            objectFit="cover"
+            className={`transition-all duration-500 ease-in-out ${product.hoverImageUrl ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
           />
-        </Link>
-        {hasDiscount && discountPercentage > 0 && (
-          <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-1 rounded-md">
-            {discountPercentage}% OFF
-          </div>
-        )}
-        {product.isNewRelease && !hasDiscount && ( // Show "NOVO!" only if not already showing discount
-           <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-md flex items-center">
-            <Zap className="h-3 w-3 mr-1" /> NOVO!
-          </div>
-        )}
-         {product.isNewRelease && hasDiscount && ( // If both, place "NOVO!" on left
-            <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-md flex items-center">
-                <Zap className="h-3 w-3 mr-1" /> NOVO!
-            </div>
-        )}
-      </div>
-      
-      <CardContent className="p-4 flex-grow flex flex-col">
-        <p className="text-xs text-muted-foreground mb-0.5">{product.brand}</p>
-        <Link href={`/products/${product.id}`} passHref>
-          <h3 className="text-sm font-bold text-foreground leading-tight hover:text-primary transition-colors mb-2 min-h-[40px]">
-            {product.name}
-          </h3>
-        </Link>
-        
-        <div className="mt-auto space-y-1.5">
-           <div className="flex items-baseline gap-2">
-            {hasDiscount && product.originalPrice && (
-              <p className="text-sm text-muted-foreground line-through">
-                R$ {product.originalPrice.toFixed(2).replace('.', ',')}
-              </p>
+
+          {/* Hover Image */}
+          {product.hoverImageUrl && (
+            <Image
+              src={product.hoverImageUrl}
+              alt={`${product.name} back`}
+              layout="fill"
+              objectFit="cover"
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out group-hover:scale-105"
+            />
+          )}
+
+          {/* Badges Container - Top Left */}
+          <div className="absolute top-2 left-2 z-20 flex flex-col gap-1.5">
+            {product.isNewRelease && (
+              <span className="bg-[#e60012] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide shadow-sm flex items-center gap-1">
+                <Zap className="w-3 h-3 fill-current" /> NOVO
+              </span>
             )}
-            <p className="text-xl font-bold text-destructive">
-              R$ {product.price.toFixed(2).replace('.', ',')}
-            </p>
+            {hasDiscount && (
+              <span className="bg-rose-600 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                -{discountPercentage}%
+              </span>
+            )}
           </div>
-          <div className="flex items-center text-xs text-muted-foreground">
-            <ShoppingCart className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            <span>3 x de R$ {installmentPrice} sem juros</span>
+        </Link>
+
+        {/* Floating "Quick Add" Button - Bottom Right Overlay - Shows on Hover */}
+        <div className="absolute bottom-3 right-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Button
+            onClick={(e) => {
+              e.preventDefault(); // Prevent navigating to product page
+              handleAddToCart();
+            }}
+            className="bg-[#054F31] hover:bg-[#033E26] text-white shadow-lg text-xs font-bold py-1 px-4 h-8 rounded-full transition-transform transform active:scale-95 flex items-center gap-1.5 backdrop-blur-sm"
+          >
+            + Adicionar rápido
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col px-1">
+        {/* Title */}
+        <div className="mb-1">
+          <Link href={`/products/${product.id}`} passHref>
+            <h3 className="text-sm font-bold text-foreground leading-tight line-clamp-2 hover:text-primary transition-colors">
+              {product.name}
+            </h3>
+          </Link>
+        </div>
+
+        <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{product.category}</p>
+
+        {/* Price Section */}
+        <div className="mt-auto">
+          {hasDiscount && product.originalPrice && (
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-xs text-muted-foreground line-through">R$ {product.originalPrice.toFixed(2).replace('.', ',')}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="text-base sm:text-lg font-extrabold text-[#054F31] dark:text-[#10B981]">R$ {product.price.toFixed(2).replace('.', ',')}</span>
           </div>
         </div>
-      </CardContent>
-
-      <CardFooter className="p-2 border-t-0">
-        <Button
-          onClick={handleAddToCart}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-sm font-semibold py-3"
-          disabled={product.stock === 0}
-          aria-label={`Comprar ${product.name}`}
-        >
-          COMPRAR
-        </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

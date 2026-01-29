@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCart } from '@/context/CartContext';
@@ -10,30 +9,71 @@ import { ShoppingBag, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useState } from 'react';
 
 export default function CartPage() {
   const { cartItems, getCartTotal, clearCart, getCartItemCount } = useCart();
   const { toast } = useToast();
   const router = useRouter();
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const cartTotal = getCartTotal();
   const itemCount = getCartItemCount();
-  const shippingCost = cartTotal > 199 || cartTotal === 0 ? 0 : 25.00; 
-  const finalTotal = cartTotal + shippingCost;
+  const shippingCost = 0; // Pickup only
+  const finalTotal = cartTotal;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
+    if (!phone) {
+      toast({ title: "Telefone obrigatório", description: "Por favor, informe seu WhatsApp para contato.", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
     toast({
-      title: "Redirecionando para o Mercado Pago...",
-      description: "Você será levado para um ambiente seguro para finalizar sua compra.",
+      title: "Processando pedido...",
+      description: "Aguarde enquanto finalizamos sua compra...",
     });
-    // Simulate API call to backend, which would create a Mercado Pago preference
-    // and return a URL. Then we redirect.
-    setTimeout(() => {
-        // In a real scenario, this would clear the cart only after a successful payment webhook.
-        // For simulation, we clear it upon starting the checkout.
-        clearCart(); 
-        router.push('/checkout/success'); 
-    }, 1500);
+
+    try {
+      // Call Server Action to save order and trigger webhook
+      const { processCheckout } = await import('@/actions/checkout');
+      // Added phone parameter
+      const result = await processCheckout(cartItems, finalTotal, phone);
+
+      if (result.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Pedido criado. Redirecionando...",
+        });
+        // Don't clear cart here, do it on success page to generate whatsapp message
+        // clearCart(); 
+        if (result.url) {
+          router.push(result.url);
+        } else {
+          toast({
+            title: "Erro",
+            description: "URL de pagamento não gerada.",
+            variant: "destructive"
+          });
+        }
+      } else {
+        toast({
+          title: "Erro",
+          description: "Falha ao processar pedido via Server Action.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClearCart = () => {
@@ -41,7 +81,7 @@ export default function CartPage() {
     toast({
       title: "Carrinho Limpo!",
       description: "Todos os itens foram removidos do seu carrinho.",
-      variant: "default" 
+      variant: "default"
     });
   };
 
@@ -96,12 +136,9 @@ export default function CartPage() {
                 <div className="flex justify-between text-muted-foreground">
                   <span>Frete:</span>
                   <span className="text-foreground font-medium">
-                    {shippingCost === 0 ? 'Grátis' : `R$ ${shippingCost.toFixed(2).replace('.', ',')}`}
+                    Retirada na Loja (Grátis)
                   </span>
                 </div>
-                {shippingCost > 0 && cartTotal <= 199 && (
-                     <p className="text-xs text-green-500 text-center">Frete grátis para compras acima de R$ 199,00!</p>
-                )}
                 <hr className="my-1.5 sm:my-2 border-border/40" />
                 <div className="flex justify-between text-lg sm:text-xl font-bold">
                   <span>Total:</span>
@@ -109,8 +146,22 @@ export default function CartPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-2.5 sm:gap-3">
-                <Button size="lg" className="w-full bg-blue-500 hover:bg-blue-600 text-white text-base sm:text-lg py-2.5 sm:py-3" onClick={handleCheckout}>
-                  <Image src="https://placehold.co/100x25.png" alt="Mercado Pago" width={100} height={25} className="mr-2" data-ai-hint="mercadopago logo" /> Finalizar com Mercado Pago
+                <div className="w-full space-y-2">
+                  <label className="text-sm font-medium">Seu WhatsApp</label>
+                  <input
+                    type="tel"
+                    placeholder="(11) 99999-9999"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+                <Button size="lg" disabled={loading} className="w-full bg-blue-500 hover:bg-blue-600 text-white text-base sm:text-lg py-2.5 sm:py-3" onClick={handleCheckout}>
+                  {loading ? 'Processando...' : (
+                    <>
+                      <Image src="https://placehold.co/100x25.png" alt="Mercado Pago" width={100} height={25} className="mr-2" data-ai-hint="mercadopago logo" /> Finalizar com Mercado Pago
+                    </>
+                  )}
                 </Button>
                 <Link href="/products" className="w-full" passHref>
                   <Button variant="outline" size="lg" className="w-full text-sm sm:text-base">

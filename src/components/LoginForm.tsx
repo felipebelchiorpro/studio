@@ -34,24 +34,14 @@ export default function LoginForm() {
 
   const onSubmit = (data: LoginFormValues) => {
     // Simulate login - In a real app, this would call an API
-    // Basic check for a demo merchant account.
-    const isOldUser = data.email === "merchant@darkstore.com" && data.password === "password";
-    const isNewUser = data.email === "contatofelipebelchior@gmail.com" && data.password === "3595157";
-
-    if (isOldUser || isNewUser) {
-      login(data.email);
-      toast({
-        title: "Login bem-sucedido!",
-        description: "Redirecionando para o dashboard...",
-      });
-      router.push("/dashboard");
-    } else {
-       toast({
-        title: "Falha no Login",
-        description: "Email ou senha inválidos. Verifique suas credenciais.",
-        variant: "destructive",
-      });
-    }
+    // For development/demo purposes, allow any valid email/password
+    // In production, this would verify against Supabase Auth or backend API
+    login(data.email);
+    toast({
+      title: "Login bem-sucedido!",
+      description: "Redirecionando para o dashboard...",
+    });
+    router.push("/dashboard");
   };
 
   return (
@@ -61,7 +51,7 @@ export default function LoginForm() {
         <CardDescription>Faça login para acessar o painel do comerciante.</CardDescription>
       </CardHeader>
       {/* Using div as form root to attach react-hook-form handleSubmit to button onClick */}
-      <div> 
+      <div>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -97,9 +87,9 @@ export default function LoginForm() {
             Per instructions: "Evite usar <form> onSubmit ...; use eventos de clique para formulários."
             react-hook-form's handleSubmit can be triggered by button's onClick.
           */}
-          <Button 
-            type="button" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" 
+          <Button
+            type="button"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={form.handleSubmit(onSubmit)}
             disabled={form.formState.isSubmitting}
           >

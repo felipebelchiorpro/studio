@@ -1,82 +1,67 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useBrand } from '@/context/BrandContext';
-import { PlusCircle, Tag, List } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Tag, Plus, Trash2 } from 'lucide-react';
+import BrandForm from '@/components/BrandForm';
+import Image from 'next/image';
 
 export default function ManageBrandsPage() {
-  const { brands, addBrand, getBrands } = useBrand();
-  const [newBrandName, setNewBrandName] = useState("");
-  const { toast } = useToast(); // If BrandContext handles toasts, this might not be needed here directly
-
-  const currentBrands = getBrands(); // Get sorted brands
-
-  const handleAddBrand = () => {
-    if (newBrandName.trim()) {
-      addBrand(newBrandName.trim()); // addBrand in context now shows toasts
-      setNewBrandName(""); // Clear input after adding
-    } else {
-      toast({ title: "Erro", description: "O nome da marca não pode ser vazio.", variant: "destructive" });
-    }
-  };
+  const { brands, addBrand, removeBrand } = useBrand();
+  const [isBrandFormOpen, setIsBrandFormOpen] = useState(false);
 
   return (
     <div className="space-y-8">
-      <h1 className="font-headline text-3xl font-bold text-foreground flex items-center">
-        <Tag className="mr-3 h-8 w-8 text-primary" /> Gerenciar Marcas
-      </h1>
+      <div className="flex justify-between items-center">
+        <h1 className="font-headline text-3xl font-bold text-foreground flex items-center">
+          <Tag className="mr-3 h-8 w-8 text-primary" /> Gerenciar Marcas
+        </h1>
+        <Button onClick={() => setIsBrandFormOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Adicionar Marca
+        </Button>
+      </div>
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>Adicionar Nova Marca</CardTitle>
-          <CardDescription>Insira o nome da nova marca para adicioná-la ao sistema.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              placeholder="Nome da nova marca"
-              value={newBrandName}
-              onChange={(e) => setNewBrandName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAddBrand();}}
-              className="flex-grow"
-            />
-            <Button onClick={handleAddBrand} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              <PlusCircle className="mr-2 h-5 w-5" /> Adicionar Marca
-            </Button>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {brands.map((brand) => (
+          <Card key={brand.id} className="relative group overflow-hidden shadow-md hover:shadow-lg transition-shadow border-none bg-muted/10">
+            <CardContent className="p-4 flex items-center justify-center aspect-square relative">
+              <div className="relative w-full h-full">
+                <Image
+                  src={brand.imageUrl}
+                  alt={brand.name}
+                  layout="fill"
+                  objectFit="contain"
+                  className="p-2 brightness-200"
+                />
+              </div>
+              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-2 text-center backdrop-blur-sm">
+                <p className="text-white text-xs font-semibold mb-2">{brand.name}</p>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => removeBrand(brand.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {brands.length === 0 && (
+          <div className="col-span-full text-center py-12 text-muted-foreground border border-dashed rounded-lg bg-card">
+            Nenhuma marca cadastrada no sistema.
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center"><List className="mr-2 h-6 w-6 text-primary"/> Marcas Cadastradas</CardTitle>
-          <CardDescription>Lista de todas as marcas disponíveis no sistema.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {currentBrands.length > 0 ? (
-            <ul className="space-y-2">
-              {currentBrands.map((brand, index) => (
-                <li key={index} className="p-3 bg-muted/50 rounded-md text-sm text-foreground border border-border/30">
-                  {brand}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted-foreground text-center py-4">Nenhuma marca cadastrada ainda.</p>
-          )}
-        </CardContent>
-         <CardFooter>
-            <p className="text-xs text-muted-foreground">
-                Total de marcas: {currentBrands.length}
-            </p>
-        </CardFooter>
-      </Card>
+      <BrandForm
+        open={isBrandFormOpen}
+        onOpenChange={setIsBrandFormOpen}
+        onSubmitBrand={addBrand}
+      />
     </div>
   );
 }

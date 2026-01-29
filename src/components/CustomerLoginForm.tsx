@@ -1,30 +1,30 @@
-
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCustomerAuth } from "@/context/CustomerAuthContext"; // Changed to useCustomerAuth
-import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { LogIn, UserPlus } from "lucide-react";
-import Link from "next/link";
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Por favor, insira um email válido." }),
-  password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(1, "A senha é obrigatória"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function CustomerLoginForm() {
-  const { customerLogin } = useCustomerAuth(); // Changed to customerLogin
-  const router = useRouter();
-  const searchParams = useSearchParams();
+interface CustomerLoginFormProps {
+  onSuccess?: () => void;
+}
+
+export default function CustomerLoginForm({ onSuccess }: CustomerLoginFormProps) {
+  const { customerLogin } = useCustomerAuth();
   const { toast } = useToast();
 
   const form = useForm<LoginFormValues>({
@@ -35,85 +35,88 @@ export default function CustomerLoginForm() {
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    // Simulate customer login
-    if (data.email === "customer@darkstore.com" && data.password === "password123") {
-      customerLogin(data.email, "Cliente Exemplo"); // Pass name if available, or default
-      toast({
-        title: "Login bem-sucedido!",
-        description: "Bem-vindo(a) de volta!",
-      });
-      const redirectUrl = searchParams.get('redirect') || '/account/dashboard';
-      router.push(redirectUrl);
-    } else {
-       toast({
-        title: "Falha no Login",
-        description: "Email ou senha inválidos. Use customer@darkstore.com e password123 para teste.",
-        variant: "destructive",
-      });
-    }
+  const onSubmit = async (data: LoginFormValues) => {
+    // Note: customerLogin currently handles its own error toasts.
+    await customerLogin(data.email, data.password);
+
+    // We only call onSuccess (close modal) if we think it worked. 
+    if (onSuccess) onSuccess();
   };
 
   return (
-    <Card className="w-full max-w-md shadow-xl">
-      <CardHeader className="text-center">
-        <CardTitle className="font-headline text-3xl text-primary">Acesse sua Conta</CardTitle>
-        <CardDescription>Faça login para ver seus pedidos e mais.</CardDescription>
+    <Card className="w-full max-w-md shadow-2xl border border-white/5 bg-[#0a0a0a] text-white">
+      <CardHeader className="text-center space-y-4 pb-2">
+        <div className="mx-auto w-fit mb-2">
+          {/* Logo - Assuming user has this asset, or we use text if fails */}
+          <div className="flex items-center justify-center gap-2">
+            <Image
+              src="/darkstore-logo.png"
+              alt="DarkStore Logo"
+              width={180}
+              height={50}
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+        <div>
+          <CardTitle className="text-2xl font-bold tracking-tight text-white">Bem-vindo de volta!</CardTitle>
+          <CardDescription className="text-sm text-gray-400 mt-2">Digite suas credenciais para acessar sua conta.</CardDescription>
+        </div>
       </CardHeader>
-      <div> 
-        <CardContent className="space-y-4">
+      <CardContent className="space-y-4">
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email-customer">Email</Label>
+            <Label htmlFor="email-customer" className="text-white font-medium">Email</Label>
             <Input
               id="email-customer"
               type="email"
-              placeholder="seuemail@exemplo.com"
+              placeholder="seu@email.com"
               {...form.register("email")}
-              className={form.formState.errors.email ? "border-destructive" : ""}
-              aria-invalid={form.formState.errors.email ? "true" : "false"}
+              className={`bg-white/90 text-black border-0 placeholder:text-gray-500 h-10 ${form.formState.errors.email ? "ring-2 ring-red-500" : "focus-visible:ring-1 focus-visible:ring-gray-300"}`}
             />
             {form.formState.errors.email && (
-              <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+              <p className="text-sm text-red-500 font-medium">{form.formState.errors.email.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password-customer">Senha</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password-customer" className="text-white font-medium">Senha</Label>
+              <Link href="/account/forgot-password" className="text-xs font-medium text-red-500 hover:text-red-400">
+                Esqueceu a senha?
+              </Link>
+            </div>
             <Input
               id="password-customer"
               type="password"
-              placeholder="********"
+              placeholder="••••••••••••••"
               {...form.register("password")}
-              className={form.formState.errors.password ? "border-destructive" : ""}
-              aria-invalid={form.formState.errors.password ? "true" : "false"}
+              className={`bg-white/90 text-black border-0 placeholder:text-gray-500 h-10 ${form.formState.errors.password ? "ring-2 ring-red-500" : "focus-visible:ring-1 focus-visible:ring-gray-300"}`}
             />
             {form.formState.errors.password && (
-              <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+              <p className="text-sm text-red-500 font-medium">{form.formState.errors.password.message}</p>
             )}
           </div>
-          <div className="text-sm text-right">
-            <Link href="/account/forgot-password" className="font-medium text-primary hover:underline">
-              Esqueceu sua senha?
-            </Link>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button 
-            type="button" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" 
-            onClick={form.handleSubmit(onSubmit)}
-            disabled={form.formState.isSubmitting}
-          >
-            <LogIn className="mr-2 h-4 w-4" />
-            {form.formState.isSubmitting ? "Entrando..." : "Entrar"}
-          </Button>
-           <div className="text-center text-sm text-muted-foreground">
-            Não tem uma conta?{' '}
-            <Link href="/account/register" className="font-medium text-primary hover:underline">
-              Cadastre-se aqui
-            </Link>
-          </div>
-        </CardFooter>
-      </div>
+        </div>
+
+        <Button
+          type="button"
+          className="w-full h-11 text-base font-bold bg-red-600 hover:bg-red-700 text-white shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all mt-2 rounded-md"
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? "Entrando..." : "Entrar"}
+        </Button>
+
+      </CardContent>
+      <CardFooter className="justify-center pb-6">
+        <p className="text-center text-sm text-gray-400">
+          Não tem uma conta?{' '}
+          <Link href="/account/register" className="font-semibold text-red-500 hover:text-red-400 transition-colors">
+            Cadastre-se grátis
+          </Link>
+        </p>
+      </CardFooter>
     </Card>
   );
 }

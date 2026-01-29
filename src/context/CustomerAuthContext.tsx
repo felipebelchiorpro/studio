@@ -1,24 +1,24 @@
-
 "use client";
 
 import type { CustomerUser } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast'; // Added for feedback
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 interface CustomerAuthContextType {
   isCustomerAuthenticated: boolean;
   customer: CustomerUser | null;
-  customerLogin: (email: string, name?: string) => void;
-  customerLogout: () => void;
+  customerLogin: (email: string, password?: string) => Promise<void>;
+  customerLogout: () => Promise<void>;
   customerAuthLoading: boolean;
   getAllRegisteredCustomers: () => CustomerUser[];
-  registerCustomerByAdmin: (data: { name: string; email: string }) => Promise<boolean>; // New function
+  registerCustomerByAdmin: (data: { name: string; email: string; phone?: string }) => Promise<boolean>;
 }
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(undefined);
 
-const CUSTOMER_AUTH_STORAGE_KEY = 'darkstore-customer-auth';
+// Keep this for the "Admin Dashboard" mock list only
 const ALL_CUSTOMERS_STORAGE_KEY = 'darkstore-all-customers';
 
 export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
@@ -29,21 +29,8 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const { toast } = useToast();
 
+  // Load "Mock" customers for Admin Dashboard view
   useEffect(() => {
-    try {
-      const storedAuth = localStorage.getItem(CUSTOMER_AUTH_STORAGE_KEY);
-      if (storedAuth) {
-        const authData = JSON.parse(storedAuth);
-        if (authData.isCustomerAuthenticated && authData.customer) {
-          setCustomer(authData.customer);
-          setIsCustomerAuthenticated(true);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to parse customer auth data from localStorage", error);
-      localStorage.removeItem(CUSTOMER_AUTH_STORAGE_KEY);
-    }
-
     try {
       const storedAllCustomers = localStorage.getItem(ALL_CUSTOMERS_STORAGE_KEY);
       if (storedAllCustomers) {
@@ -51,10 +38,69 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error("Failed to parse all customers data from localStorage", error);
-      localStorage.removeItem(ALL_CUSTOMERS_STORAGE_KEY);
     }
-    setCustomerAuthLoading(false);
   }, []);
+
+  // Supabase Auth Listener
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        // Map Supabase User to CustomerUser
+        const user: CustomerUser = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Cliente',
+          registeredAt: session.user.created_at,
+          phone: session.user.phone
+        };
+        setCustomer(user);
+        setIsCustomerAuthenticated(true);
+      } else {
+        setCustomer(null);
+        setIsCustomerAuthenticated(false);
+      }
+      setCustomerAuthLoading(false);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const customerLogin = async (email: string, password?: string) => {
+    if (!password) {
+      toast({ title: "Erro", description: "Senha é obrigatória.", variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      console.error("Supabase login error:", error);
+      toast({
+        title: "Falha no Login",
+        description: error.message === "Invalid login credentials" ? "Email ou senha incorretos." : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Login realizado com sucesso!",
+      description: "Bem-vindo de volta.",
+    });
+    // Redirect is handled by the calling component or let the auth state change trigger it? 
+    // Usually better to let the caller redirect on success if needed, or have a gloabl listener. 
+    // The existing code has redirect logic in the Page component watching `isCustomerAuthenticated`.
+  };
+
+  const customerLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/account/login');
+  };
 
   const persistAllCustomers = useCallback((updatedCustomers: CustomerUser[]) => {
     try {
@@ -64,51 +110,14 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const customerLogin = (email: string, name: string = `Cliente ${email.split('@')[0]}`) => {
-    const customerId = `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    const newCustomer: CustomerUser = {
-      id: customerId,
-      email,
-      name,
-      registeredAt: new Date().toISOString()
-    };
-
-    setCustomer(newCustomer);
-    setIsCustomerAuthenticated(true);
-    try {
-      localStorage.setItem(CUSTOMER_AUTH_STORAGE_KEY, JSON.stringify({ isCustomerAuthenticated: true, customer: newCustomer }));
-    } catch (error) {
-      console.error("Failed to save customer auth data to localStorage", error);
-    }
-
-    setAllCustomers(prevAllCustomers => {
-      const customerExists = prevAllCustomers.some(c => c.email === email);
-      if (!customerExists) {
-        const updatedAll = [...prevAllCustomers, newCustomer].sort((a,b) => (a.name || "").localeCompare(b.name || ""));
-        persistAllCustomers(updatedAll);
-        return updatedAll;
-      }
-      return prevAllCustomers;
-    });
-  };
-
-  const customerLogout = () => {
-    setCustomer(null);
-    setIsCustomerAuthenticated(false);
-    try {
-      localStorage.removeItem(CUSTOMER_AUTH_STORAGE_KEY);
-    } catch (error) {
-      console.error("Failed to remove customer auth data from localStorage", error);
-    }
-    router.push('/account/login');
-  };
-
   const getAllRegisteredCustomers = useCallback(() => {
     return [...allCustomers].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   }, [allCustomers]);
 
-  const registerCustomerByAdmin = useCallback(async (data: { name: string; email: string }): Promise<boolean> => {
-    const { name, email } = data;
+  const registerCustomerByAdmin = useCallback(async (data: { name: string; email: string; phone?: string }): Promise<boolean> => {
+    // This remains a "Mock" feature for now as creating users in Supabase requires Service Role or SignUp (which logs you in).
+    // Keeping local logic for display purposes in Admin Panel.
+    const { name, email, phone } = data;
     const customerExists = allCustomers.some(c => c.email.toLowerCase() === email.toLowerCase());
 
     if (customerExists) {
@@ -126,17 +135,18 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
       email: email,
       name: name,
       registeredAt: new Date().toISOString(),
+      phone: phone,
     };
 
     setAllCustomers(prevAllCustomers => {
-      const updatedAll = [...prevAllCustomers, newCustomer].sort((a,b) => (a.name || "").localeCompare(b.name || ""));
+      const updatedAll = [...prevAllCustomers, newCustomer].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
       persistAllCustomers(updatedAll);
       return updatedAll;
     });
 
     toast({
-      title: "Cliente Adicionado!",
-      description: `${name} foi adicionado com sucesso.`,
+      title: "Cliente Adicionado (Local)",
+      description: `${name} foi adicionado à lista local.`,
     });
     return true;
   }, [allCustomers, persistAllCustomers, toast]);
