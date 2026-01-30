@@ -23,6 +23,7 @@ const mapProductFromDB = (dbProduct: any): Product => {
         sizes: dbProduct.sizes || [],   // Added mapping
         colors: dbProduct.colors || [], // Added mapping
         flavors: dbProduct.flavors || [], // Added mapping
+        weights: dbProduct.weights || [], // Added mapping
         // Reviews not fetched by default on list, maybe separate
         reviews: []
     };
@@ -162,3 +163,77 @@ export const deleteProductService = async (productId: string): Promise<void> => 
     }
 };
 
+
+export const fetchNewReleasesService = async (limit: number = 8): Promise<Product[]> => {
+    const { data, error } = await supabase
+        .from('products')
+        .select(`
+      *,
+      categories (
+        name
+      )
+    `)
+        .eq('is_new_release', true)
+        .limit(limit);
+
+    if (error) {
+        console.error('Error fetching new releases:', error);
+        return [];
+    }
+
+    return (data || []).map(mapProductFromDB);
+};
+
+export const fetchBestSellersService = async (limit: number = 8): Promise<Product[]> => {
+    const { data, error } = await supabase
+        .from('products')
+        .select(`
+      *,
+      categories (
+        name
+      )
+    `)
+        .order('sales_count', { ascending: false })
+        .limit(limit);
+
+    if (error) {
+        console.error('Error fetching best sellers:', error);
+        return [];
+    }
+
+    return (data || []).map(mapProductFromDB);
+};
+
+export const fetchOnSaleService = async (limit: number = 8): Promise<Product[]> => {
+    // Note: This is a bit tricky with Supabase basic filters if we want "original_price > price".
+    // We can use .not('original_price', 'is', null) and filter in client or use a more complex query.
+    // However, .gt('original_price', supabase.rpc(...)) isn't straightforward without a function.
+    // For now, let's fetch products with an original_price and filter client side if the dataset is small enough, 
+    // OR ideally use a raw query or an RPC.
+    // Let's try to filter where original_price is not null first, then sort by discount?
+    // Actually, asking for specific "on sale" usually means original_price > price.
+    // If we can't do column comparison easily in standard select, we might need to fetch a bit more and filter.
+    // But to be safe and fast, let's just fetch items with original_price set, assuming they are on sale.
+    // Better yet: Rpc call if possible, but let's stick to standard queries for simplicity unless user has rpc.
+    // We'll fetch items where original_price is not null. 
+
+    const { data, error } = await supabase
+        .from('products')
+        .select(`
+      *,
+      categories (
+        name
+      )
+    `)
+        .not('original_price', 'is', null)
+        .limit(limit * 2); // Fetch a bit more to filter client side if needed
+
+    if (error) {
+        console.error('Error fetching on sale products:', error);
+        return [];
+    }
+
+    // Client-side refinement for the comparison
+    const products = (data || []).map(mapProductFromDB);
+    return products.filter(p => p.originalPrice && p.originalPrice > p.price).slice(0, limit);
+};

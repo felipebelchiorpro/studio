@@ -1,5 +1,6 @@
+
 import React, { Suspense } from 'react';
-import { fetchProductsService } from '@/services/productService';
+import { fetchNewReleasesService, fetchBestSellersService, fetchOnSaleService } from '@/services/productService';
 import { fetchPromotionsService } from '@/services/promotionService';
 import HomeClient from '@/components/home/HomeClient';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,15 +8,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function HomePage() {
-  // Parallel fetching for even better performance
-  const productsData = fetchProductsService();
-  const promotionsData = fetchPromotionsService();
-
-  const [products, promotions] = await Promise.all([productsData, promotionsData]);
+  // Parallel fetching for even better performance with specialized queries
+  const [newReleases, bestSellers, onSale, promotions] = await Promise.all([
+    fetchNewReleasesService(8),
+    fetchBestSellersService(8),
+    fetchOnSaleService(8),
+    fetchPromotionsService(),
+  ]);
 
   return (
     <Suspense fallback={<HomeLoadingSkeleton />}>
-      <HomeClient products={products} promotions={promotions} />
+      <HomeClient
+        newReleases={newReleases}
+        bestSellers={bestSellers}
+        onSale={onSale}
+        promotions={promotions}
+      />
     </Suspense>
   );
 }

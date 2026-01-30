@@ -40,6 +40,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedFlavor, setSelectedFlavor] = useState<string>('');
+  const [selectedWeight, setSelectedWeight] = useState<string>(''); // Added Weight State
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   // Partner Discount State
@@ -65,8 +66,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     if (product) {
       if (product.sizes && product.sizes.length > 0 && !selectedSize) setSelectedSize(product.sizes[0]);
       if (product.flavors && product.flavors.length > 0 && !selectedFlavor) setSelectedFlavor(product.flavors[0]);
+      if (product.weights && product.weights.length > 0 && !selectedWeight) setSelectedWeight(product.weights[0]);
     }
-  }, [product, selectedSize, selectedFlavor]);
+  }, [product, selectedSize, selectedFlavor, selectedWeight]);
 
   if (productsLoading || product === undefined) {
     return (
@@ -175,6 +177,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   const sizes = product.sizes || [];
   const flavors = product.flavors || [];
+  const weights = product.weights || []; // Get weights
   const hasSizes = sizes.length > 0;
 
   return (
@@ -401,6 +404,31 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       )}
                     >
                       {flavor}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Weight Selector (Supplement) */}
+            {weights.length > 0 && (
+              <div className="space-y-3 w-full">
+                <p className="text-sm font-medium text-foreground">
+                  Peso: <span className="font-bold">{selectedWeight}</span>
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {weights.map((weight) => (
+                    <button
+                      key={weight}
+                      onClick={() => setSelectedWeight(weight)}
+                      className={cn(
+                        "h-10 px-4 rounded-full border text-sm font-medium transition-all duration-200",
+                        selectedWeight === weight
+                          ? "border-[#16a34a] text-[#16a34a] bg-[#16a34a]/10 ring-1 ring-[#16a34a]"
+                          : "border-input bg-background text-foreground hover:border-[#16a34a]/50"
+                      )}
+                    >
+                      {weight}
                     </button>
                   ))}
                 </div>

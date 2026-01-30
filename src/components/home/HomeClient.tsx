@@ -1,4 +1,3 @@
-"use client";
 
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { Banner } from "@/components/Banner";
@@ -22,7 +21,9 @@ import BrandCarousel from '@/components/BrandCarousel';
 import { cn } from "@/lib/utils";
 
 interface HomeClientProps {
-    products: Product[];
+    newReleases: Product[];
+    bestSellers: Product[];
+    onSale: Product[];
     promotions: Promotion[];
 }
 
@@ -69,7 +70,7 @@ const CarouselDots = ({ api, onDotClick }: { api: CarouselApi | undefined, onDot
     );
 };
 
-export default function HomeClient({ products: allProducts, promotions }: HomeClientProps) {
+export default function HomeClient({ newReleases, bestSellers, onSale, promotions }: HomeClientProps) {
     const [carouselLoopThreshold, setCarouselLoopThreshold] = useState(3);
 
     useEffect(() => {
@@ -89,11 +90,6 @@ export default function HomeClient({ products: allProducts, promotions }: HomeCl
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
-    const featuredProducts = useMemo(() => allProducts.slice(0, 8), [allProducts]);
-    const newReleaseProducts = useMemo(() => allProducts.filter(p => p.isNewRelease).slice(0, 8), [allProducts]);
-    const bestSellingProducts = useMemo(() => [...allProducts].sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0)).slice(0, 8), [allProducts]);
-    const onSaleProducts = useMemo(() => allProducts.filter(p => p.originalPrice && p.originalPrice > p.price).slice(0, 8), [allProducts]);
 
     const newReleasesPlugin = useRef(Autoplay({ delay: 4500, stopOnInteraction: true }));
     const [apiNewReleases, setApiNewReleases] = useState<CarouselApi>();
@@ -136,7 +132,7 @@ export default function HomeClient({ products: allProducts, promotions }: HomeCl
                             </Button>
                         </Link>
                     </div>
-                    {newReleaseProducts.length > 0 ? (
+                    {newReleases.length > 0 ? (
                         <>
                             <Carousel
                                 setApi={setApiNewReleases}
@@ -144,13 +140,13 @@ export default function HomeClient({ products: allProducts, promotions }: HomeCl
                                 className="w-full"
                                 opts={{
                                     align: "start",
-                                    loop: newReleaseProducts.length > carouselLoopThreshold,
+                                    loop: newReleases.length > carouselLoopThreshold,
                                 }}
                                 onMouseEnter={newReleasesPlugin.current.stop}
                                 onMouseLeave={newReleasesPlugin.current.reset}
                             >
                                 <CarouselContent className="-ml-2 sm:-ml-4">
-                                    {newReleaseProducts.map((product: Product) => (
+                                    {newReleases.map((product: Product) => (
                                         <CarouselItem key={product.id} className="pl-2 sm:pl-4 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                             <div className="h-full p-0.5 sm:p-1">
                                                 <ProductCard product={product} />
@@ -177,7 +173,7 @@ export default function HomeClient({ products: allProducts, promotions }: HomeCl
                             </Button>
                         </Link>
                     </div>
-                    {bestSellingProducts.length > 0 ? (
+                    {bestSellers.length > 0 ? (
                         <>
                             <Carousel
                                 setApi={setApiBestSellers}
@@ -185,13 +181,13 @@ export default function HomeClient({ products: allProducts, promotions }: HomeCl
                                 className="w-full"
                                 opts={{
                                     align: "start",
-                                    loop: bestSellingProducts.length > carouselLoopThreshold,
+                                    loop: bestSellers.length > carouselLoopThreshold,
                                 }}
                                 onMouseEnter={bestSellersPlugin.current.stop}
                                 onMouseLeave={bestSellersPlugin.current.reset}
                             >
                                 <CarouselContent className="-ml-2 sm:-ml-4">
-                                    {bestSellingProducts.map((product: Product) => (
+                                    {bestSellers.map((product: Product) => (
                                         <CarouselItem key={product.id} className="pl-2 sm:pl-4 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                             <div className="h-full p-0.5 sm:p-1">
                                                 <ProductCard product={product} />
@@ -311,7 +307,7 @@ export default function HomeClient({ products: allProducts, promotions }: HomeCl
                             </Button>
                         </Link>
                     </div>
-                    {onSaleProducts.length > 0 ? (
+                    {onSale.length > 0 ? (
                         <>
                             <Carousel
                                 setApi={setApiOnSale}
@@ -319,13 +315,13 @@ export default function HomeClient({ products: allProducts, promotions }: HomeCl
                                 className="w-full"
                                 opts={{
                                     align: "start",
-                                    loop: onSaleProducts.length > carouselLoopThreshold,
+                                    loop: onSale.length > carouselLoopThreshold,
                                 }}
                                 onMouseEnter={onSaleProductsPlugin.current.stop}
                                 onMouseLeave={onSaleProductsPlugin.current.reset}
                             >
                                 <CarouselContent className="-ml-2 sm:-ml-4">
-                                    {onSaleProducts.map((product: Product) => (
+                                    {onSale.map((product: Product) => (
                                         <CarouselItem key={product.id} className="pl-2 sm:pl-4 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                             <div className="h-full p-0.5 sm:p-1">
                                                 <ProductCard product={product} />
@@ -364,3 +360,4 @@ export default function HomeClient({ products: allProducts, promotions }: HomeCl
         </div>
     );
 }
+
