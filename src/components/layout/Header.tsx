@@ -474,6 +474,27 @@ export default function Header() {
         </div>
       </nav>
 
+      {/* Mobile Navigation Bar (Scrollable) */}
+      <nav className="md:hidden bg-background border-b border-border/40 py-2 overflow-x-auto no-scrollbar">
+        <div className="container mx-auto px-4 flex items-center space-x-4 min-w-max">
+          <Link href="/products" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
+            Suplementos
+          </Link>
+          <Link href="/products?category=ROUPAS" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
+            Vestuário
+          </Link>
+          <Link href="/products?filter=on-sale" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
+            Outlet
+          </Link>
+          <Link href="/products?category=KITS" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
+            Kits
+          </Link>
+          <Link href="/products?tag=new" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
+            Lançamentos
+          </Link>
+        </div>
+      </nav>
+
     </header>
   );
 }
