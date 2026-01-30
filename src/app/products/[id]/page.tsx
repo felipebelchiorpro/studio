@@ -191,7 +191,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <div className="relative w-full max-w-[450px] mx-auto">
           <div className="aspect-[3/4] w-full relative overflow-hidden bg-secondary/20 rounded-sm">
             <Image
-              src={product.imageUrl || "https://placehold.co/600x800.png"}
+              src={selectedColor && product.colorMapping?.find(c => c.color === selectedColor)?.image
+                ? product.colorMapping.find(c => c.color === selectedColor)!.image!
+                : (product.imageUrl || "https://placehold.co/600x800.png")}
               alt={product.name}
               layout="fill"
               objectFit="cover"
@@ -213,6 +215,22 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </Badge>
             )}
           </div>
+          {/* Gallery Thumbnails (Optional - basic implementation) */}
+          {product.gallery && product.gallery.length > 0 && (
+            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 no-scrollbar">
+              <button
+                className={cn("relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden", !selectedColor ? "ring-2 ring-primary" : "")}
+                onClick={() => setSelectedColor(null)}
+              >
+                <Image src={product.imageUrl} layout="fill" objectFit="cover" alt="Default" />
+              </button>
+              {product.gallery.map((img, idx) => (
+                <div key={idx} className="relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden">
+                  <Image src={img} layout="fill" objectFit="cover" alt={`Gallery ${idx}`} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Details (Centered Layout) */}
@@ -293,6 +311,51 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             )}
 
             <Separator className="bg-border/40" />
+
+            {/* Color Selector */}
+            {(product.colorMapping?.length || product.colors?.length) ? (
+              <div className="space-y-3 w-full pt-4">
+                <p className="text-sm font-medium text-foreground">
+                  Cor: <span className="font-bold">{selectedColor || "Selecione"}</span>
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {/* Priority to Color Mapping (Pro) */}
+                  {product.colorMapping && product.colorMapping.length > 0 ? (
+                    product.colorMapping.map((mapItem, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedColor(mapItem.color)}
+                        className={cn(
+                          "w-10 h-10 rounded-full border-2 transition-all duration-200 shadow-sm relative",
+                          selectedColor === mapItem.color
+                            ? "border-primary ring-2 ring-primary ring-offset-2 ring-offset-background scale-110"
+                            : "border-border hover:scale-105 hover:border-primary/50"
+                        )}
+                        title={mapItem.color}
+                        style={{ backgroundColor: mapItem.hex }}
+                        aria-label={`Selecionar cor ${mapItem.color}`}
+                      />
+                    ))
+                  ) : (
+                    // Fallback to legacy colors array
+                    product.colors?.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={cn(
+                          "h-10 px-4 rounded-full border text-sm font-medium transition-all duration-200",
+                          selectedColor === color
+                            ? "border-primary text-primary bg-primary/10 ring-1 ring-primary"
+                            : "border-input bg-background text-foreground hover:border-primary/50"
+                        )}
+                      >
+                        {color}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : null}
 
             {/* Size Selector (Clothing) */}
             {hasSizes && (
