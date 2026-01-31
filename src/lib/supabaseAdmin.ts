@@ -5,7 +5,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Note: This client should ONLY be used in Server Actions or API routes.
 // NEVER import this in a Client Component.
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || '', {
+// Fallback to 'build-placeholder' to prevent build failures if key is missing (Cron will fail at runtime, which is expected)
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || 'build-missing-service-key', {
     auth: {
         autoRefreshToken: false,
         persistSession: false
