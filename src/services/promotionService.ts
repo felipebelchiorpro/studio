@@ -2,23 +2,29 @@ import { supabase } from '@/lib/supabaseClient';
 import { Promotion } from '@/types';
 
 export const fetchPromotionsService = async (): Promise<Promotion[]> => {
-    const { data, error } = await supabase
-        .from('promotions')
-        .select('*');
+    try {
+        const { data, error } = await supabase
+            .from('promotions')
+            .select('*');
 
-    if (error) {
-        console.error('Error fetching promotions:', error);
-        throw error;
+        if (error) {
+            console.error('Error fetching promotions:', error);
+            // Don't throw, just return empty to prevent build crash
+            return [];
+        }
+
+        return (data || []).map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            imageUrl: p.image_url,
+            link: p.link,
+            position: p.position || 'main_carousel'
+        }));
+    } catch (err) {
+        console.error('Network/Unexpected Error fetching promotions:', err);
+        return [];
     }
-
-    return (data || []).map((p: any) => ({
-        id: p.id,
-        title: p.title,
-        description: p.description,
-        imageUrl: p.image_url,
-        link: p.link,
-        position: p.position || 'main_carousel'
-    }));
 };
 
 export const createPromotionService = async (promotion: Partial<Promotion>): Promise<Promotion | null> => {
