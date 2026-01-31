@@ -22,6 +22,7 @@ const mapProductFromDB = (dbProduct: any): Product => {
         isNewRelease: dbProduct.is_new_release,
         sizes: dbProduct.sizes || [],   // Added mapping
         colors: dbProduct.colors || [], // Added mapping
+        colorMapping: dbProduct.color_mapping || [], // Added mapping
         flavors: dbProduct.flavors || [], // Added mapping
         weights: dbProduct.weights || [], // Added mapping
         // Reviews not fetched by default on list, maybe separate
