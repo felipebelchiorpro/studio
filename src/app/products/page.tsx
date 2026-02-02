@@ -34,6 +34,11 @@ function ProductsContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState('default');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
 
   useEffect(() => {
@@ -124,7 +129,7 @@ function ProductsContent() {
   };
 
 
-  if (productsLoading) {
+  if (productsLoading || !hasMounted) {
     return (
       <div className="container mx-auto py-6 sm:py-8">
         <div className="mb-6 sm:mb-8 text-center">

@@ -26,15 +26,18 @@ export default function ProductCard({ product }: ProductCardProps) {
     });
   };
 
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
-  const discountPercentage = hasDiscount && product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const safePrice = typeof product.price === 'number' ? product.price : 0;
+  const safeOriginalPrice = typeof product.originalPrice === 'number' ? product.originalPrice : 0;
+
+  const hasDiscount = safeOriginalPrice > safePrice;
+  const discountPercentage = hasDiscount && safeOriginalPrice > 0
+    ? Math.round(((safeOriginalPrice - safePrice) / safeOriginalPrice) * 100)
     : 0;
 
-  const installmentPrice = (product.price / 3).toFixed(2).replace('.', ',');
+  const installmentPrice = (safePrice / 3).toFixed(2).replace('.', ',');
 
-  const discountValue = hasDiscount && product.originalPrice
-    ? (product.originalPrice - product.price).toFixed(2).replace('.', ',')
+  const discountValue = hasDiscount
+    ? (safeOriginalPrice - safePrice).toFixed(2).replace('.', ',')
     : '0,00';
 
   return (
@@ -105,13 +108,13 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Price Section */}
         <div className="mt-auto">
-          {hasDiscount && product.originalPrice && (
+          {hasDiscount && (
             <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-xs text-muted-foreground line-through">R$ {product.originalPrice.toFixed(2).replace('.', ',')}</span>
+              <span className="text-xs text-muted-foreground line-through">R$ {safeOriginalPrice.toFixed(2).replace('.', ',')}</span>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg font-extrabold text-[#054F31] dark:text-[#10B981]">R$ {product.price.toFixed(2).replace('.', ',')}</span>
+            <span className="text-base sm:text-lg font-extrabold text-[#054F31] dark:text-[#10B981]">R$ {safePrice.toFixed(2).replace('.', ',')}</span>
           </div>
         </div>
       </div>

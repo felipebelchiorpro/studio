@@ -36,12 +36,20 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
 
   // ALL_BRANDS will now be derived from BrandContext
   const ALL_BRANDS = useMemo(() => {
-    return getBrands().sort(); // getBrands already returns sorted unique brands
-  }, [contextBrands, getBrands]); // Depend on contextBrands to re-memoize when brands change
+    return Array.from(new Set(getBrands().map(b => b.name))).sort();
+  }, [contextBrands, getBrands]);
+
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const MAX_PRICE = useMemo(() => {
-    if (productsLoading || allProducts.length === 0) return 1000; // Default max if no products or loading
-    return Math.max(...allProducts.map(p => p.price), 100);
+    if (productsLoading || allProducts.length === 0) return 1000;
+    // Safeguard map to ensure only valid numbers are passed to Math.max
+    const prices = allProducts.map(p => typeof p.price === 'number' && !isNaN(p.price) ? p.price : 0);
+    return Math.max(...prices, 100);
   }, [allProducts, productsLoading]);
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -104,7 +112,7 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
     });
   };
 
-  if (productsLoading) { // Still show skeleton if products are loading (for MAX_PRICE)
+  if (productsLoading || !hasMounted) { // Still show skeleton if products are loading (for MAX_PRICE)
     return (
       <div className="space-y-6 p-4 bg-card rounded-lg shadow-md">
         <Skeleton className="h-6 w-3/4 mb-4" />
