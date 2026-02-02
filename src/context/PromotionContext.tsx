@@ -67,14 +67,12 @@ export const PromotionProvider = ({ children }: { children: ReactNode }) => {
   // I will just make them async and call the service to be safe.
 
   const addPromotion = async (promotionData: Omit<Promotion, 'id'>) => {
-    // Logic handled in Dashboard Page mostly, but if used elsewhere:
     const { createPromotionService } = await import('@/services/promotionService');
     const newPromo = await createPromotionService(promotionData);
     if (newPromo) {
       setPromotions(prev => [newPromo, ...prev]);
       return newPromo;
     }
-    throw new Error("Failed to create");
   };
 
   const updatePromotion = async (promotion: Promotion) => {

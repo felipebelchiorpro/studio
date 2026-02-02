@@ -46,7 +46,7 @@ export default function AppearancePage() {
             updatePromotion(data);
             toast({ title: "Banner Atualizado", description: `"${data.title}" foi atualizado.` });
         } else {
-            addPromotion(data as Omit<Promotion, 'id'>);
+            addPromotion(data);
             toast({ title: "Banner Adicionado", description: `"${data.title}" foi adicionado.` });
         }
         setIsFormOpen(false);
@@ -103,7 +103,7 @@ export default function AppearancePage() {
 
             <PromotionForm
                 promotion={editingPromotion}
-                onSubmit={handleSubmitPromotion}
+                onSubmitPromotion={handleSubmitPromotion}
                 open={isFormOpen}
                 onOpenChange={(isOpen) => {
                     setIsFormOpen(isOpen);

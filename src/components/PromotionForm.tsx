@@ -24,12 +24,15 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Promotion } from "@/types";
+import { uploadFile } from "@/services/storageService";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const promotionSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  imageUrl: z.string().url({ message: "URL inválida" }),
-  link: z.string().optional(),
+  title: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  imageUrl: z.string().min(1, "Imagem é obrigatória"),
+  link: z.string().optional().nullable(),
   position: z.enum(['main_carousel', 'grid_left', 'grid_top_right', 'grid_bottom_left', 'grid_bottom_right']).default('main_carousel'),
 });
 
@@ -39,13 +42,15 @@ const DEFAULT_PLACEHOLDER_IMAGE = "https://placehold.co/800x400?text=Banner+Prev
 
 interface PromotionFormProps {
   promotion?: Promotion | null;
-  onSubmitPromotion: (data: Promotion) => void;
+  onSubmitPromotion: (data: Promotion, isEditing: boolean) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export default function PromotionForm({ promotion, onSubmitPromotion, open, onOpenChange }: PromotionFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<PromotionFormValues>({
     resolver: zodResolver(promotionSchema),
@@ -62,10 +67,10 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
     if (open) {
       if (promotion) {
         form.reset({
-          title: promotion.title,
+          title: promotion.title || "",
           description: promotion.description || "",
           imageUrl: promotion.imageUrl,
-          link: promotion.link,
+          link: promotion.link || "",
           position: promotion.position || "main_carousel",
         });
         setImagePreview(promotion.imageUrl);
@@ -82,30 +87,34 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
     }
   }, [promotion, form, open]);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUri = reader.result as string;
-        setImagePreview(dataUri);
-        form.setValue("imageUrl", dataUri);
-        form.clearErrors("imageUrl");
-      };
-      reader.readAsDataURL(file);
+      try {
+        setIsUploading(true);
+        const publicUrl = await uploadFile(file, 'banners');
+        setImagePreview(publicUrl);
+        form.setValue("imageUrl", publicUrl, { shouldValidate: true });
+        toast({ title: "Sucesso", description: "Imagem do banner enviada com sucesso." });
+      } catch (error) {
+        console.error("Error uploading banner", error);
+        toast({ title: "Erro", description: "Falha ao enviar imagem.", variant: "destructive" });
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
   const handleSubmit = (data: PromotionFormValues) => {
     const finalData: Promotion = {
-      id: promotion?.id || "",
-      title: data.title,
+      id: promotion?.id || `promo-${Date.now()}`,
+      title: data.title || "",
       description: data.description || "",
       imageUrl: data.imageUrl,
-      link: data.link,
+      link: data.link || "",
       position: data.position as any,
     };
-    onSubmitPromotion(finalData);
+    onSubmitPromotion(finalData, !!promotion);
     onOpenChange(false);
   };
 
@@ -128,7 +137,7 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
                 <FormItem>
                   <FormLabel>Título Principal <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Queima de Estoque" {...field} />
+                    <Input placeholder="Ex: Queima de Estoque" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -142,7 +151,7 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
                 <FormItem>
                   <FormLabel>Subtítulo / Descrição <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Até 50% OFF em selecionados" {...field} />
+                    <Input placeholder="Ex: Até 50% OFF em selecionados" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -156,7 +165,7 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
                 <FormItem>
                   <FormLabel>Link de Destino <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: /products?category=WHEY" {...field} />
+                    <Input placeholder="Ex: /products?category=WHEY" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -232,8 +241,15 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              {promotion ? "Salvar Banner" : "Criar Banner"}
+            <Button type="submit" className="w-full" disabled={isUploading || form.formState.isSubmitting}>
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando Imagem...
+                </>
+              ) : (
+                promotion ? "Salvar Banner" : "Criar Banner"
+              )}
             </Button>
           </form>
         </Form>
