@@ -20,12 +20,12 @@ const mapProductFromDB = (dbProduct: any): Product => {
         rating: Number(dbProduct.rating),
         salesCount: dbProduct.sales_count,
         isNewRelease: dbProduct.is_new_release,
-        sizes: dbProduct.sizes || [],   // Added mapping
-        colors: dbProduct.colors || [], // Added mapping
-        colorMapping: dbProduct.color_mapping || [], // Added mapping
-        flavors: dbProduct.flavors || [], // Added mapping
-        flavorMapping: dbProduct.flavor_mapping || [], // Added mapping
-        weights: dbProduct.weights || [], // Added mapping
+        sizes: Array.isArray(dbProduct.sizes) ? dbProduct.sizes : [],
+        colors: Array.isArray(dbProduct.colors) ? dbProduct.colors : [],
+        colorMapping: Array.isArray(dbProduct.color_mapping) ? dbProduct.color_mapping : [],
+        flavors: Array.isArray(dbProduct.flavors) ? dbProduct.flavors : [],
+        flavorMapping: Array.isArray(dbProduct.flavor_mapping) ? dbProduct.flavor_mapping : [],
+        weights: Array.isArray(dbProduct.weights) ? dbProduct.weights : [],
         // Reviews not fetched by default on list, maybe separate
         reviews: []
     };

@@ -47,7 +47,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
     const [discountValue, setDiscountValue] = useState('');
     const [usageLimit, setUsageLimit] = useState('');
     const [expirationDate, setExpirationDate] = useState('');
-    const [selectedPartner, setSelectedPartner] = useState<string>('none');
+    const [selectedPartner, setSelectedPartner] = useState<string>(''); // Changed to string input
     const [isPartnerCoupon, setIsPartnerCoupon] = useState(false);
 
     const resetForm = () => {
@@ -56,7 +56,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
         setDiscountValue('');
         setUsageLimit('');
         setExpirationDate('');
-        setSelectedPartner('none');
+        setSelectedPartner('');
         setIsPartnerCoupon(false);
     };
 
@@ -76,7 +76,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
                 usage_limit: usageLimit ? Number(usageLimit) : null,
                 expiration_date: expirationDate ? new Date(expirationDate).toISOString() : null,
                 active: true,
-                partner_id: isPartnerCoupon && selectedPartner !== 'none' ? selectedPartner : null
+                partner_name: isPartnerCoupon && selectedPartner ? selectedPartner : null
             });
 
             if (res.success) {
@@ -144,19 +144,14 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
 
                             {isPartnerCoupon && (
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="partner" className="text-right">Parceiro</Label>
+                                    <Label htmlFor="partner" className="text-right">Nome do Parceiro</Label>
                                     <div className="col-span-3">
-                                        <Select value={selectedPartner} onValueChange={setSelectedPartner}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecione o parceiro" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none" disabled>Selecione um parceiro...</SelectItem>
-                                                {partners.map(partner => (
-                                                    <SelectItem key={partner.id} value={partner.id}>{partner.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Input
+                                            id="partner"
+                                            value={selectedPartner}
+                                            onChange={(e) => setSelectedPartner(e.target.value)}
+                                            placeholder="Ex: Felipe Belchior"
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -241,7 +236,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
 
                 <TabsContent value="general">
                     <CouponList
-                        coupons={initialCoupons.filter(c => !c.partner_id)}
+                        coupons={initialCoupons.filter(c => !c.partner_name && !c.partner_id)}
                         handleToggle={handleToggle}
                         handleDelete={handleDelete}
                     />
@@ -249,7 +244,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
 
                 <TabsContent value="partners">
                     <CouponList
-                        coupons={initialCoupons.filter(c => c.partner_id)}
+                        coupons={initialCoupons.filter(c => c.partner_name || c.partner_id)}
                         handleToggle={handleToggle}
                         handleDelete={handleDelete}
                         isPartnerView
@@ -282,10 +277,10 @@ function CouponList({ coupons, handleToggle, handleDelete, isPartnerView = false
                 <Card key={coupon.id} className={`${!coupon.active ? 'opacity-60' : ''}`}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <div className="space-y-1">
-                            {isPartnerView && coupon.partners && (
+                            {isPartnerView && (
                                 <div className="text-xs font-semibold text-primary flex items-center gap-1">
                                     <User className="h-3 w-3" />
-                                    {coupon.partners.name}
+                                    {coupon.partner_name || coupon.partners?.name || 'Parceiro'}
                                 </div>
                             )}
                             <CardTitle className="text-sm font-medium">
