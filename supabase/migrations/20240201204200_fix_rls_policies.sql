@@ -104,16 +104,16 @@ CREATE POLICY "Service Role manages partners" ON public.partners
     FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- === ORDERS ===
--- Strict: Service Role + Owners (checking auth.uid)
+-- Strict: Service Role + Owners (checking auth.uid) + Admin Exception
 CREATE POLICY "Service Role manages orders" ON public.orders
     FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 CREATE POLICY "Users can read own orders" ON public.orders
     FOR SELECT TO authenticated
-    USING (auth.uid()::text = user_id);
+    USING (auth.uid()::text = user_id OR (auth.jwt() ->> 'email') = 'contatofelipebelchior@gmail.com');
 
 -- === ORDER ITEMS ===
--- Strict: Service Role + Owners (via parent order)
+-- Strict: Service Role + Owners (via parent order) + Admin Exception
 CREATE POLICY "Service Role manages order_items" ON public.order_items
     FOR ALL TO service_role USING (true) WITH CHECK (true);
 
@@ -123,6 +123,6 @@ CREATE POLICY "Users can read own order items" ON public.order_items
         EXISTS (
             SELECT 1 FROM public.orders
             WHERE orders.id = order_items.order_id
-            AND orders.user_id = auth.uid()::text
+            AND (orders.user_id = auth.uid()::text OR (auth.jwt() ->> 'email') = 'contatofelipebelchior@gmail.com')
         )
     );
