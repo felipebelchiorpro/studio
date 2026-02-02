@@ -9,7 +9,8 @@ ADD COLUMN IF NOT EXISTS "sizes" text[] DEFAULT '{}';
 ALTER TABLE "public"."products"
 ADD COLUMN IF NOT EXISTS "video_url" text NULL,
 ADD COLUMN IF NOT EXISTS "original_price" numeric NULL,
-ADD COLUMN IF NOT EXISTS "is_new_release" boolean DEFAULT false;
+ADD COLUMN IF NOT EXISTS "is_new_release" boolean DEFAULT false,
+ADD COLUMN IF NOT EXISTS "hover_image_url" text NULL;
 
 -- 3. Handling Case Sensitivity/Mapping
 -- If the frontend sends "originalPrice" (camelCase) but DB has "original_price" (snake_case), it might fail.
