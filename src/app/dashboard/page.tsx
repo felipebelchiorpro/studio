@@ -106,8 +106,11 @@ export default function DashboardOverviewPage() {
         });
 
       } catch (err: any) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) console.error("Auth check error:", authError);
+
         console.error("Dashboard fetch error:", err);
-        setError(`Debug: ${JSON.stringify(err)} | Padrão: ${err.message || "Erro desconhecido"}`);
+        setError(`Debug: ${JSON.stringify(err)} | User: ${user?.id || "Sem usuario"} | AuthErr: ${authError?.message || "N/A"}`);
       } finally {
         setLoading(false);
       }
