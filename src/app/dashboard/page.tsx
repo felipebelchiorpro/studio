@@ -107,7 +107,7 @@ export default function DashboardOverviewPage() {
 
       } catch (err: any) {
         console.error("Dashboard fetch error:", err);
-        setError(err.message || "Erro desconhecido ao carregar dados.");
+        setError(`Debug: ${JSON.stringify(err)} | Padrão: ${err.message || "Erro desconhecido"}`);
       } finally {
         setLoading(false);
       }
