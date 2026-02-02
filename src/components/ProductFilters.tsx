@@ -30,7 +30,12 @@ interface ProductFiltersProps {
 // For now, let's fetch inside to ensure it's up to date.
 
 
-export default function ProductFilters({ onFilterChange }: ProductFiltersProps) {
+interface ProductFiltersProps {
+  onFilterChange: (filters: Filters) => void;
+  initialFilters?: Filters;
+}
+
+export default function ProductFilters({ onFilterChange, initialFilters }: ProductFiltersProps) {
   const { products: allProducts, loading: productsLoading } = useProduct();
   const { getBrands, brands: contextBrands } = useBrand(); // Use useBrand
 
@@ -56,6 +61,15 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
   const [priceRange, setPriceRange] = useState<[number, number]>([0, MAX_PRICE]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+
+  // Sync state with props (URL changes)
+  useEffect(() => {
+    if (initialFilters) {
+      if (initialFilters.categories) setSelectedCategories(initialFilters.categories);
+      if (initialFilters.brands) setSelectedBrands(initialFilters.brands);
+      if (initialFilters.priceRange) setPriceRange(initialFilters.priceRange);
+    }
+  }, [initialFilters]);
 
   useEffect(() => {
     const fetchCats = async () => {

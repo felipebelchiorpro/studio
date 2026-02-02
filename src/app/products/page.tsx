@@ -35,10 +35,28 @@ function ProductsContent() {
   const [sortOption, setSortOption] = useState('default');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
-
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  // Sync state with URL parameters
+  useEffect(() => {
+    if (!hasMounted) return;
+
+    const category = searchParams.get('category');
+    const query = searchParams.get('q');
+
+    if (category) {
+      setFilters(prev => ({ ...prev, categories: [category] }));
+    } else if (searchParams.has('category')) {
+      // if category param exists but is empty, clear it
+      setFilters(prev => ({ ...prev, categories: [] }));
+    }
+
+    if (query !== null) {
+      setSearchQuery(query);
+    }
+  }, [searchParams, hasMounted]);
 
 
   useEffect(() => {
@@ -166,6 +184,7 @@ function ProductsContent() {
         <aside className="hidden md:block w-full md:w-1/4 lg:w-1/5">
           <ProductFilters
             onFilterChange={handleFilterChange}
+            initialFilters={filters}
           />
         </aside>
 
@@ -192,6 +211,7 @@ function ProductsContent() {
                     </div>
                     <ProductFilters
                       onFilterChange={handleFilterChange}
+                      initialFilters={filters}
                     />
                   </div>
                 </SheetContent>
