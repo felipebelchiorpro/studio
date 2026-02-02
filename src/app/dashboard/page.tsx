@@ -117,7 +117,7 @@ export default function DashboardOverviewPage() {
   }, []);
 
   if (loading) {
-    return <div className="p-8">Carregando dados do dashboard...</div>;
+    return <div className="p-8">Carregando dados do dashboard (v2.0 New)...</div>;
   }
 
   if (error) {
