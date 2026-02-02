@@ -28,6 +28,7 @@ export interface Product {
   weights?: string[];
   gallery?: string[];
   colorMapping?: Array<{ color: string; hex: string; image?: string }>;
+  flavorMapping?: Array<{ flavor: string; image?: string }>; // Added for Flavor Images
 
   // For dashboard stock page - transient property, not persisted ideally
   currentEditStock?: number;

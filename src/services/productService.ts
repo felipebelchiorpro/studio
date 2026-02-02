@@ -24,6 +24,7 @@ const mapProductFromDB = (dbProduct: any): Product => {
         colors: dbProduct.colors || [], // Added mapping
         colorMapping: dbProduct.color_mapping || [], // Added mapping
         flavors: dbProduct.flavors || [], // Added mapping
+        flavorMapping: dbProduct.flavor_mapping || [], // Added mapping
         weights: dbProduct.weights || [], // Added mapping
         // Reviews not fetched by default on list, maybe separate
         reviews: []
@@ -99,6 +100,7 @@ export const createProductService = async (product: Partial<Product>): Promise<P
         sizes: product.sizes,   // Added
         colors: product.colors,  // Added
         flavors: product.flavors, // Added
+        flavor_mapping: product.flavorMapping, // Added
         weights: product.weights // Added
         // For now, let's assume valid ID or generate one if missing.
     };
@@ -138,6 +140,7 @@ export const updateProductService = async (product: Product): Promise<void> => {
         sizes: product.sizes,   // Added
         colors: product.colors,  // Added
         flavors: product.flavors, // Added
+        flavor_mapping: product.flavorMapping, // Added
         weights: product.weights // Added
     };
 

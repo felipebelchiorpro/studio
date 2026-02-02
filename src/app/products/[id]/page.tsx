@@ -194,9 +194,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <div className="relative w-full max-w-[450px] mx-auto">
           <div className="aspect-[3/4] w-full relative overflow-hidden bg-secondary/20 rounded-sm">
             <Image
-              src={selectedColor && product.colorMapping?.find(c => c.color === selectedColor)?.image
-                ? product.colorMapping.find(c => c.color === selectedColor)!.image!
-                : (product.imageUrl || "https://placehold.co/600x800.png")}
+              src={
+                (selectedColor && product.colorMapping?.find(c => c.color === selectedColor)?.image)
+                  ? product.colorMapping.find(c => c.color === selectedColor)!.image!
+                  : (selectedFlavor && product.flavorMapping?.find(f => f.flavor === selectedFlavor)?.image)
+                    ? product.flavorMapping.find(f => f.flavor === selectedFlavor)!.image!
+                    : (product.imageUrl || "https://placehold.co/600x800.png")
+              }
               alt={product.name}
               layout="fill"
               objectFit="cover"

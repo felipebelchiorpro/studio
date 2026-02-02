@@ -43,6 +43,10 @@ const productSchema = z.object({
         hex: z.string().min(1, "Hex da cor obrigatório"),
         image: z.string().optional()
     })).optional(),
+    flavorMapping: z.array(z.object({
+        flavor: z.string().min(1, "Nome do sabor obrigatório"),
+        image: z.string().optional()
+    })).optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -99,12 +103,14 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
             gallery: [],
             hoverImageUrl: "",
             colorMapping: [],
+            flavorMapping: [],
         },
     });
 
     const { watch, setValue } = form;
     const gallery = watch("gallery") || [];
     const colorMapping = watch("colorMapping") || [];
+    const flavorMapping = watch("flavorMapping") || [];
 
     useEffect(() => {
         if (open) {
@@ -125,6 +131,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                     gallery: product.gallery || [],
                     hoverImageUrl: product.hoverImageUrl || "",
                     colorMapping: product.colorMapping || [],
+                    flavorMapping: product.flavorMapping || [],
                 });
 
                 // Determine type based on features present
@@ -132,7 +139,10 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                     setProductType('clothing');
                 } else if ((product.flavors && product.flavors.length > 0) || (product.weights && product.weights.length > 0)) {
                     setProductType('supplement');
-                    setFlavorsInput(product.flavors?.join(', ') || "");
+                    // Ensure flavor input is populated if usage of mapping not detected or fallback
+                    if (!product.flavorMapping || product.flavorMapping.length === 0) {
+                        setFlavorsInput(product.flavors?.join(', ') || "");
+                    }
                 } else {
                     setProductType('other');
                 }
@@ -156,6 +166,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                     gallery: [],
                     hoverImageUrl: "",
                     colorMapping: [],
+                    flavorMapping: [],
                 });
                 setProductType('other');
                 setFlavorsInput("");
@@ -258,12 +269,48 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
         }
     };
 
+    // Flavor Mapping Logic
+    const addFlavor = () => {
+        setValue("flavorMapping", [...flavorMapping, { flavor: "Novo Sabor", image: "" }]);
+    };
+
+    const removeFlavor = (index: number) => {
+        const newMapping = [...flavorMapping];
+        newMapping.splice(index, 1);
+        setValue("flavorMapping", newMapping);
+    };
+
+    const updateFlavor = (index: number, field: keyof typeof flavorMapping[0], value: string) => {
+        const newMapping = [...flavorMapping];
+        newMapping[index] = { ...newMapping[index], [field]: value };
+        setValue("flavorMapping", newMapping);
+    };
+
+    const handleFlavorImageUpload = async (index: number, files: FileList | null) => {
+        if (files && files[0]) {
+            try {
+                setUploading(true);
+                const publicUrl = await uploadFile(files[0], 'flavors'); // Ensure 'flavors' bucket exists or use generic
+                updateFlavor(index, 'image', publicUrl);
+                toast({ title: "Sucesso", description: "Imagem do sabor enviada com sucesso." });
+            } catch (error) {
+                console.error("Erro ao enviar imagem do sabor", error);
+                toast({ title: "Erro", description: "Falha ao enviar imagem.", variant: "destructive" });
+            } finally {
+                setUploading(false);
+            }
+        }
+    };
+
     const handleSubmit = (data: ProductFormValues) => {
         const selectedCategory = categories.find(c => c.id === data.category);
         const categoryName = selectedCategory ? selectedCategory.name : "Categoria Indefinida";
 
         // Backward compatibility for colors array (legacy)
         const refinedColors = data.colorMapping?.map(c => c.color) || [];
+
+        // Backward compatibility for flavor array
+        const refinedFlavors = data.flavorMapping?.map(f => f.flavor) || (productType === 'supplement' ? flavorsInput.split(',').map(s => s.trim()).filter(Boolean) : []);
 
         const finalData: Product = {
             ...data,
@@ -277,7 +324,8 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
             sizes: productType === 'clothing' ? data.sizes : [],
             colors: refinedColors, // Maintain legacy array for search/filter if needed
             weights: productType === 'supplement' ? data.weights : [],
-            flavors: productType === 'supplement' ? flavorsInput.split(',').map(s => s.trim()).filter(Boolean) : [],
+            flavors: refinedFlavors, // Use refined flavors which prioritizes mapping
+            flavorMapping: data.flavorMapping, // New field persistence
             gallery: data.gallery,
             colorMapping: data.colorMapping,
         };
@@ -513,13 +561,47 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                             {productType === 'supplement' && (
                                 <div className="space-y-6 pt-2">
                                     {/* Sabores */}
-                                    <div className="space-y-2">
-                                        <Label>Sabores</Label>
-                                        <Input
-                                            placeholder="Separe por vírgula (ex: Chocolate, Baunilha, Morango)"
-                                            value={flavorsInput}
-                                            onChange={(e) => setFlavorsInput(e.target.value)}
-                                        />
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <Label>Sabores & Fotos</Label>
+                                            <Button type="button" variant="secondary" size="sm" onClick={addFlavor}><Plus size={14} className="mr-1" /> Adicionar Sabor</Button>
+                                        </div>
+
+                                        {/* Simple Input Backup if no mapping */}
+                                        {flavorMapping.length === 0 && (
+                                            <div className="mb-4">
+                                                <Label className="text-xs text-muted-foreground">Ou digite lista simples (sem fotos):</Label>
+                                                <Input
+                                                    placeholder="Chocolate, Baunilha..."
+                                                    value={flavorsInput}
+                                                    onChange={(e) => setFlavorsInput(e.target.value)}
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-2">
+                                            {flavorMapping.map((item, idx) => (
+                                                <div key={idx} className="flex items-center gap-2 p-2 border rounded-md bg-background">
+                                                    <Input
+                                                        placeholder="Nome (ex: Chocolate Belga)"
+                                                        value={item.flavor}
+                                                        onChange={(e) => updateFlavor(idx, 'flavor', e.target.value)}
+                                                        className="h-8 flex-1"
+                                                    />
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="relative w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80">
+                                                            <input type="file" accept="image/*" disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={(e) => handleFlavorImageUpload(idx, e.target.files)} />
+                                                            {item.image ? (
+                                                                <Image src={item.image} alt={item.flavor} layout="fill" objectFit="cover" />
+                                                            ) : <Upload size={14} className="text-muted-foreground" />}
+                                                        </div>
+                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => removeFlavor(idx)}>
+                                                            <Trash2 size={16} />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     {/* Pesos */}
