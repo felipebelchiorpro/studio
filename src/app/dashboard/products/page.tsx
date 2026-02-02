@@ -68,8 +68,8 @@ export default function ManageProductsPage() {
     } catch (error: any) {
       console.error("Erro detalhado:", error);
       toast({
-        title: "Erro ao Salvar",
-        description: error.message || "Ocorreu um erro desconhecido ao salvar o produto.",
+        title: "Erro ao Salvar (Debug)",
+        description: `Detalhes: ${error.message || JSON.stringify(error) || "Erro desconhecido"}`,
         variant: "destructive"
       });
     }
