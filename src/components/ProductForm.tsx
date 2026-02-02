@@ -15,6 +15,8 @@ import { useBrand } from "@/context/BrandContext";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Trash2, Plus, Upload, Image as ImageIcon, X } from "lucide-react";
+import { uploadFile } from "@/services/storageService";
+import { useToast } from "@/hooks/use-toast";
 
 // Updated Schema with Pro Features
 const productSchema = z.object({
@@ -35,7 +37,7 @@ const productSchema = z.object({
     // Pro Features
     weights: z.array(z.string()).optional(),
     gallery: z.array(z.string()).optional(),
-    hoverImageUrl: z.string().optional(), // Added back
+    hoverImageUrl: z.string().optional(),
     colorMapping: z.array(z.object({
         color: z.string().min(1, "Nome da cor obrigatório"),
         hex: z.string().min(1, "Hex da cor obrigatório"),
@@ -64,12 +66,14 @@ const PRODUCT_TYPES = [
 
 export default function ProductForm({ product, onSubmitProduct, open, onOpenChange }: ProductFormProps) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [hoverImagePreview, setHoverImagePreview] = useState<string | null>(null); // Added back
+    const [hoverImagePreview, setHoverImagePreview] = useState<string | null>(null);
     const { getBrands } = useBrand();
     const availableBrands = getBrands();
     const [categories, setCategories] = useState<any[]>([]);
     const [productType, setProductType] = useState<string>('other');
     const [flavorsInput, setFlavorsInput] = useState<string>("");
+    const [uploading, setUploading] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         import('@/services/categoryService').then(({ fetchCategoriesService }) => {
@@ -93,7 +97,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
             flavors: [],
             weights: [],
             gallery: [],
-            hoverImageUrl: "", // Added back
+            hoverImageUrl: "",
             colorMapping: [],
         },
     });
@@ -119,7 +123,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                     flavors: product.flavors || [],
                     weights: product.weights || [],
                     gallery: product.gallery || [],
-                    hoverImageUrl: product.hoverImageUrl || "", // Added back
+                    hoverImageUrl: product.hoverImageUrl || "",
                     colorMapping: product.colorMapping || [],
                 });
 
@@ -134,7 +138,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                 }
 
                 setImagePreview(product.imageUrl || DEFAULT_PLACEHOLDER_IMAGE);
-                setHoverImagePreview(product.hoverImageUrl || null); // Added back
+                setHoverImagePreview(product.hoverImageUrl || null);
             } else {
                 form.reset({
                     name: "",
@@ -150,60 +154,68 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                     flavors: [],
                     weights: [],
                     gallery: [],
-                    hoverImageUrl: "", // Added back
+                    hoverImageUrl: "",
                     colorMapping: [],
                 });
                 setProductType('other');
                 setFlavorsInput("");
                 setImagePreview(DEFAULT_PLACEHOLDER_IMAGE);
-                setHoverImagePreview(null); // Added back
+                setHoverImagePreview(null);
             }
         }
     }, [product, form, open]);
 
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const dataUri = reader.result as string;
-                setImagePreview(dataUri);
-                setValue("imageUrl", dataUri, { shouldValidate: true });
-            };
-            reader.readAsDataURL(file);
+            try {
+                setUploading(true);
+                const publicUrl = await uploadFile(file, 'covers');
+                setImagePreview(publicUrl);
+                setValue("imageUrl", publicUrl, { shouldValidate: true });
+                toast({ title: "Sucesso", description: "Imagem de capa enviada com sucesso." });
+            } catch (error) {
+                console.error("Erro ao enviar imagem", error);
+                toast({ title: "Erro", description: "Falha ao enviar imagem.", variant: "destructive" });
+            } finally {
+                setUploading(false);
+            }
         }
     };
 
-    const handleHoverImageChange = (event: React.ChangeEvent<HTMLInputElement>) => { // Added back
+    const handleHoverImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const dataUri = reader.result as string;
-                setHoverImagePreview(dataUri);
-                setValue("hoverImageUrl", dataUri);
-            };
-            reader.readAsDataURL(file);
+            try {
+                setUploading(true);
+                const publicUrl = await uploadFile(file, 'hovers');
+                setHoverImagePreview(publicUrl);
+                setValue("hoverImageUrl", publicUrl);
+                toast({ title: "Sucesso", description: "Imagem hover enviada com sucesso." });
+            } catch (error) {
+                console.error("Erro ao enviar imagem", error);
+                toast({ title: "Erro", description: "Falha ao enviar imagem.", variant: "destructive" });
+            } finally {
+                setUploading(false);
+            }
         }
     };
 
     const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (files && files.length > 0) {
-            const fileReaders: Promise<string>[] = [];
-
-            Array.from(files).forEach(file => {
-                fileReaders.push(new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        resolve(reader.result as string);
-                    };
-                    reader.readAsDataURL(file);
-                }));
-            });
-
-            const newImages = await Promise.all(fileReaders);
-            setValue("gallery", [...gallery, ...newImages]);
+            try {
+                setUploading(true);
+                const uploadPromises = Array.from(files).map(file => uploadFile(file, 'gallery'));
+                const newImages = await Promise.all(uploadPromises);
+                setValue("gallery", [...gallery, ...newImages]);
+                toast({ title: "Sucesso", description: `${newImages.length} imagens adicionadas à galeria.` });
+            } catch (error) {
+                console.error("Erro ao enviar imagens da galeria", error);
+                toast({ title: "Erro", description: "Falha ao enviar algumas imagens.", variant: "destructive" });
+            } finally {
+                setUploading(false);
+            }
         }
     };
 
@@ -230,14 +242,19 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
         setValue("colorMapping", newMapping);
     };
 
-    const handleColorImageUpload = (index: number, files: FileList | null) => {
+    const handleColorImageUpload = async (index: number, files: FileList | null) => {
         if (files && files[0]) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const dataUri = reader.result as string;
-                updateColor(index, 'image', dataUri);
-            };
-            reader.readAsDataURL(files[0]);
+            try {
+                setUploading(true);
+                const publicUrl = await uploadFile(files[0], 'colors');
+                updateColor(index, 'image', publicUrl);
+                toast({ title: "Sucesso", description: "Imagem da cor enviada com sucesso." });
+            } catch (error) {
+                console.error("Erro ao enviar imagem da cor", error);
+                toast({ title: "Erro", description: "Falha ao enviar imagem.", variant: "destructive" });
+            } finally {
+                setUploading(false);
+            }
         }
     };
 
@@ -252,7 +269,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
             ...data,
             id: product?.id || `prod-${Date.now()}`,
             imageUrl: data.imageUrl,
-            hoverImageUrl: data.hoverImageUrl || undefined, // Added back
+            hoverImageUrl: data.hoverImageUrl || undefined,
             originalPrice: data.originalPrice || undefined,
             isNewRelease: data.isNewRelease || false,
             categoryId: data.category,
@@ -357,13 +374,13 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                                 <div className="col-span-1 space-y-2">
                                     <Label>Foto de Capa</Label>
                                     <div className="relative aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition bg-background overflow-hidden group">
-                                        <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                        <input type="file" accept="image/*" onChange={handleImageChange} disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                                         {imagePreview ? (
                                             <Image src={imagePreview} alt="Capa" layout="fill" objectFit="cover" />
                                         ) : (
                                             <div className="text-center p-2">
                                                 <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                                                <span className="text-xs text-muted-foreground">Capa</span>
+                                                <span className="text-xs text-muted-foreground">{uploading ? 'Aguarde...' : 'Capa'}</span>
                                             </div>
                                         )}
                                     </div>
@@ -373,13 +390,13 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                                 <div className="col-span-1 space-y-2">
                                     <Label>Hover (Opcional)</Label>
                                     <div className="relative aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition bg-background overflow-hidden group">
-                                        <input type="file" accept="image/*" onChange={handleHoverImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                        <input type="file" accept="image/*" onChange={handleHoverImageChange} disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                                         {hoverImagePreview ? (
                                             <Image src={hoverImagePreview} alt="Hover" layout="fill" objectFit="cover" />
                                         ) : (
                                             <div className="text-center p-2">
                                                 <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                                                <span className="text-xs text-muted-foreground">Hover</span>
+                                                <span className="text-xs text-muted-foreground">{uploading ? 'Aguarde...' : 'Hover'}</span>
                                             </div>
                                         )}
                                     </div>
@@ -398,7 +415,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                                             </div>
                                         ))}
                                         <div className="relative aspect-square border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer hover:bg-muted/50 transition">
-                                            <input type="file" multiple accept="image/*" onChange={handleGalleryUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                            <input type="file" multiple accept="image/*" onChange={handleGalleryUpload} disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                                             <Plus className="text-muted-foreground" />
                                         </div>
                                     </div>
@@ -476,7 +493,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                                                     />
                                                     <div className="flex items-center gap-2">
                                                         <div className="relative w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80">
-                                                            <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={(e) => handleColorImageUpload(idx, e.target.files)} />
+                                                            <input type="file" accept="image/*" disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={(e) => handleColorImageUpload(idx, e.target.files)} />
                                                             {item.image ? (
                                                                 <Image src={item.image} alt={item.color} layout="fill" objectFit="cover" />
                                                             ) : <Upload size={14} className="text-muted-foreground" />}
@@ -601,8 +618,8 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                         <DialogClose asChild>
                             <Button type="button" variant="outline">Cancelar</Button>
                         </DialogClose>
-                        <Button type="button" onClick={form.handleSubmit(handleSubmit)} disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                            {form.formState.isSubmitting ? "Salvando..." : "Salvar Produto"}
+                        <Button type="button" onClick={form.handleSubmit(handleSubmit)} disabled={form.formState.isSubmitting || uploading} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                            {form.formState.isSubmitting || uploading ? "Salvando..." : "Salvar Produto"}
                         </Button>
                     </DialogFooter>
 
@@ -611,3 +628,4 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
         </>
     );
 }
+

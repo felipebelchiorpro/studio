@@ -65,8 +65,13 @@ export default function ManageProductsPage() {
       }
       setIsFormOpen(false);
       setEditingProduct(null);
-    } catch (error) {
-      toast({ title: "Erro", description: "Ocorreu um erro ao salvar o produto.", variant: "destructive" });
+    } catch (error: any) {
+      console.error("Erro detalhado:", error);
+      toast({
+        title: "Erro ao Salvar",
+        description: error.message || "Ocorreu um erro desconhecido ao salvar o produto.",
+        variant: "destructive"
+      });
     }
   };
 
