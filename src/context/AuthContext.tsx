@@ -4,10 +4,12 @@ import type { User } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { supabase } from '@/lib/supabaseClient';
+
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (email: string) => void; // Simplified login
+  login: (email: string, password?: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -17,47 +19,59 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true); // To handle initial check
+  const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Simulate checking auth status from localStorage
-    try {
-      const storedAuth = localStorage.getItem('darkstore-auth');
-      if (storedAuth) {
-        const authData = JSON.parse(storedAuth);
-        if (authData.isAuthenticated && authData.user) {
-          setUser(authData.user);
-          setIsAuthenticated(true);
-        }
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email!, name: session.user.user_metadata?.name });
+        setIsAuthenticated(true);
       }
-    } catch (error) {
-      console.error("Failed to parse auth data from localStorage", error);
-      localStorage.removeItem('darkstore-auth');
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    // Listen for changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email!, name: session.user.user_metadata?.name });
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (email: string) => {
-    // Simulate successful login
-    const mockUser: User = { id: 'merchant01', email, name: 'Merchant Admin' };
-    setUser(mockUser);
-    setIsAuthenticated(true);
-    try {
-      localStorage.setItem('darkstore-auth', JSON.stringify({ isAuthenticated: true, user: mockUser }));
-    } catch (error) {
-      console.error("Failed to save auth data to localStorage", error);
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  const login = async (email: string, password?: string) => {
+    if (!password) {
+      // Fallback for legacy calls or specific dev flows if needed, but ideally enforce password
+      console.error("Login requires password for Supabase Auth");
+      return;
     }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      console.error("Supabase Login Error:", error);
+      throw error;
+    }
+    // Session state auto-updates via onAuthStateChange
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
-    try {
-      localStorage.removeItem('darkstore-auth');
-    } catch (error) {
-      console.error("Failed to remove auth data from localStorage", error);
-    }
+    localStorage.removeItem('darkstore-auth'); // Clean up old mock data if exists
     router.push('/login');
   };
 

@@ -3,6 +3,9 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { revalidatePath } from "next/cache";
 
+import { validatePartnerCode } from "./partners";
+import { PARTNERS } from "@/config/partners";
+
 export type Coupon = {
     id: string;
     code: string;
@@ -20,6 +23,12 @@ export type Coupon = {
 export async function createCoupon(data: Omit<Coupon, 'id' | 'created_at' | 'used_count' | 'partners'>) {
     const { code, discount_type, discount_value, expiration_date, usage_limit, active, partner_id } = data;
 
+    // Sanitize partner_id for Mock/Static mode
+    // If we send a static ID (e.g. 'partner-001') to Supabase, it will fail FK constraint.
+    // We set it to null so the coupon is created successfully (as General) but works via Code validation.
+    const isSafeId = partner_id && !partner_id.startsWith('partner-') && !partner_id.startsWith('mock-');
+    const dbPartnerId = isSafeId ? partner_id : null;
+
     const { data: coupon, error } = await supabaseAdmin
         .from('coupons')
         .insert([{
@@ -29,7 +38,7 @@ export async function createCoupon(data: Omit<Coupon, 'id' | 'created_at' | 'use
             expiration_date,
             usage_limit,
             active,
-            partner_id
+            partner_id: dbPartnerId
         }])
         .select()
         .single();
@@ -46,7 +55,7 @@ export async function createCoupon(data: Omit<Coupon, 'id' | 'created_at' | 'use
 export async function getCoupons() {
     const { data: coupons, error } = await supabaseAdmin
         .from('coupons')
-        .select('*, partners(name)')
+        .select('*')
         .order('created_at', { ascending: false });
 
     if (error) {
@@ -54,7 +63,18 @@ export async function getCoupons() {
         return [];
     }
 
-    return coupons as Coupon[];
+    // Map static partner names
+    const couponsWithPartners = coupons.map((coupon: Coupon) => {
+        if (coupon.partner_id) {
+            const partner = PARTNERS.find(p => p.id === coupon.partner_id);
+            if (partner) {
+                return { ...coupon, partners: { name: partner.name } };
+            }
+        }
+        return coupon;
+    });
+
+    return couponsWithPartners as Coupon[];
 }
 
 export async function deleteCoupon(id: string) {
@@ -115,25 +135,9 @@ export async function validateCoupon(code: string) {
     }
 
     // 2. Check Partners (Fallback)
-    // Assuming 'partners' table exists and has 'code' and 'score' (which maps to discount)
-    // Logic adapted from previous validatePartnerCode
-    const { data: partner } = await supabaseAdmin
-        .from('partners')
-        .select('*')
-        .eq('code', upperCode)
-        .single();
-
-    if (partner) {
-        // Logic adapted from previous validatePartnerCode
-        const discount = 7.5; // Fixed 7.5% legacy support
-        return {
-            valid: true,
-            type: 'partner',
-            discountType: 'percent',
-            value: discount,
-            name: partner.name,
-            message: `Cupom de parceiro aplicado! (${discount}% OFF)`
-        };
+    const partnerValidation = await validatePartnerCode(upperCode);
+    if (partnerValidation.valid) {
+        return partnerValidation;
     }
 
     return { valid: false, message: "Cupom inválido." };

@@ -32,16 +32,22 @@ export default function LoginForm() {
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    // Simulate login - In a real app, this would call an API
-    // For development/demo purposes, allow any valid email/password
-    // In production, this would verify against Supabase Auth or backend API
-    login(data.email);
-    toast({
-      title: "Login bem-sucedido!",
-      description: "Redirecionando para o dashboard...",
-    });
-    router.push("/dashboard");
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      await login(data.email, data.password);
+      toast({
+        title: "Login bem-sucedido!",
+        description: "Redirecionando para o dashboard...",
+      });
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error("Login failed", error);
+      toast({
+        title: "Erro ao entrar",
+        description: error.message || "Por favor, verifique suas credenciais.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

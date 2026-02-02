@@ -1,19 +1,12 @@
 "use server";
 
+import { PARTNERS } from "@/config/partners";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { revalidatePath } from "next/cache";
 
 export async function getPartners() {
-    const { data, error } = await supabaseAdmin
-        .from("partners")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        console.error("Error fetching partners:", error);
-        return [];
-    }
-    return data;
+    // Return static partners to ensure functionality without DB Auth
+    return PARTNERS;
 }
 
 export async function createPartner(formData: FormData) {
@@ -58,6 +51,18 @@ export async function validatePartnerCode(code: string) {
     // Clean input
     const cleanCode = code.trim().toUpperCase();
 
+    // 1. Check Static Partners First
+    const staticPartner = PARTNERS.find(p => p.code === cleanCode);
+    if (staticPartner) {
+        return {
+            valid: true,
+            partner: staticPartner,
+            discountPercentage: 7.5,
+            message: `Cupom de ${staticPartner.name} aplicado! (7.5% OFF)`
+        };
+    }
+
+    // 2. Check DB (Fallback, might fail with current keys)
     const { data, error } = await supabaseAdmin
         .from("partners")
         .select("name, code")

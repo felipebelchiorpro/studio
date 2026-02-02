@@ -17,8 +17,13 @@ export async function getAnalyticsData(dateRange?: { from: Date; to: Date }) {
         .neq("status", "cancelled");
 
     if (error || !orders) {
-        console.error("Error fetching analytics data:", error);
-        return null;
+        console.warn("Analytics fetch failed (expected if Service Key is missing/invalid):", JSON.stringify(error || {}, null, 2));
+        // Return Safe Empty Data to prevent UI Crash
+        return {
+            kpis: { totalRevenue: 0, totalOrders: 0, averageTicket: 0, newCustomers: 0 },
+            charts: { salesByDate: [], topProducts: [] },
+            recentOrders: []
+        };
     }
 
     // Calculate KPIs

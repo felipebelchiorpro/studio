@@ -40,7 +40,7 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
         setBrands(mappedBrands);
       }
     } catch (error) {
-      console.error("Erro ao buscar marcas:", error);
+      console.error("Erro ao buscar marcas (Full):", JSON.stringify(error, null, 2));
       toast({ title: "Erro", description: "Falha ao carregar marcas.", variant: "destructive" });
     }
   }, [toast]);

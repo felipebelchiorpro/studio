@@ -43,7 +43,7 @@ export const fetchProductsService = async (): Promise<Product[]> => {
 
 
     if (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching products (Full):', JSON.stringify(error, null, 2));
         throw error;
     }
 
@@ -64,7 +64,7 @@ export const fetchProductByIdService = async (id: string): Promise<Product | nul
         .single();
 
     if (error) {
-        console.error(`Error fetching product ${id}:`, error);
+        console.error(`Error fetching product ${id} (Full):`, JSON.stringify(error, null, 2));
         return null;
     }
 
@@ -179,7 +179,7 @@ export const fetchNewReleasesService = async (limit: number = 8): Promise<Produc
             .limit(limit);
 
         if (error) {
-            console.error('Error fetching new releases:', error);
+            console.error('Error fetching new releases (Full):', JSON.stringify(error, null, 2));
             return [];
         }
 
@@ -204,7 +204,7 @@ export const fetchBestSellersService = async (limit: number = 8): Promise<Produc
             .limit(limit);
 
         if (error) {
-            console.error('Error fetching best sellers:', error);
+            console.error('Error fetching best sellers (Full):', JSON.stringify(error, null, 2));
             return [];
         }
 
@@ -241,7 +241,7 @@ export const fetchOnSaleService = async (limit: number = 8): Promise<Product[]> 
             .limit(limit * 2); // Fetch a bit more to filter client side if needed
 
         if (error) {
-            console.error('Error fetching on sale products:', error);
+            console.error('Error fetching on sale products (Full):', JSON.stringify(error, null, 2));
             return [];
         }
 

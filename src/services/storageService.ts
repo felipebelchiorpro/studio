@@ -28,7 +28,7 @@ export const uploadFile = async (file: File, subfolder: string = ''): Promise<st
 
         return data.publicUrl;
     } catch (error) {
-        console.error('Error uploading file:', error);
+        console.error('Error uploading file (Full):', JSON.stringify(error, null, 2));
         throw error;
     }
 };

@@ -38,12 +38,14 @@ interface CategoryFormProps {
     onSubmitCategory: (data: Category) => void;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    categories: Category[]; // Receive categories from parent
 }
 
-export default function CategoryForm({ category, onSubmitCategory, open, onOpenChange }: CategoryFormProps) {
+export default function CategoryForm({ category, onSubmitCategory, open, onOpenChange, categories }: CategoryFormProps) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-    const [allCategories, setAllCategories] = useState<Category[]>([]);
+    // Filtered categories for dropdown (exclude self)
+    const availableParents = categories.filter(c => c.id !== category?.id);
 
     const form = useForm<CategoryFormValues>({
         resolver: zodResolver(categorySchema),
@@ -55,21 +57,7 @@ export default function CategoryForm({ category, onSubmitCategory, open, onOpenC
         },
     });
 
-    useEffect(() => {
-        // Fetch all categories for the parent dropdown
-        const fetchCats = async () => {
-            try {
-                const { fetchCategoriesService } = await import('@/services/categoryService');
-                const data = await fetchCategoriesService();
-                setAllCategories(data);
-            } catch (error) {
-                console.error("Failed to load categories for select", error);
-            }
-        };
-        if (open) {
-            fetchCats();
-        }
-    }, [open]);
+    // Removed internal fetching effect
 
     useEffect(() => {
         if (open) {
@@ -161,13 +149,11 @@ export default function CategoryForm({ category, onSubmitCategory, open, onOpenC
                                         </FormControl>
                                         <SelectContent>
                                             <SelectItem value="none">-- Nenhuma (Categoria Principal) --</SelectItem>
-                                            {allCategories
-                                                .filter(c => c.id !== category?.id) // Prevent self-parenting
-                                                .map((cat) => (
-                                                    <SelectItem key={cat.id} value={cat.id}>
-                                                        {cat.name}
-                                                    </SelectItem>
-                                                ))}
+                                            {availableParents.map((cat) => (
+                                                <SelectItem key={cat.id} value={cat.id}>
+                                                    {cat.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,6 +28,7 @@ import {
 
 import { Category } from "@/types";
 import { fetchCategoriesService, createCategoryService, updateCategoryService, deleteCategoryService } from "@/services/categoryService";
+// import { createCategoryAction, updateCategoryAction, deleteCategoryAction } from "@/actions/categories";
 import CategoryForm from "@/components/CategoryForm";
 import Image from "next/image";
 
@@ -121,7 +122,7 @@ export default function CategoriesPage() {
   const confirmDelete = async () => {
     if (!deleteId) return;
     try {
-      await deleteCategoryService(deleteId);
+      await deleteCategoryService(deleteId); // Use Service
       toast({ title: "Categoria removida com sucesso!" });
       loadCategories();
     } catch (error) {
@@ -140,18 +141,18 @@ export default function CategoriesPage() {
     try {
       if (editingCategory) {
         // Update
-        await updateCategoryService({ ...editingCategory, ...data });
+        await updateCategoryService({ ...editingCategory, ...data }); // Use Service
         toast({ title: "Categoria atualizada!" });
       } else {
         // Create
-        await createCategoryService(data);
+        await createCategoryService(data); // Use Service
         toast({ title: "Categoria criada!" });
       }
       loadCategories();
     } catch (error) {
       toast({
         title: "Erro ao salvar",
-        description: "Verifique os dados e tente novamente.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro desconhecido",
         variant: "destructive",
       });
     }
@@ -218,9 +219,8 @@ export default function CategoriesPage() {
               ) : (
                 // Tree structure for default view
                 buildCategoryTree(categories).map((node) => (
-                  <>
+                  <React.Fragment key={node.id}>
                     <CategoryRow
-                      key={node.id}
                       category={node}
                       level={0}
                       onEdit={handleEditClick}
@@ -237,7 +237,7 @@ export default function CategoriesPage() {
                         onAddSub={handleAddSubClick}
                       />
                     ))}
-                  </>
+                  </React.Fragment>
                 ))
               )
             )}
@@ -250,6 +250,7 @@ export default function CategoriesPage() {
         onOpenChange={setIsFormOpen}
         category={editingCategory}
         onSubmitCategory={handleFormSubmit}
+        categories={categories}
       />
 
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
