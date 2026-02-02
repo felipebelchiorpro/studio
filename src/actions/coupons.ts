@@ -137,7 +137,13 @@ export async function validateCoupon(code: string) {
     // 2. Check Partners (Fallback)
     const partnerValidation = await validatePartnerCode(upperCode);
     if (partnerValidation.valid) {
-        return partnerValidation;
+        return {
+            valid: true,
+            discountType: 'percent',
+            value: partnerValidation.discountPercentage,
+            name: partnerValidation.partner?.name || 'Parceiro',
+            message: partnerValidation.message
+        };
     }
 
     return { valid: false, message: "Cupom inválido." };

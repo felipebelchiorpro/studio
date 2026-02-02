@@ -101,9 +101,11 @@ export const createProductService = async (product: Partial<Product>): Promise<P
         colors: product.colors,  // Added
         flavors: product.flavors, // Added
         flavor_mapping: product.flavorMapping, // Added
+        color_mapping: product.colorMapping, // Added - Fixed missing persistence
         weights: product.weights // Added
-        // For now, let's assume valid ID or generate one if missing.
     };
+    // For now, let's assume valid ID or generate one if missing.
+
 
     // Add ID if provided (or generate simple one if missing/needed by schema constraints)
     const payloadWithId = { ...dbPayload, id: product.id || crypto.randomUUID() };
@@ -139,8 +141,9 @@ export const updateProductService = async (product: Product): Promise<void> => {
         is_new_release: product.isNewRelease,
         sizes: product.sizes,   // Added
         colors: product.colors,  // Added
-        flavors: product.flavors, // Added
+
         flavor_mapping: product.flavorMapping, // Added
+        color_mapping: product.colorMapping, // Added - Fixed missing persistence
         weights: product.weights // Added
     };
 

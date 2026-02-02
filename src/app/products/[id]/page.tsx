@@ -196,9 +196,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <Image
               src={
                 (selectedColor && product.colorMapping?.find(c => c.color === selectedColor)?.image)
-                  ? product.colorMapping.find(c => c.color === selectedColor)!.image!
+                  ? product.colorMapping!.find(c => c.color === selectedColor)!.image!
                   : (selectedFlavor && product.flavorMapping?.find(f => f.flavor === selectedFlavor)?.image)
-                    ? product.flavorMapping.find(f => f.flavor === selectedFlavor)!.image!
+                    ? product.flavorMapping!.find(f => f.flavor === selectedFlavor)!.image!
                     : (product.imageUrl || "https://placehold.co/600x800.png")
               }
               alt={product.name}
@@ -223,21 +223,44 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             )}
           </div>
           {/* Gallery Thumbnails (Optional - basic implementation) */}
-          {product.gallery && product.gallery.length > 0 && (
-            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 no-scrollbar">
-              <button
-                className={cn("relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden", !selectedColor ? "ring-2 ring-primary" : "")}
-                onClick={() => setSelectedColor(null)}
-              >
-                <Image src={product.imageUrl} layout="fill" objectFit="cover" alt="Default" />
-              </button>
-              {product.gallery.map((img, idx) => (
-                <div key={idx} className="relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden">
-                  <Image src={img} layout="fill" objectFit="cover" alt={`Gallery ${idx}`} />
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Gallery Thumbnails */}
+          {(() => {
+            const colorData = selectedColor ? product.colorMapping?.find(c => c.color === selectedColor) : null;
+            // Use color specific gallery if available, otherwise fallback to product gallery
+            const activeGallery = (colorData?.images && colorData.images.length > 0)
+              ? colorData.images
+              : (product.gallery || []);
+
+            // If color has single image but no gallery array, add it to display might be nice, but user asked for "Gallery per color".
+            // Let's assume if there are images, we show them.
+
+            return (activeGallery.length > 0) && (
+              <div className="flex gap-2 mt-4 overflow-x-auto pb-2 no-scrollbar">
+                <button
+                  className={cn("relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden",
+                    // Highlight if main image is the cover, or something. Simplified logic:
+                    "hover:opacity-80 transition"
+                  )}
+                // Clicking thumbnail -> Update main image? 
+                // Currently main image is derived from state. 
+                // We might need a state for "overrideMainImage" if user clicks a thumbnail that isn't the mapped one.
+                // But for now, let's just display them. User wants to SEE them.
+                // Ideally clicking them changes the big image.
+                >
+                  {/* We need a state to control the specific displayed image if it deviates from the "default color image" */}
+                  {/* For MVP, let's just show them. If user clicks, maybe we can just open in modal or set temporary view? */}
+                  {/* Implementing a localized "selectedImage" state would be best. */}
+                  <Image src={product.imageUrl} layout="fill" objectFit="cover" alt="Default" />
+                </button>
+
+                {activeGallery.map((img, idx) => (
+                  <div key={idx} className="relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden">
+                    <Image src={img} layout="fill" objectFit="cover" alt={`Gallery ${idx}`} />
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right Column: Details (Centered Layout) */}

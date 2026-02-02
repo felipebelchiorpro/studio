@@ -41,7 +41,8 @@ const productSchema = z.object({
     colorMapping: z.array(z.object({
         color: z.string().min(1, "Nome da cor obrigatório"),
         hex: z.string().min(1, "Hex da cor obrigatório"),
-        image: z.string().optional()
+        image: z.string().optional(),
+        images: z.array(z.string()).optional() // Added Multi-Image
     })).optional(),
     flavorMapping: z.array(z.object({
         flavor: z.string().min(1, "Nome do sabor obrigatório"),
@@ -238,7 +239,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
 
     // Color Mapping Logic
     const addColor = () => {
-        setValue("colorMapping", [...colorMapping, { color: "Nova Cor", hex: "#000000", image: "" }]);
+        setValue("colorMapping", [...colorMapping, { color: "Nova Cor", hex: "#000000", image: "", images: [] }]);
     };
 
     const removeColor = (index: number) => {
@@ -247,19 +248,33 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
         setValue("colorMapping", newMapping);
     };
 
-    const updateColor = (index: number, field: keyof typeof colorMapping[0], value: string) => {
+    const updateColor = (index: number, field: keyof typeof colorMapping[0], value: any) => {
         const newMapping = [...colorMapping];
         newMapping[index] = { ...newMapping[index], [field]: value };
         setValue("colorMapping", newMapping);
     };
 
     const handleColorImageUpload = async (index: number, files: FileList | null) => {
-        if (files && files[0]) {
+        if (files && files.length > 0) {
             try {
                 setUploading(true);
-                const publicUrl = await uploadFile(files[0], 'colors');
-                updateColor(index, 'image', publicUrl);
-                toast({ title: "Sucesso", description: "Imagem da cor enviada com sucesso." });
+                // Upload all selected files
+                const uploadPromises = Array.from(files).map(file => uploadFile(file, 'colors'));
+                const uploadedUrls = await Promise.all(uploadPromises);
+
+                // Get current images or init empty
+                const currentImages = colorMapping[index].images || [];
+                const newImages = [...currentImages, ...uploadedUrls];
+
+                // Update both 'images' (all) and 'image' (first one for legacy/main)
+                updateColor(index, 'images', newImages);
+                if (!colorMapping[index].image && newImages.length > 0) {
+                    updateColor(index, 'image', newImages[0]);
+                } else if (uploadedUrls.length > 0 && !colorMapping[index].image) {
+                    updateColor(index, 'image', uploadedUrls[0]); // Fallback
+                }
+
+                toast({ title: "Sucesso", description: `${uploadedUrls.length} foto(s) da cor enviada(s).` });
             } catch (error) {
                 console.error("Erro ao enviar imagem da cor", error);
                 toast({ title: "Erro", description: "Falha ao enviar imagem.", variant: "destructive" });
@@ -267,6 +282,24 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                 setUploading(false);
             }
         }
+    };
+
+    const removeColorImage = (colorIndex: number, imgIndex: number) => {
+        const newMapping = [...colorMapping];
+        const colorItem = newMapping[colorIndex];
+        if (colorItem.images) {
+            const newImages = [...colorItem.images];
+            newImages.splice(imgIndex, 1);
+            colorItem.images = newImages;
+            // Update main image if needed
+            if (colorItem.image && !newImages.includes(colorItem.image)) {
+                colorItem.image = newImages.length > 0 ? newImages[0] : "";
+            } else if (!colorItem.image && newImages.length > 0) {
+                colorItem.image = newImages[0];
+            }
+            if (newImages.length === 0) colorItem.image = "";
+        }
+        setValue("colorMapping", newMapping);
     };
 
     // Flavor Mapping Logic
@@ -539,14 +572,33 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                                                         onChange={(e) => updateColor(idx, 'color', e.target.value)}
                                                         className="h-8 flex-1"
                                                     />
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        {(item.images?.length ? item.images : (item.image ? [item.image] : [])).map((imgUrl, imgIdx) => (
+                                                            <div key={imgIdx} className="relative w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden border group">
+                                                                <Image src={imgUrl} alt={`${item.color} ${imgIdx}`} layout="fill" objectFit="cover" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeColorImage(idx, imgIdx)}
+                                                                    className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+
                                                         <div className="relative w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80">
-                                                            <input type="file" accept="image/*" disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={(e) => handleColorImageUpload(idx, e.target.files)} />
-                                                            {item.image ? (
-                                                                <Image src={item.image} alt={item.color} layout="fill" objectFit="cover" />
-                                                            ) : <Upload size={14} className="text-muted-foreground" />}
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                multiple
+                                                                disabled={uploading}
+                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                                onChange={(e) => handleColorImageUpload(idx, e.target.files)}
+                                                            />
+                                                            <Plus size={14} className="text-muted-foreground" />
                                                         </div>
-                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => removeColor(idx)}>
+
+                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 ml-2" onClick={() => removeColor(idx)}>
                                                             <Trash2 size={16} />
                                                         </Button>
                                                     </div>
