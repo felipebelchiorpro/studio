@@ -5,6 +5,7 @@ import type { Product } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { fetchProductsService, createProductService, updateProductService, deleteProductService } from '@/services/productService';
 // import { mockProducts as initialSeedProducts } from '@/data/mockData'; // Removed seed usage
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductContextType {
   products: Product[];
@@ -30,6 +31,7 @@ const hydrateProduct = (productData: Partial<Product>): Product => {
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { toast } = useToast();
 
   const loadProducts = async () => {
     // 1. Try to load from cache first for instant render
@@ -63,8 +65,13 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
       // Update cache
       localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(reversed));
-    } catch (error) {
+    } catch (error: any) {
       console.warn("Failed to fetch products (likely timeout or network)", error);
+      toast({ // Importing useToast needed if not present, but context likely has it or I need to check
+        title: "Erro ao carregar produtos",
+        description: `Detalhes: ${error.message || "Erro de conexão"}`,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
