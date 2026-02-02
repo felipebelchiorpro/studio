@@ -58,6 +58,11 @@ export default function Header() {
 
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     setCartItemCount(getCartItemCount());
@@ -191,7 +196,7 @@ export default function Header() {
 
           {/* Auth & Cart Links - Desktop */}
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
-            {isCustomerAuthenticated ? (
+            {hasMounted && isCustomerAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center text-sm font-medium hover:text-primary gap-2">
@@ -209,7 +214,7 @@ export default function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/account/orders" className="cursor-pointer flex items-center"> {/* Placeholder */}
+                    <Link href="/account/orders" className="cursor-pointer flex items-center">
                       <Package className="mr-2 h-4 w-4 text-primary" /> Meus Pedidos
                     </Link>
                   </DropdownMenuItem>
@@ -219,7 +224,7 @@ export default function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            ) : hasMounted && (
               <Link href="/account/login" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <UserCircle className="h-6 w-6" />
                 <span className="font-medium text-sm">Login</span>
@@ -267,14 +272,14 @@ export default function Header() {
                 <div className="flex-grow overflow-y-auto">
                   {/* Área do Usuário */}
                   <div className="p-4 bg-muted/30">
-                    {isCustomerAuthenticated ? (
+                    {hasMounted && isCustomerAuthenticated ? (
                       <div className="flex flex-col space-y-3">
                         <div className="flex items-center space-x-3 text-foreground">
                           <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
                             <UserIcon size={20} />
                           </div>
                           <div>
-                            <p className="text-sm font-medium">Olá, {customer?.name?.split(' ')[0]}</p>
+                            <p className="text-sm font-medium">Olá, {customer?.name?.split(' ')[0] || 'Cliente'}</p>
                             <p className="text-xs text-muted-foreground">Bem-vindo de volta!</p>
                           </div>
                         </div>
@@ -289,7 +294,7 @@ export default function Header() {
                           </Button>
                         </div>
                       </div>
-                    ) : (
+                    ) : hasMounted && (
                       <div className="flex flex-col space-y-3">
                         <Link href="/account/login" onClick={closeSheet} className="w-full">
                           <Button className="w-full">Entrar ou Cadastrar</Button>

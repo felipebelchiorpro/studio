@@ -11,18 +11,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Download, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { fetchOrdersService } from '@/services/orderService';
+import { useToast } from '@/hooks/use-toast';
+
 const ITEMS_PER_PAGE = 10;
 
 export default function SalesReportPage() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchOrdersService();
+        setOrders(data);
+      } catch (error) {
+        console.error("Failed to load orders", error);
+        toast({
+          title: "Erro ao carregar pedidos",
+          description: "Não foi possível conectar ao banco de dados.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadOrders();
+  }, [toast]);
 
   const filteredOrders = orders
     .filter(order => {
-      const searchMatch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          order.userId.toLowerCase().includes(searchTerm.toLowerCase());
+      const searchMatch = (order.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (order.userId || "").toLowerCase().includes(searchTerm.toLowerCase());
       const statusMatch = statusFilter === "all" || order.status === statusFilter;
       return searchMatch && statusMatch;
     })
@@ -34,7 +59,7 @@ export default function SalesReportPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  
+
   const getStatusColorClass = (status: Order['status']): string => {
     switch (status) {
       case 'Delivered': return 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/50';
@@ -90,9 +115,15 @@ export default function SalesReportPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedOrders.length > 0 ? paginatedOrders.map((order) => (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  Carregando pedidos reais...
+                </TableCell>
+              </TableRow>
+            ) : paginatedOrders.length > 0 ? paginatedOrders.map((order) => (
               <TableRow key={order.id}>
-                <TableCell className="font-medium px-2 py-3 sm:px-4 text-xs sm:text-sm">#{order.id.substring(0,8)}...</TableCell>
+                <TableCell className="font-medium px-2 py-3 sm:px-4 text-xs sm:text-sm">#{order.id.substring(0, 8)}...</TableCell>
                 <TableCell className="px-2 py-3 sm:px-4 text-xs sm:text-sm">{new Date(order.orderDate).toLocaleDateString('pt-BR')}</TableCell>
                 <TableCell className="hidden md:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{order.userId}</TableCell>
                 <TableCell className="text-right px-2 py-3 sm:px-4 text-xs sm:text-sm">R$ {order.totalAmount.toFixed(2).replace('.', ',')}</TableCell>
@@ -104,7 +135,7 @@ export default function SalesReportPage() {
                 <TableCell className="text-center hidden sm:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{order.items.reduce((sum, item) => sum + item.quantity, 0)}</TableCell>
               </TableRow>
             )) : (
-               <TableRow>
+              <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-sm sm:text-base">
                   Nenhum pedido encontrado.
                 </TableCell>

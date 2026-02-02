@@ -13,12 +13,12 @@ export const fetchCategoriesService = async (): Promise<Category[]> => {
     }
 
     return (data || []).map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        imageUrl: c.image_url,
+        id: c.id || `cat-missing-${Math.random().toString(36).substring(2, 7)}`,
+        name: c.name || 'Sem nome',
+        imageUrl: c.image_url || '',
         totalRevenue: c.total_revenue ? Number(c.total_revenue) : 0,
-        parentId: c.parent_id, // Map parent_id
-        type: c.type || 'supplement' // Map type
+        parentId: c.parent_id || undefined,
+        type: (c.type as any) || 'supplement'
     }));
 };
 

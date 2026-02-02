@@ -30,20 +30,17 @@ export default function DashboardOverviewPage() {
 
         if (productsError) throw productsError;
 
-        // 2. Fetch Orders (RLS must allow admin email)
-        const { data: orders, error: ordersError } = await supabase
-          .from("orders")
-          .select("total_amount, order_date, status, user_id")
-          .neq("status", "cancelled");
+        // 2. Fetch Orders using Service
+        const { fetchOrdersService } = await import('@/services/orderService');
+        const orders = await fetchOrdersService();
 
-        if (ordersError) {
-          console.error("Order fetch error:", ordersError);
-          throw new Error("Não foi possível carregar os pedidos. Verifique se você é um administrador.");
+        if (!orders) {
+          throw new Error("Não foi possível carregar os pedidos.");
         }
 
         const totalOrders = orders.length;
-        const totalRevenue = orders.reduce((acc, order) => acc + (order.total_amount || 0), 0);
-        const uniqueCustomers = new Set(orders.map(o => o.user_id).filter(Boolean)).size;
+        const totalRevenue = orders.reduce((acc, order) => acc + (order.totalAmount || 0), 0);
+        const uniqueCustomers = new Set(orders.map(o => o.userId).filter(Boolean)).size;
 
         // 3. Process Chart Data
         const sevenDaysAgo = new Date();
@@ -58,11 +55,11 @@ export default function DashboardOverviewPage() {
         }
 
         orders.forEach(order => {
-          const orderDate = new Date(order.order_date);
+          const orderDate = new Date(order.orderDate);
           if (orderDate >= sevenDaysAgo) {
             const dateKey = orderDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
             if (dailyRevenueMap.has(dateKey)) {
-              dailyRevenueMap.set(dateKey, dailyRevenueMap.get(dateKey)! + (order.total_amount || 0));
+              dailyRevenueMap.set(dateKey, dailyRevenueMap.get(dateKey)! + (order.totalAmount || 0));
             }
           }
         });
