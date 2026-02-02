@@ -4,6 +4,7 @@
 import type { Brand } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 interface BrandContextType {
   brands: Brand[];
@@ -20,39 +21,35 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
+  const fetchBrands = useCallback(async () => {
     try {
-      const storedBrands = localStorage.getItem(BRAND_STORAGE_KEY);
-      if (storedBrands) {
-        const parsed = JSON.parse(storedBrands);
-        // Migration check: if stored items are strings, clear them or convert
-        if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
-          // Basic migration for legacy strings if wanted, or just reset. 
-          // Let's reset to empty to enforce new format as per plan.
-          localStorage.removeItem(BRAND_STORAGE_KEY);
-          setBrands([]);
-        } else {
-          setBrands(parsed);
-        }
-      } else {
-        // No default brands initially to encourage adding real logos
-        setBrands([]);
+      const { data, error } = await supabase
+        .from('brands')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        // Map database fields to frontend type
+        const mappedBrands: Brand[] = data.map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          imageUrl: b.image_url // Map snake_case to camelCase
+        }));
+        setBrands(mappedBrands);
       }
     } catch (error) {
-      console.error("Failed to parse brands from localStorage", error);
-      localStorage.removeItem(BRAND_STORAGE_KEY);
+      console.error("Erro ao buscar marcas:", error);
+      toast({ title: "Erro", description: "Falha ao carregar marcas.", variant: "destructive" });
     }
-  }, []);
+  }, [toast]);
 
-  const persistBrands = useCallback((updatedBrands: Brand[]) => {
-    try {
-      localStorage.setItem(BRAND_STORAGE_KEY, JSON.stringify(updatedBrands));
-    } catch (error) {
-      console.error("Failed to save brands to localStorage", error);
-    }
-  }, []);
+  useEffect(() => {
+    fetchBrands();
+  }, [fetchBrands]);
 
-  const addBrand = (brandData: Omit<Brand, 'id'>) => {
+  const addBrand = async (brandData: Omit<Brand, 'id'>) => {
     if (!brandData.name.trim()) {
       toast({ title: "Erro", description: "Nome da marca não pode ser vazio.", variant: "destructive" });
       return;
@@ -62,41 +59,51 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    setBrands(prevBrands => {
-      const normalizedNewBrandName = brandData.name.trim();
-      const brandExists = prevBrands.some(
-        b => b.name.toLowerCase() === normalizedNewBrandName.toLowerCase()
-      );
+    try {
+      const { data, error } = await supabase
+        .from('brands')
+        .insert([{
+          name: brandData.name.trim(),
+          image_url: brandData.imageUrl
+        }])
+        .select();
 
-      if (brandExists) {
-        toast({ title: "Marca Existente", description: `A marca "${normalizedNewBrandName}" já existe.`, variant: "default" });
-        return prevBrands;
+      if (error) throw error;
+
+      if (data && data[0]) {
+        const newBrand: Brand = {
+          id: data[0].id,
+          name: data[0].name,
+          imageUrl: data[0].image_url
+        };
+        setBrands(prev => [...prev, newBrand].sort((a, b) => a.name.localeCompare(b.name)));
+        toast({ title: "Marca Adicionada", description: `Marca "${newBrand.name}" adicionada com sucesso.` });
       }
-
-      const newBrand: Brand = {
-        id: crypto.randomUUID(), // Modern browsers support this
-        name: normalizedNewBrandName,
-        imageUrl: brandData.imageUrl
-      };
-
-      const newBrands = [...prevBrands, newBrand].sort((a, b) => a.name.localeCompare(b.name));
-      persistBrands(newBrands);
-      toast({ title: "Marca Adicionada", description: `Marca "${normalizedNewBrandName}" adicionada com sucesso.` });
-      return newBrands;
-    });
+    } catch (error) {
+      console.error("Erro ao adicionar marca:", error);
+      toast({ title: "Erro", description: "Falha ao salvar marca no banco.", variant: "destructive" });
+    }
   };
 
-  const removeBrand = (brandId: string) => {
-    setBrands(prevBrands => {
-      const newBrands = prevBrands.filter(b => b.id !== brandId);
-      persistBrands(newBrands);
+  const removeBrand = async (brandId: string) => {
+    try {
+      const { error } = await supabase
+        .from('brands')
+        .delete()
+        .eq('id', brandId);
+
+      if (error) throw error;
+
+      setBrands(prev => prev.filter(b => b.id !== brandId));
       toast({ title: "Marca Removida", description: "Marca removida com sucesso." });
-      return newBrands;
-    });
-  }
+    } catch (error) {
+      console.error("Erro ao remover marca:", error);
+      toast({ title: "Erro", description: "Falha ao remover marca.", variant: "destructive" });
+    }
+  };
 
   const getBrands = useCallback(() => {
-    return [...brands].sort((a, b) => a.name.localeCompare(b.name));
+    return brands;
   }, [brands]);
 
   return (
