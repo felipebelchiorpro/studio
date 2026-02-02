@@ -182,7 +182,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
         if (file) {
             try {
                 setUploading(true);
-                const publicUrl = await uploadFile(file, 'covers');
+                const publicUrl = await uploadFile(file, 'products', 'covers');
                 setImagePreview(publicUrl);
                 setValue("imageUrl", publicUrl, { shouldValidate: true });
                 toast({ title: "Sucesso", description: "Imagem de capa enviada com sucesso." });
@@ -200,7 +200,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
         if (file) {
             try {
                 setUploading(true);
-                const publicUrl = await uploadFile(file, 'hovers');
+                const publicUrl = await uploadFile(file, 'products', 'hovers');
                 setHoverImagePreview(publicUrl);
                 setValue("hoverImageUrl", publicUrl);
                 toast({ title: "Sucesso", description: "Imagem hover enviada com sucesso." });
@@ -218,7 +218,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
         if (files && files.length > 0) {
             try {
                 setUploading(true);
-                const uploadPromises = Array.from(files).map(file => uploadFile(file, 'gallery'));
+                const uploadPromises = Array.from(files).map(file => uploadFile(file, 'products', 'gallery'));
                 const newImages = await Promise.all(uploadPromises);
                 setValue("gallery", [...gallery, ...newImages]);
                 toast({ title: "Sucesso", description: `${newImages.length} imagens adicionadas à galeria.` });
@@ -259,7 +259,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
             try {
                 setUploading(true);
                 // Upload all selected files
-                const uploadPromises = Array.from(files).map(file => uploadFile(file, 'colors'));
+                const uploadPromises = Array.from(files).map(file => uploadFile(file, 'products', 'colors'));
                 const uploadedUrls = await Promise.all(uploadPromises);
 
                 // Get current images or init empty
@@ -323,7 +323,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
         if (files && files[0]) {
             try {
                 setUploading(true);
-                const publicUrl = await uploadFile(files[0], 'flavors'); // Ensure 'flavors' bucket exists or use generic
+                const publicUrl = await uploadFile(files[0], 'products', 'flavors'); // Ensure 'flavors' bucket exists or use generic
                 updateFlavor(index, 'image', publicUrl);
                 toast({ title: "Sucesso", description: "Imagem do sabor enviada com sucesso." });
             } catch (error) {

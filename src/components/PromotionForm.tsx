@@ -92,7 +92,7 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
     if (file) {
       try {
         setIsUploading(true);
-        const publicUrl = await uploadFile(file, 'banners');
+        const publicUrl = await uploadFile(file, 'products', 'banners');
         setImagePreview(publicUrl);
         form.setValue("imageUrl", publicUrl, { shouldValidate: true });
         toast({ title: "Sucesso", description: "Imagem do banner enviada com sucesso." });

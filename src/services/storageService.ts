@@ -18,12 +18,20 @@ export const uploadFile = async (file: File, bucket: string = 'products', subfol
             .upload(fileName, file);
 
         if (uploadError) {
+            console.error(`Upload error details for bucket "${bucket}":`, uploadError);
+            if (uploadError.message === 'Bucket not found') {
+                throw new Error(`O bucket de armazenamento "${bucket}" não existe. Por favor, crie-o no painel do Supabase.`);
+            }
             throw uploadError;
         }
 
         const { data } = supabase.storage
             .from(bucket)
             .getPublicUrl(fileName);
+
+        if (!data?.publicUrl) {
+            throw new Error("Falha ao gerar URL pública para o arquivo enviado.");
+        }
 
         return data.publicUrl;
     } catch (error) {

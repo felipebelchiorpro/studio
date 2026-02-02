@@ -18,6 +18,9 @@ import { useState } from "react";
 import Image from "next/image";
 import { Brand } from "@/types";
 
+import { useToast } from "@/hooks/use-toast";
+import { uploadFile } from "@/services/storageService";
+
 const brandSchema = z.object({
     name: z.string().min(2, {
         message: "O nome da marca deve ter pelo menos 2 caracteres.",
@@ -37,6 +40,8 @@ interface BrandFormProps {
 
 export default function BrandForm({ onSubmitBrand, open, onOpenChange }: BrandFormProps) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const { toast } = useToast();
 
     const form = useForm<BrandFormValues>({
         resolver: zodResolver(brandSchema),
@@ -58,17 +63,22 @@ export default function BrandForm({ onSubmitBrand, open, onOpenChange }: BrandFo
         onOpenChange(isOpen);
     };
 
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const dataUri = reader.result as string;
-                setImagePreview(dataUri);
-                form.setValue("imageUrl", dataUri);
+            try {
+                setIsUploading(true);
+                const publicUrl = await uploadFile(file, 'brand-logos');
+                setImagePreview(publicUrl);
+                form.setValue("imageUrl", publicUrl);
                 form.clearErrors("imageUrl");
-            };
-            reader.readAsDataURL(file);
+                toast({ title: "Sucesso", description: "Logo da marca enviada com sucesso." });
+            } catch (error) {
+                console.error("Error uploading brand logo", error);
+                toast({ title: "Erro", description: "Falha ao enviar logo.", variant: "destructive" });
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 
