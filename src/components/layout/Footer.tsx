@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Github, Linkedin, Instagram, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
@@ -89,8 +90,23 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-8 border-t border-border/40 pt-6 text-center">
-                    <p className="text-sm text-muted-foreground">&copy; {currentYear} DarkStore Suplementos. Todos os direitos reservados.</p>
+                <div className="mt-8 border-t border-border/40 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p className="text-xs sm:text-sm text-muted-foreground order-2 md:order-1 text-center md:text-left">
+                        &copy; {currentYear} DarkStore Suplementos. Todos os direitos reservados.
+                    </p>
+
+                    <div className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity order-1 md:order-2">
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Desenvolvido por:</span>
+                        <a href="https://venturevendas.com.br" target="_blank" rel="noopener noreferrer">
+                            <Image
+                                src="/images/venture-logo.png"
+                                alt="Venture"
+                                width={100}
+                                height={24}
+                                className="h-5 w-auto object-contain brightness-0 invert opacity-90"
+                            />
+                        </a>
+                    </div>
                 </div>
             </div>
         </footer>
