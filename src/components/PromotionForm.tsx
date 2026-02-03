@@ -31,7 +31,8 @@ import { Loader2 } from "lucide-react";
 const promotionSchema = z.object({
   title: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
-  imageUrl: z.string().min(1, "Imagem é obrigatória"),
+  imageUrl: z.string().min(1, "Imagem desktop é obrigatória"),
+  mobileImageUrl: z.string().optional().nullable(),
   link: z.string().optional().nullable(),
   position: z.enum(['main_carousel', 'grid_left', 'grid_top_right', 'grid_bottom_left', 'grid_bottom_right']).default('main_carousel'),
 });
@@ -49,7 +50,9 @@ interface PromotionFormProps {
 
 export default function PromotionForm({ promotion, onSubmitPromotion, open, onOpenChange }: PromotionFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [mobileImagePreview, setMobileImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingMobile, setIsUploadingMobile] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<PromotionFormValues>({
@@ -58,6 +61,7 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
       title: "",
       description: "",
       imageUrl: "",
+      mobileImageUrl: "",
       link: "",
       position: "main_carousel",
     },
@@ -70,19 +74,23 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
           title: promotion.title || "",
           description: promotion.description || "",
           imageUrl: promotion.imageUrl,
+          mobileImageUrl: promotion.mobileImageUrl || "",
           link: promotion.link || "",
           position: promotion.position || "main_carousel",
         });
         setImagePreview(promotion.imageUrl);
+        setMobileImagePreview(promotion.mobileImageUrl || DEFAULT_PLACEHOLDER_IMAGE);
       } else {
         form.reset({
           title: "",
           description: "",
           imageUrl: "",
+          mobileImageUrl: "",
           link: "",
           position: "main_carousel",
         });
         setImagePreview(DEFAULT_PLACEHOLDER_IMAGE);
+        setMobileImagePreview(DEFAULT_PLACEHOLDER_IMAGE);
       }
     }
   }, [promotion, form, open]);
@@ -105,12 +113,31 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
     }
   };
 
+  const handleMobileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        setIsUploadingMobile(true);
+        const publicUrl = await uploadFile(file, 'products', 'banners');
+        setMobileImagePreview(publicUrl);
+        form.setValue("mobileImageUrl", publicUrl, { shouldValidate: true });
+        toast({ title: "Sucesso", description: "Imagem mobile do banner enviada com sucesso." });
+      } catch (error) {
+        console.error("Error uploading mobile banner", error);
+        toast({ title: "Erro", description: "Falha ao enviar imagem mobile.", variant: "destructive" });
+      } finally {
+        setIsUploadingMobile(false);
+      }
+    }
+  };
+
   const handleSubmit = (data: PromotionFormValues) => {
     const finalData: Promotion = {
       id: promotion?.id || `promo-${Date.now()}`,
       title: data.title || "",
       description: data.description || "",
       imageUrl: data.imageUrl,
+      mobileImageUrl: data.mobileImageUrl || undefined,
       link: data.link || "",
       position: data.position as any,
     };
@@ -197,14 +224,17 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
               )}
             />
 
-            <div className="flex flex-col gap-4">
-              <FormLabel>Imagem do Banner (URL ou Upload)</FormLabel>
+            <div className="flex flex-col gap-4 p-4 border rounded-md bg-muted/10">
+              <FormLabel className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">1</span>
+                Imagem Desktop (Proporção larga)
+              </FormLabel>
 
-              <div className="flex justify-center bg-muted/30 p-4 rounded-md border border-dashed border-muted-foreground/25">
-                <div className="relative w-full aspect-[2/1]">
+              <div className="flex justify-center bg-muted/30 p-2 rounded-md border border-dashed border-muted-foreground/25">
+                <div className="relative w-full aspect-[16/5]">
                   <Image
                     src={imagePreview || DEFAULT_PLACEHOLDER_IMAGE}
-                    alt="Preview"
+                    alt="Preview Desktop"
                     layout="fill"
                     objectFit="cover"
                     className="rounded-md"
@@ -218,7 +248,6 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
                 onChange={handleImageChange}
                 className="cursor-pointer"
               />
-              <p className="text-xs text-muted-foreground text-center">Ou cole uma URL abaixo:</p>
 
               <FormField
                 control={form.control}
@@ -227,7 +256,7 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
                   <FormItem>
                     <FormControl>
                       <Input
-                        placeholder="https://exemplo.com/banner.png"
+                        placeholder="URL da imagem desktop"
                         {...field}
                         onChange={(e) => {
                           field.onChange(e);
@@ -241,11 +270,58 @@ export default function PromotionForm({ promotion, onSubmitPromotion, open, onOp
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isUploading || form.formState.isSubmitting}>
-              {isUploading ? (
+            <div className="flex flex-col gap-4 p-4 border rounded-md bg-muted/10">
+              <FormLabel className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">2</span>
+                Imagem Mobile (Proporção quadrada ou vertical)
+              </FormLabel>
+
+              <div className="flex justify-center bg-muted/30 p-2 rounded-md border border-dashed border-muted-foreground/25">
+                <div className="relative w-full aspect-square max-w-[200px]">
+                  <Image
+                    src={mobileImagePreview || DEFAULT_PLACEHOLDER_IMAGE}
+                    alt="Preview Mobile"
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-md"
+                  />
+                </div>
+              </div>
+
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleMobileImageChange}
+                className="cursor-pointer"
+              />
+
+              <FormField
+                control={form.control}
+                name="mobileImageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="URL da imagem mobile (opcional)"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          if (e.target.value) setMobileImagePreview(e.target.value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isUploading || isUploadingMobile || form.formState.isSubmitting}>
+              {isUploading || isUploadingMobile ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando Imagem...
+                  {isUploading ? "Enviando Desktop..." : "Enviando Mobile..."}
                 </>
               ) : (
                 promotion ? "Salvar Banner" : "Criar Banner"

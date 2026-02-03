@@ -18,6 +18,7 @@ export const fetchPromotionsService = async (): Promise<Promotion[]> => {
             title: p.title,
             description: p.description,
             imageUrl: p.image_url,
+            mobileImageUrl: p.mobile_image_url,
             link: p.link,
             position: p.position || 'main_carousel'
         }));
@@ -32,6 +33,7 @@ export const createPromotionService = async (promotion: Partial<Promotion>): Pro
         title: promotion.title,
         description: promotion.description,
         image_url: promotion.imageUrl,
+        mobile_image_url: promotion.mobileImageUrl,
         link: promotion.link,
         position: promotion.position || 'main_carousel',
         id: promotion.id || `promo-${Date.now()}`
@@ -89,6 +91,7 @@ export const createPromotionService = async (promotion: Partial<Promotion>): Pro
         title: p.title,
         description: p.description,
         imageUrl: p.image_url,
+        mobileImageUrl: p.mobile_image_url,
         link: p.link,
         position: p.position
     };
@@ -99,6 +102,7 @@ export const updatePromotionService = async (promotion: Promotion): Promise<void
         title: promotion.title,
         description: promotion.description,
         image_url: promotion.imageUrl,
+        mobile_image_url: promotion.mobileImageUrl,
         link: promotion.link,
         position: promotion.position
     };

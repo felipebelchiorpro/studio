@@ -107,6 +107,7 @@ export interface Promotion {
   title: string;
   description: string;
   imageUrl: string;
+  mobileImageUrl?: string; // Image for mobile screens
   link: string; // e.g., link to a category or product
   position?: 'main_carousel' | 'grid_left' | 'grid_top_right' | 'grid_bottom_left' | 'grid_bottom_right';
 }

@@ -50,14 +50,27 @@ export function Banner({ promotions }: BannerProps) {
                   {hasText ? (
                     // Layout with Overlay Text
                     <>
-                      <Image
-                        src={promotion.imageUrl}
-                        alt={promotion.title}
-                        layout="fill"
-                        objectFit="cover"
-                        className="brightness-75"
-                        data-ai-hint="fitness promotion"
-                      />
+                      {/* Mobile Image */}
+                      <div className="md:hidden absolute inset-0">
+                        <Image
+                          src={promotion.mobileImageUrl || promotion.imageUrl}
+                          alt={promotion.title}
+                          layout="fill"
+                          objectFit="cover"
+                          className="brightness-75"
+                        />
+                      </div>
+                      {/* Desktop Image */}
+                      <div className="hidden md:block absolute inset-0">
+                        <Image
+                          src={promotion.imageUrl}
+                          alt={promotion.title}
+                          layout="fill"
+                          objectFit="cover"
+                          className="brightness-75"
+                        />
+                      </div>
+
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 p-6 text-center">
                         {promotion.title && <h2 className="font-headline text-3xl md:text-5xl font-bold text-white mb-4 shadow-md drop-shadow-lg">
                           {promotion.title}
@@ -78,23 +91,46 @@ export function Banner({ promotions }: BannerProps) {
                     // Layout Image Only (Full Art)
                     promotion.link ? (
                       <Link href={promotion.link} className="relative w-full h-full block">
-                        <Image
-                          src={promotion.imageUrl}
-                          alt={promotion.title || "Banner"}
-                          layout="fill"
-                          objectFit="cover"
-                          className="" // No brightness filter for clean art
-                          priority={true}
-                        />
+                        {/* Mobile Image Only */}
+                        <div className="md:hidden relative w-full h-full">
+                          <Image
+                            src={promotion.mobileImageUrl || promotion.imageUrl}
+                            alt={promotion.title || "Banner Mobile"}
+                            layout="fill"
+                            objectFit="cover"
+                            priority={true}
+                          />
+                        </div>
+                        {/* Desktop Image Only */}
+                        <div className="hidden md:block relative w-full h-full">
+                          <Image
+                            src={promotion.imageUrl}
+                            alt={promotion.title || "Banner Desktop"}
+                            layout="fill"
+                            objectFit="cover"
+                            priority={true}
+                          />
+                        </div>
                       </Link>
                     ) : (
-                      <Image
-                        src={promotion.imageUrl}
-                        alt={promotion.title || "Banner"}
-                        layout="fill"
-                        objectFit="cover"
-                        className=""
-                      />
+                      <>
+                        <div className="md:hidden relative w-full h-full">
+                          <Image
+                            src={promotion.mobileImageUrl || promotion.imageUrl}
+                            alt={promotion.title || "Banner Mobile"}
+                            layout="fill"
+                            objectFit="cover"
+                          />
+                        </div>
+                        <div className="hidden md:block relative w-full h-full">
+                          <Image
+                            src={promotion.imageUrl}
+                            alt={promotion.title || "Banner Desktop"}
+                            layout="fill"
+                            objectFit="cover"
+                          />
+                        </div>
+                      </>
                     )
                   )}
                 </CardContent>
