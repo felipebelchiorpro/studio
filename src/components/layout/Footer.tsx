@@ -97,7 +97,7 @@ export default function Footer() {
 
                     <div className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity order-1 md:order-2">
                         <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Desenvolvido por:</span>
-                        <a href="https://venturevendas.com.br" target="_blank" rel="noopener noreferrer">
+                        <a href="https://venturexp.pro" target="_blank" rel="noopener noreferrer">
                             <Image
                                 src="/images/venture-logo.png"
                                 alt="Venture"
