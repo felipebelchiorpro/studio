@@ -214,20 +214,45 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                         {/* GRID LEFT (LARGE VERTICAL) */}
                         <Link href={gridLeft?.link || "/products?category=GANHO%20DE%20MASSA"} passHref>
                             <div className="group relative aspect-[3/4] sm:aspect-video md:aspect-[3/4] overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
-                                <Image
-                                    src={gridLeft?.imageUrl || "https://placehold.co/600x800.png?text=Destaque+Esquerda"}
-                                    alt={gridLeft?.title || "Destaque"}
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75"
-                                    data-ai-hint="muscle fitness torso"
-                                />
-                                <div className="absolute inset-0 flex flex-col items-center justify-end p-4 sm:p-6 text-center">
-                                    <h3 className="font-headline text-2xl sm:text-3xl md:text-4xl font-bold text-primary uppercase shadow-md mb-2 sm:mb-3">
-                                        {gridLeft?.title || "GANHO DE MASSA"}
-                                    </h3>
-                                    <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm">Ver Agora</Button>
-                                </div>
+                                {gridLeft?.mobileImageUrl ? (
+                                    <>
+                                        <div className="md:hidden absolute inset-0">
+                                            <Image
+                                                src={gridLeft.mobileImageUrl}
+                                                alt={gridLeft.title || "Destaque Mobile"}
+                                                layout="fill"
+                                                objectFit="cover"
+                                                className={cn("transition-transform duration-300 group-hover:scale-105", (gridLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                            />
+                                        </div>
+                                        <div className="hidden md:block absolute inset-0">
+                                            <Image
+                                                src={gridLeft.imageUrl}
+                                                alt={gridLeft.title || "Destaque"}
+                                                layout="fill"
+                                                objectFit="cover"
+                                                className={cn("transition-transform duration-300 group-hover:scale-105", (gridLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <Image
+                                        src={gridLeft?.imageUrl || "https://placehold.co/600x800.png?text=Destaque+Esquerda"}
+                                        alt={gridLeft?.title || "Destaque"}
+                                        layout="fill"
+                                        objectFit="cover"
+                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridLeft?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                    />
+                                )}
+
+                                {gridLeft?.title && (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-end p-4 sm:p-6 text-center bg-black/20">
+                                        <h3 className="font-headline text-2xl sm:text-3xl md:text-4xl font-bold text-primary uppercase shadow-md mb-2 sm:mb-3">
+                                            {gridLeft.title}
+                                        </h3>
+                                        <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm">Ver Agora</Button>
+                                    </div>
+                                )}
                             </div>
                         </Link>
 
@@ -235,20 +260,45 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                             {/* GRID TOP RIGHT (WIDE) */}
                             <Link href={gridTopRight?.link || "/products?category=ENDURANCE"} passHref>
                                 <div className="group relative h-full w-full overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
-                                    <Image
-                                        src={gridTopRight?.imageUrl || "https://placehold.co/800x400.png?text=Destaque+Topo"}
-                                        alt={gridTopRight?.title || "Destaque"}
-                                        layout="fill"
-                                        objectFit="cover"
-                                        className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75"
-                                        data-ai-hint="runner motion"
-                                    />
-                                    <div className="absolute inset-0 flex flex-col items-center justify-end p-3 sm:p-4 text-center">
-                                        <h3 className="font-headline text-xl sm:text-2xl md:text-3xl font-bold text-primary uppercase shadow-md mb-1.5 sm:mb-2">
-                                            {gridTopRight?.title || "ENDURANCE"}
-                                        </h3>
-                                        <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-3 sm:px-5 py-1 sm:py-1.5 text-xs sm:text-sm">Ver Agora</Button>
-                                    </div>
+                                    {gridTopRight?.mobileImageUrl ? (
+                                        <>
+                                            <div className="md:hidden absolute inset-0">
+                                                <Image
+                                                    src={gridTopRight.mobileImageUrl}
+                                                    alt={gridTopRight.title || "Destaque Mobile"}
+                                                    layout="fill"
+                                                    objectFit="cover"
+                                                    className={cn("transition-transform duration-300 group-hover:scale-105", (gridTopRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                />
+                                            </div>
+                                            <div className="hidden md:block absolute inset-0">
+                                                <Image
+                                                    src={gridTopRight.imageUrl}
+                                                    alt={gridTopRight.title || "Destaque"}
+                                                    layout="fill"
+                                                    objectFit="cover"
+                                                    className={cn("transition-transform duration-300 group-hover:scale-105", (gridTopRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <Image
+                                            src={gridTopRight?.imageUrl || "https://placehold.co/800x400.png?text=Destaque+Topo"}
+                                            alt={gridTopRight?.title || "Destaque"}
+                                            layout="fill"
+                                            objectFit="cover"
+                                            className={cn("transition-transform duration-300 group-hover:scale-105", (gridTopRight?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                        />
+                                    )}
+
+                                    {gridTopRight?.title && (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-end p-3 sm:p-4 text-center bg-black/20">
+                                            <h3 className="font-headline text-xl sm:text-2xl md:text-3xl font-bold text-primary uppercase shadow-md mb-1.5 sm:mb-2">
+                                                {gridTopRight.title}
+                                            </h3>
+                                            <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-3 sm:px-5 py-1 sm:py-1.5 text-xs sm:text-sm">Ver Agora</Button>
+                                        </div>
+                                    )}
                                 </div>
                             </Link>
 
@@ -256,40 +306,90 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                 {/* GRID BOTTOM LEFT */}
                                 <Link href={gridBottomLeft?.link || "/products?category=EMAGRECIMENTO"} passHref>
                                     <div className="group relative h-full w-full overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
-                                        <Image
-                                            src={gridBottomLeft?.imageUrl || "https://placehold.co/400x400.png?text=Peq+Esq"}
-                                            alt={gridBottomLeft?.title || "Destaque"}
-                                            layout="fill"
-                                            objectFit="cover"
-                                            className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75"
-                                            data-ai-hint="waist measure fitness"
-                                        />
-                                        <div className="absolute inset-0 flex flex-col items-center justify-end p-2 sm:p-3 text-center">
-                                            <h3 className="font-headline text-lg sm:text-xl md:text-2xl font-bold text-primary uppercase shadow-md mb-1 sm:mb-2">
-                                                {gridBottomLeft?.title || "EMAGRECIMENTO"}
-                                            </h3>
-                                            <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-2.5 sm:px-4 py-0.5 sm:py-1 text-[10px] sm:text-xs h-7">Ver Agora</Button>
-                                        </div>
+                                        {gridBottomLeft?.mobileImageUrl ? (
+                                            <>
+                                                <div className="md:hidden absolute inset-0">
+                                                    <Image
+                                                        src={gridBottomLeft.mobileImageUrl}
+                                                        alt={gridBottomLeft.title || "Destaque Mobile"}
+                                                        layout="fill"
+                                                        objectFit="cover"
+                                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                    />
+                                                </div>
+                                                <div className="hidden md:block absolute inset-0">
+                                                    <Image
+                                                        src={gridBottomLeft.imageUrl}
+                                                        alt={gridBottomLeft.title || "Destaque"}
+                                                        layout="fill"
+                                                        objectFit="cover"
+                                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <Image
+                                                src={gridBottomLeft?.imageUrl || "https://placehold.co/400x400.png?text=Peq+Esq"}
+                                                alt={gridBottomLeft?.title || "Destaque"}
+                                                layout="fill"
+                                                objectFit="cover"
+                                                className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomLeft?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                            />
+                                        )}
+
+                                        {gridBottomLeft?.title && (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-end p-2 sm:p-3 text-center bg-black/20">
+                                                <h3 className="font-headline text-lg sm:text-xl md:text-2xl font-bold text-primary uppercase shadow-md mb-1 sm:mb-2">
+                                                    {gridBottomLeft.title}
+                                                </h3>
+                                                <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-2.5 sm:px-4 py-0.5 sm:py-1 text-[10px] sm:text-xs h-7">Ver Agora</Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </Link>
 
                                 {/* GRID BOTTOM RIGHT */}
                                 <Link href={gridBottomRight?.link || "/products?category=DEFINIÇÃO"} passHref>
                                     <div className="group relative h-full w-full overflow-hidden rounded-lg border border-border/40 hover:border-border/70 shadow-none transition-all duration-300 cursor-pointer">
-                                        <Image
-                                            src={gridBottomRight?.imageUrl || "https://placehold.co/400x400.png?text=Peq+Dir"}
-                                            alt={gridBottomRight?.title || "Destaque"}
-                                            layout="fill"
-                                            objectFit="cover"
-                                            className="transition-transform duration-300 group-hover:scale-105 brightness-50 group-hover:brightness-75"
-                                            data-ai-hint="abs fitness definition"
-                                        />
-                                        <div className="absolute inset-0 flex flex-col items-center justify-end p-2 sm:p-3 text-center">
-                                            <h3 className="font-headline text-lg sm:text-xl md:text-2xl font-bold text-primary uppercase shadow-md mb-1 sm:mb-2">
-                                                {gridBottomRight?.title || "DEFINIÇÃO"}
-                                            </h3>
-                                            <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-2.5 sm:px-4 py-0.5 sm:py-1 text-[10px] sm:text-xs h-7">Ver Agora</Button>
-                                        </div>
+                                        {gridBottomRight?.mobileImageUrl ? (
+                                            <>
+                                                <div className="md:hidden absolute inset-0">
+                                                    <Image
+                                                        src={gridBottomRight.mobileImageUrl}
+                                                        alt={gridBottomRight.title || "Destaque Mobile"}
+                                                        layout="fill"
+                                                        objectFit="cover"
+                                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                    />
+                                                </div>
+                                                <div className="hidden md:block absolute inset-0">
+                                                    <Image
+                                                        src={gridBottomRight.imageUrl}
+                                                        alt={gridBottomRight.title || "Destaque"}
+                                                        layout="fill"
+                                                        objectFit="cover"
+                                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <Image
+                                                src={gridBottomRight?.imageUrl || "https://placehold.co/400x400.png?text=Peq+Dir"}
+                                                alt={gridBottomRight?.title || "Destaque"}
+                                                layout="fill"
+                                                objectFit="cover"
+                                                className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomRight?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                            />
+                                        )}
+
+                                        {gridBottomRight?.title && (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-end p-2 sm:p-3 text-center bg-black/20">
+                                                <h3 className="font-headline text-lg sm:text-xl md:text-2xl font-bold text-primary uppercase shadow-md mb-1 sm:mb-2">
+                                                    {gridBottomRight.title}
+                                                </h3>
+                                                <Button variant="secondary" size="sm" className="bg-neutral-800/80 hover:bg-neutral-900/90 text-white px-2.5 sm:px-4 py-0.5 sm:py-1 text-[10px] sm:text-xs h-7">Ver Agora</Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </Link>
                             </div>
