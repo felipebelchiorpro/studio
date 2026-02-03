@@ -5,7 +5,8 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import ProductCard from '@/components/ProductCard';
 import SearchBar from '@/components/SearchBar';
 import ProductFilters, { type Filters } from '@/components/ProductFilters';
-import type { Product } from '@/types';
+import type { Product, Category } from '@/types';
+import { fetchCategoriesService } from '@/services/categoryService';
 import { useSearchParams } from 'next/navigation';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,8 +36,19 @@ function ProductsContent() {
   const [sortOption, setSortOption] = useState('default');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+
   useEffect(() => {
     setHasMounted(true);
+    const loadCategories = async () => {
+      try {
+        const cats = await fetchCategoriesService();
+        setAllCategories(cats);
+      } catch (err) {
+        console.error("Failed to load categories for filtering", err);
+      }
+    };
+    loadCategories();
   }, []);
 
   // Sync state with URL parameters
@@ -91,11 +103,38 @@ function ProductsContent() {
       result = result.filter(p => p.originalPrice && p.originalPrice > p.price);
     }
 
+    // Hierarchical category filtering
     if (filters.categories.length > 0) {
+      // 1. Get all relevant category names (selected + descendants)
+      const getDescendantNames = (parentNames: string[]): string[] => {
+        const descendantNames = [...parentNames];
+        const queue = [...parentNames];
+        const visited = new Set<string>(parentNames.map(n => n.toLowerCase()));
+
+        while (queue.length > 0) {
+          const currentName = queue.shift()!;
+          const parentCat = allCategories.find(c => c.name.toLowerCase() === currentName.toLowerCase());
+
+          if (parentCat) {
+            const children = allCategories.filter(c => c.parentId === parentCat.id);
+            for (const child of children) {
+              if (!visited.has(child.name.toLowerCase())) {
+                visited.add(child.name.toLowerCase());
+                descendantNames.push(child.name);
+                queue.push(child.name);
+              }
+            }
+          }
+        }
+        return descendantNames;
+      };
+
+      const expandedCategories = getDescendantNames(filters.categories);
+
       result = result.filter(product =>
-        filters.categories.some(cat =>
+        expandedCategories.some(cat =>
           product.category.toLowerCase() === cat.toLowerCase() ||
-          (cat.toUpperCase() === 'KITS' && product.category.toLowerCase().includes('kit')) // Robust check for Kits
+          (cat.toUpperCase() === 'KITS' && product.category.toLowerCase().includes('kit'))
         )
       );
     }
