@@ -77,6 +77,7 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  phone?: string;
   // For simulated auth, no password stored
 }
 

@@ -26,7 +26,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email!, name: session.user.user_metadata?.name });
+        // Extract phone from metadata or direct property
+        const phone = session.user.user_metadata?.phone || session.user.phone || undefined;
+        setUser({ id: session.user.id, email: session.user.email!, name: session.user.user_metadata?.name, phone });
         setIsAuthenticated(true);
       }
       setLoading(false);
@@ -37,7 +39,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email!, name: session.user.user_metadata?.name });
+        // Extract phone from metadata or direct property (depends on provider)
+        // In our RegisterForm we perform: options: { data: { phone: ... } }
+        const phone = session.user.user_metadata?.phone || session.user.phone || undefined;
+        setUser({ id: session.user.id, email: session.user.email!, name: session.user.user_metadata?.name, phone });
         setIsAuthenticated(true);
       } else {
         setUser(null);

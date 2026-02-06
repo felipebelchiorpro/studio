@@ -40,7 +40,10 @@ export async function createCoupon(data: Omit<Coupon, 'id' | 'created_at' | 'use
 
     if (error) {
         console.error("Error creating coupon:", error);
-        return { success: false, message: "Erro ao criar cupom. Verifique se o código já existe." };
+        if (error.code === '23505') { // Postgres unique_violation code
+            return { success: false, message: "Este código de cupom já existe." };
+        }
+        return { success: false, message: "Erro ao criar cupom. Tente novamente." };
     }
 
     revalidatePath('/dashboard/coupons');
@@ -61,7 +64,36 @@ export async function getCoupons() {
     // No mapping needed for partner_name, it's directly in the row now.
     return coupons as Coupon[];
 }
-// ... (delete and toggle remain same)
+
+export async function deleteCoupon(id: string) {
+    const { error } = await supabaseAdmin
+        .from('coupons')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error deleting coupon:", error);
+        return { success: false, message: "Erro ao excluir cupom." };
+    }
+
+    revalidatePath('/dashboard/coupons');
+    return { success: true };
+}
+
+export async function toggleCouponStatus(id: string, currentStatus: boolean) {
+    const { error } = await supabaseAdmin
+        .from('coupons')
+        .update({ active: !currentStatus })
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error toggling coupon status:", error);
+        return { success: false, message: "Erro ao atualizar status do cupom." };
+    }
+
+    revalidatePath('/dashboard/coupons');
+    return { success: true };
+}
 
 export async function validateCoupon(code: string) {
     const upperCode = code.toUpperCase();

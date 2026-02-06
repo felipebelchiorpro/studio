@@ -2,8 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import Script from 'next/script';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { processPayment } from '@/actions/payment';
+import { createOrderAction } from '@/actions/order';
 
 declare global {
     interface Window {
@@ -12,9 +15,38 @@ declare global {
 }
 
 export default function CheckoutPage() {
-    const { cartItems, getCartTotal } = useCart();
+    const { cartItems, getCartTotal, updateContactInfo, clearCart } = useCart();
+    const { user, isAuthenticated } = useAuth();
+    const router = useRouter();
     const [mpLoaded, setMpLoaded] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Local state for inputs to manage pre-fill and manual entry
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+
+    // Pre-fill from Auth
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            if (user.email) setEmail(user.email);
+            if (user.phone) setPhone(user.phone);
+            // Sync immediately if we have data
+            updateContactInfo(user.email, user.phone);
+        }
+    }, [isAuthenticated, user, updateContactInfo]);
+
+    // Handle input changes
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEmail(e.target.value);
+    };
+
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPhone(e.target.value);
+    };
+
+    const handleContactBlur = () => {
+        updateContactInfo(email, phone);
+    };
 
     useEffect(() => {
         if (mpLoaded && window.MercadoPago) {
@@ -74,7 +106,7 @@ export default function CheckoutPage() {
                         const {
                             paymentMethodId: payment_method_id,
                             issuerId: issuer_id,
-                            cardholderEmail: email,
+                            cardholderEmail: email, // MP gets this from the form input with ID form-checkout__cardholderEmail
                             amount,
                             token,
                             installments,
@@ -99,12 +131,29 @@ export default function CheckoutPage() {
                         };
 
                         const result = await processPayment(payload);
-                        setLoading(false);
+
 
                         if (result.success) {
-                            alert(`Pagamento Aprovado! ID: ${result.id}`);
-                            // Redirect or clear cart
+                            // Payment Approved! Now Create Order
+                            const orderRes = await createOrderAction({
+                                userId: user?.id,
+                                items: cartItems,
+                                totalAmount: Number(amount),
+                                paymentId: result.id ? result.id.toString() : 'unknown',
+                                status: 'approved',
+                                userEmail: email,
+                                userPhone: phone
+                            });
+
+                            if (orderRes.success) {
+                                clearCart();
+                                router.push(`/checkout/success?order_id=${orderRes.orderId}`);
+                            } else {
+                                setLoading(false);
+                                alert(`Pagamento Aprovado, mas erro ao salvar pedido: ${orderRes.message}`);
+                            }
                         } else {
+                            setLoading(false);
                             alert(`Erro: ${result.message}`);
                         }
                     },
@@ -116,7 +165,7 @@ export default function CheckoutPage() {
                 },
             });
         }
-    }, [mpLoaded, getCartTotal]);
+    }, [mpLoaded, getCartTotal, cartItems, user, phone, email, updateContactInfo, clearCart, router]);
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white p-8 pt-24">
@@ -180,7 +229,28 @@ export default function CheckoutPage() {
                     {/* Email */}
                     <div className="space-y-1">
                         <label className="text-xs text-gray-400">Email</label>
-                        <input type="email" id="form-checkout__cardholderEmail" className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white" />
+                        <input
+                            type="email"
+                            id="form-checkout__cardholderEmail"
+                            className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white"
+                            value={email}
+                            onChange={handleEmailChange}
+                            onBlur={handleContactBlur}
+                            placeholder="seu@email.com"
+                        />
+                    </div>
+
+                    {/* Phone (New Field) */}
+                    <div className="space-y-1">
+                        <label className="text-xs text-gray-400">Telefone / WhatsApp</label>
+                        <input
+                            type="tel"
+                            className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white focus:border-red-500 outline-none"
+                            value={phone}
+                            onChange={handlePhoneChange}
+                            onBlur={handleContactBlur}
+                            placeholder="(11) 99999-9999"
+                        />
                     </div>
 
                     <button

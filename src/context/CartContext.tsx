@@ -12,6 +12,7 @@ interface CartContextType {
   clearCart: () => void;
   getCartTotal: () => number;
   getCartItemCount: () => number;
+  updateContactInfo: (email?: string, phone?: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -22,27 +23,24 @@ const CART_ID_KEY = 'darkstore-cart-id';
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartId, setCartId] = useState<string>('');
-  const [isLoaded, setIsLoaded] = useState(false); // Track if initial load is done
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [contactInfo, setContactInfo] = useState<{ email?: string; phone?: string }>({});
 
-  // 1. Load Cart on Mount
+  // 1. Load Cart on Mount (existing code)
   useEffect(() => {
     try {
       const storedCart = localStorage.getItem(CART_STORAGE_KEY);
       if (storedCart) {
         const parsedCart = JSON.parse(storedCart);
-        console.log("Cart loaded from storage:", parsedCart.length, "items");
         setCartItems(parsedCart);
-      } else {
-        console.log("No cart found in storage");
       }
     } catch (error) {
       console.error("Failed to parse cart from localStorage", error);
       localStorage.removeItem(CART_STORAGE_KEY);
     } finally {
-      setIsLoaded(true); // Mark as loaded even if empty
+      setIsLoaded(true);
     }
 
-    // Initialize Cart ID
     let id = localStorage.getItem(CART_ID_KEY);
     if (!id) {
       id = crypto.randomUUID();
@@ -51,12 +49,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCartId(id);
   }, []);
 
-  // 2. Persist Cart on Change (Only after load)
+  // 2. Persist Cart on Change (existing code)
   useEffect(() => {
-    if (!isLoaded) return; // Don't save if we haven't loaded yet (avoids overwriting with empty)
-
+    if (!isLoaded) return;
     try {
-      console.log("Persisting cart to storage:", cartItems.length, "items");
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
     } catch (error) {
       console.error("Failed to save cart to localStorage", error);
@@ -69,7 +65,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     const timeoutId = setTimeout(() => {
       const total = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-      syncCartAction(cartId, cartItems, total)
+      // Pass contact info to sync action
+      syncCartAction(cartId, cartItems, total, contactInfo.email, contactInfo.phone)
         .then(res => {
           if (!res.success) console.error("Cart Sync Failed:", res.message);
         })
@@ -77,7 +74,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [cartItems, cartId]);
+  }, [cartItems, cartId, contactInfo]); // Add contactInfo dependency
 
   const addToCart = (product: Product & { couponCode?: string }, quantityToAdd: number = 1) => {
     setCartItems(prevItems => {
@@ -115,6 +112,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCartItems([]);
   };
 
+  const updateContactInfo = (email?: string, phone?: string) => {
+    setContactInfo(prev => ({ ...prev, ...(email && { email }), ...(phone && { phone }) }));
+  };
+
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   };
@@ -124,7 +125,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount, updateContactInfo }}>
       {children}
     </CartContext.Provider>
   );
