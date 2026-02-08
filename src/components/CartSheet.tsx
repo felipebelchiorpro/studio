@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Tag, X, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import CartItemDisplay from "@/components/CartItemDisplay";
 import { useState } from "react";
@@ -12,19 +12,46 @@ import Image from "next/image";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import CustomerLoginForm from "@/components/CustomerLoginForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { validateCouponService } from "@/services/couponService";
 
 export function CartSheet() {
-    const { cartItems, getCartTotal, clearCart, getCartItemCount } = useCart();
-    // Safely destructure with fallback if context is initially null (though provider should ensure it exists)
+    const { cartItems, getCartTotal, clearCart, getCartItemCount, coupon, applyCoupon, removeCoupon, getSubtotal, getDiscountAmount } = useCart();
+    // Safely destructure with fallback if context is initially null
     const { customer } = useCustomerAuth() || {};
     const { toast } = useToast();
     const router = useRouter();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showLogin, setShowLogin] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
+    const [isApplying, setIsApplying] = useState(false);
 
     const itemCount = getCartItemCount();
     const total = getCartTotal();
+    const subtotal = getSubtotal();
+    const discountAmount = getDiscountAmount();
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+
+        setIsApplying(true);
+        try {
+            const res = await validateCouponService(couponCode);
+            if (res.valid && res.coupon) {
+                applyCoupon(res.coupon);
+                setCouponCode('');
+                toast({ title: "Cupom aplicado!", description: res.message, className: "bg-green-600 text-white" });
+            } else {
+                toast({ title: "Inválido", description: res.message || "Cupom inválido", variant: "destructive" });
+            }
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Erro", description: "Erro ao validar cupom.", variant: "destructive" });
+        } finally {
+            setIsApplying(false);
+        }
+    };
 
     const handleCheckout = () => {
         if (!customer) {
@@ -78,13 +105,57 @@ export function CartSheet() {
 
                 {cartItems.length > 0 && (
                     <div className="border-t border-white/10 pt-4 space-y-4">
-                        <div className="flex justify-between items-center text-lg font-bold">
-                            <span>Total</span>
-                            <span className="text-red-400">R$ {total.toFixed(2).replace('.', ',')}</span>
+                        {/* Coupon Section */}
+                        <div className="space-y-2">
+                            {coupon ? (
+                                <div className="bg-green-900/20 border border-green-900/50 rounded-md p-3 flex justify-between items-center animate-in fade-in slide-in-from-bottom-2">
+                                    <div className="flex items-center gap-2 text-green-400">
+                                        <Tag className="h-4 w-4" />
+                                        <span className="font-medium text-sm">Cupom: {coupon.code}</span>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={removeCoupon} className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive">
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <Tag className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Cupom de desconto"
+                                            className="pl-9 bg-black/50 border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-red-500"
+                                            value={couponCode}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                                        />
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        className="border-white/10 hover:bg-white/10 hover:text-white"
+                                        onClick={handleApplyCoupon}
+                                        disabled={isApplying || !couponCode}
+                                    >
+                                        {isApplying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Aplicar"}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="space-y-2">
-                            {/* Phone input removed as per user request - data comes from login */}
+                        <div className="space-y-1 text-sm">
+                            <div className="flex justify-between text-muted-foreground">
+                                <span>Subtotal</span>
+                                <span>R$ {subtotal.toFixed(2).replace('.', ',')}</span>
+                            </div>
+                            {coupon && (
+                                <div className="flex justify-between text-green-400 font-medium">
+                                    <span>Desconto</span>
+                                    <span>- R$ {discountAmount.toFixed(2).replace('.', ',')}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center text-lg font-bold border-t border-white/10 pt-2 mt-2">
+                                <span>Total</span>
+                                <span className="text-red-400">R$ {total.toFixed(2).replace('.', ',')}</span>
+                            </div>
                         </div>
 
                         <Button
@@ -92,11 +163,7 @@ export function CartSheet() {
                             disabled={loading}
                             onClick={handleCheckout}
                         >
-                            {loading ? "Processando..." : (
-                                <>
-                                    Finalizar Compra
-                                </>
-                            )}
+                            {loading ? "Processando..." : "Finalizar Compra"}
                         </Button>
 
                         <Button variant="ghost" className="w-full text-xs text-muted-foreground hover:text-red-400 hover:bg-transparent" onClick={clearCart}>

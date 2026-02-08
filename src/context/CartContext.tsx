@@ -29,6 +29,11 @@ interface CartContextType {
   updateContactInfo: (email?: string, phone?: string) => void;
   shippingInfo: ShippingInfo;
   updateShippingInfo: (info: ShippingInfo) => void;
+  coupon: { code: string; type: 'percent' | 'fixed'; value: number } | null;
+  applyCoupon: (coupon: { code: string; type: 'percent' | 'fixed'; value: number }) => void;
+  removeCoupon: () => void;
+  getSubtotal: () => number;
+  getDiscountAmount: () => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -42,18 +47,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [contactInfo, setContactInfo] = useState<{ email?: string; phone?: string }>({});
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ method: 'shipping', fee: 0 });
+  const [coupon, setCoupon] = useState<{ code: string; type: 'percent' | 'fixed'; value: number } | null>(null);
+  const COUPON_STORAGE_KEY = 'darkstore-coupon';
 
-  // 1. Load Cart on Mount (existing code)
+  // 1. Load Cart & Coupon on Mount
   useEffect(() => {
     try {
       const storedCart = localStorage.getItem(CART_STORAGE_KEY);
       if (storedCart) {
-        const parsedCart = JSON.parse(storedCart);
-        setCartItems(parsedCart);
+        setCartItems(JSON.parse(storedCart));
+      }
+      const storedCoupon = localStorage.getItem(COUPON_STORAGE_KEY);
+      if (storedCoupon) {
+        setCoupon(JSON.parse(storedCoupon));
       }
     } catch (error) {
-      console.error("Failed to parse cart from localStorage", error);
+      console.error("Failed to parse cart/coupon from localStorage", error);
       localStorage.removeItem(CART_STORAGE_KEY);
+      localStorage.removeItem(COUPON_STORAGE_KEY);
     } finally {
       setIsLoaded(true);
     }
@@ -66,22 +77,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCartId(id);
   }, []);
 
-  // 2. Persist Cart on Change (existing code)
+  // 2. Persist Cart & Coupon on Change
   useEffect(() => {
     if (!isLoaded) return;
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+      if (coupon) {
+        localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(coupon));
+      } else {
+        localStorage.removeItem(COUPON_STORAGE_KEY);
+      }
     } catch (error) {
       console.error("Failed to save cart to localStorage", error);
     }
-  }, [cartItems, isLoaded]);
+  }, [cartItems, coupon, isLoaded]);
 
   // 3. Sync with Server (Debounced)
   useEffect(() => {
     if (!cartId || cartItems.length === 0) return;
 
     const timeoutId = setTimeout(() => {
-      const total = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+      const total = getCartTotal();
       // Pass contact info to sync action
       syncCartAction(cartId, cartItems, total, contactInfo.email, contactInfo.phone)
         .then(res => {
@@ -91,7 +107,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [cartItems, cartId, contactInfo]); // Add contactInfo dependency
+  }, [cartItems, cartId, contactInfo, coupon]); // Add coupon dependency
 
   const addToCart = (product: Product & { couponCode?: string }, quantityToAdd: number = 1) => {
     setCartItems(prevItems => {
@@ -128,6 +144,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const clearCart = () => {
     setCartItems([]);
     setShippingInfo({ method: 'shipping', fee: 0 }); // Reset shipping too
+    setCoupon(null);
   };
 
   const updateContactInfo = (email?: string, phone?: string) => {
@@ -138,8 +155,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setShippingInfo(info);
   };
 
-  const getCartTotal = () => {
+  const applyCoupon = (newCoupon: { code: string; type: 'percent' | 'fixed'; value: number }) => {
+    setCoupon(newCoupon);
+  };
+
+  const removeCoupon = () => {
+    setCoupon(null);
+  };
+
+  const getSubtotal = () => {
     return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
+  const getDiscountAmount = () => {
+    if (!coupon) return 0;
+    const subtotal = getSubtotal();
+    if (coupon.type === 'percent') {
+      return (subtotal * coupon.value) / 100;
+    } else {
+      return Math.min(coupon.value, subtotal); // Cannot discount more than total
+    }
+  };
+
+  const getCartTotal = () => {
+    return Math.max(0, getSubtotal() - getDiscountAmount());
   };
 
   const getCartItemCount = () => {
@@ -147,7 +186,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount, updateContactInfo, shippingInfo, updateShippingInfo }}>
+    <CartContext.Provider value={{
+      cartItems,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getCartTotal,
+      getSubtotal,
+      getDiscountAmount,
+      getCartItemCount,
+      updateContactInfo,
+      shippingInfo,
+      updateShippingInfo,
+      coupon,
+      applyCoupon,
+      removeCoupon
+    }}>
       {children}
     </CartContext.Provider>
   );
