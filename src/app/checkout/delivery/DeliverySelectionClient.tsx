@@ -278,13 +278,19 @@ export default function DeliverySelectionClient() {
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="pb-8 pt-4 px-8">
+                <CardFooter className="pb-8 pt-4 px-4 sm:px-8">
                     <Button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="w-full text-lg h-14 bg-red-600 hover:bg-red-700 text-white font-bold tracking-wide shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:shadow-[0_0_30px_rgba(220,38,38,0.6)] transition-all transform hover:-translate-y-1 active:scale-[0.98] rounded-xl"
+                        className="w-full text-base sm:text-lg h-12 sm:h-14 bg-red-600 hover:bg-red-700 text-white font-bold tracking-wide shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:shadow-[0_0_30px_rgba(220,38,38,0.6)] transition-all transform hover:-translate-y-1 active:scale-[0.98] rounded-xl flex items-center justify-center"
                     >
-                        {loading ? 'Processando...' : 'Confirmar e Ir para Pagamento'} <ArrowRight className="ml-2 h-5 w-5" />
+                        {loading ? 'Processando...' : (
+                            <>
+                                <span className="sm:hidden">Ir para Pagamento</span>
+                                <span className="hidden sm:inline">Confirmar e Ir para Pagamento</span>
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </>
+                        )}
                     </Button>
                 </CardFooter>
             </Card>
