@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,11 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
+
+    // Fetch on mount to ensure we have data even if server-side auth failed
+    useEffect(() => {
+        refreshCoupons();
+    }, []);
 
     const refreshCoupons = async () => {
         const data = await fetchCouponsService();
