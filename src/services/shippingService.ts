@@ -18,7 +18,7 @@ export async function fetchShippingRatesService() {
             .order('base_fee', { ascending: true });
 
         if (error) {
-            console.warn("Error fetching shipping rates:", error.message);
+            console.error("Error fetching shipping rates:", JSON.stringify(error, null, 2));
             return [];
         }
 
@@ -35,8 +35,8 @@ export async function createShippingRateService(data: Omit<ShippingRate, 'id' | 
         .insert(data);
 
     if (error) {
-        console.error("Error creating shipping rate:", error);
-        return { success: false, message: error.message };
+        console.error("Error creating shipping rate:", JSON.stringify(error, null, 2));
+        return { success: false, message: error.message || "Erro desconhecido ao criar frete." };
     }
     return { success: true };
 }

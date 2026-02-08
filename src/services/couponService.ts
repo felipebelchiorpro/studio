@@ -48,11 +48,11 @@ export async function createCouponService(data: Omit<Coupon, 'id' | 'created_at'
         .single();
 
     if (error) {
-        console.error("Error creating coupon:", error);
+        console.error("Error creating coupon:", JSON.stringify(error, null, 2));
         if (error.code === '23505') {
             return { success: false, message: "Este código de cupom já existe." };
         }
-        return { success: false, message: "Erro ao criar cupom. Tente novamente." };
+        return { success: false, message: error.message || "Erro ao criar cupom. Verifique as permissões." };
     }
 
     return { success: true, coupon };
