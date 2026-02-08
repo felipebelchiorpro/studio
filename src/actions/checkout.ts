@@ -4,17 +4,50 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { triggerOrderCreatedWebhook } from '@/services/webhookTriggerService';
 import { incrementCouponUsage } from '@/actions/coupons';
 
-export async function processCheckout(cartItems: any[], total: number, phone?: string) {
-    console.log("Processing checkout for", cartItems.length, "items", "Phone:", phone);
+import { createOrderAction } from '@/actions/order';
 
-    if (!process.env.MP_ACCESS_TOKEN) {
-        console.error("MP_ACCESS_TOKEN not found");
-        return { success: false, message: "Erro de configuração de pagamento. Token não encontrado." };
+export async function processCheckout(
+    cartItems: any[],
+    total: number,
+    user: { id?: string, email: string, phone: string },
+    shippingInfo: { method: string, address?: any, fee: number }
+) {
+    console.log("Processing checkout Pro for", user.email);
+
+    // ... inside processCheckout ...
+
+    const settingsRes = await getIntegrationSettings();
+    const mpAccessToken = settingsRes.success && settingsRes.data?.mp_access_token
+        ? settingsRes.data.mp_access_token
+        : process.env.MP_ACCESS_TOKEN;
+
+    if (!mpAccessToken) {
+        console.error("MP_ACCESS_TOKEN not found in DB or Env");
+        return { success: false, message: "Erro de configuração de pagamento: Token não encontrado." };
     }
 
     try {
-        // Initialize client here to ensure we use the latest env var
-        const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+        // 1. Create Order with 'Pending' status
+        const orderRes = await createOrderAction({
+            userId: user.id || undefined,
+            items: cartItems,
+            totalAmount: total + shippingInfo.fee,
+            paymentId: 'pending_mp_redirect',
+            status: 'Pending', // Initial status
+            userEmail: user.email,
+            userPhone: user.phone,
+            shippingFee: shippingInfo.fee,
+            shippingAddress: shippingInfo.method === 'shipping' ? shippingInfo.address : { type: 'pickup' }
+        });
+
+        if (!orderRes.success || !orderRes.orderId) {
+            return { success: false, message: `Erro ao criar pedido: ${orderRes.message}` };
+        }
+
+        const orderId = orderRes.orderId;
+
+        // 2. Initializa MP and Create Preference
+        const client = new MercadoPagoConfig({ accessToken: mpAccessToken });
         const preference = new Preference(client);
 
         const items = cartItems.map(item => ({
@@ -24,60 +57,53 @@ export async function processCheckout(cartItems: any[], total: number, phone?: s
             unit_price: Number(item.price)
         }));
 
-        console.log("Creating preference with items:", items.length);
+        if (shippingInfo.fee > 0) {
+            items.push({
+                id: 'shipping-fee',
+                title: 'Frete / Entrega',
+                quantity: 1,
+                unit_price: Number(shippingInfo.fee)
+            });
+        }
 
-        // Determine Base URL reliably
-        // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'; 
-
-        // HARDCODED for debugging to ensure no empty string issues
-        const baseUrl = 'http://localhost:3001';
-
-        // Construct absolute URLs
-        const backUrls = {
-            success: `${baseUrl}/checkout/success`,
-            failure: `${baseUrl}/checkout/failure`,
-            pending: `${baseUrl}/checkout/pending`,
-        };
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'; // Ensure this matches prod
 
         const preferenceData = {
             items: items,
-            backUrls: backUrls, // Try camelCase
-            autoReturn: 'approved', // Try camelCase
-            externalReference: `ORD-${Date.now()}-${phone}`, // Try camelCase
+            payer: {
+                email: user.email,
+                phone: {
+                    area_code: user.phone.substring(0, 2),
+                    number: user.phone.substring(2)
+                }
+            },
+            back_urls: {
+                success: `${baseUrl}/checkout/success?order_id=${orderId}`,
+                failure: `${baseUrl}/checkout/failure?order_id=${orderId}`,
+                pending: `${baseUrl}/checkout/pending?order_id=${orderId}`,
+            },
+            auto_return: 'approved',
+            external_reference: orderId, // LINK THE ORDER ID HERE
             metadata: {
-                phone: phone
+                order_id: orderId,
+                email: user.email
             }
         };
 
-        console.log("Creating preference with payload:", JSON.stringify(preferenceData, null, 2));
+        console.log("Creating preference for Order:", orderId);
 
         const result = await preference.create({
             body: preferenceData
         });
 
         if (result.init_point) {
-            console.log("Preference created successfully:", result.init_point);
-
-            // Track Coupon Usage (Optimistic)
-            const usedCoupons = new Set<string>();
-            cartItems.forEach(item => {
-                if (item.couponCode) {
-                    usedCoupons.add(item.couponCode);
-                }
-            });
-
-            for (const code of Array.from(usedCoupons)) {
-                await incrementCouponUsage(code);
-            }
-
-            return { success: true, url: result.init_point };
+            return { success: true, url: result.init_point, orderId: orderId };
         } else {
-            console.error("Result missing init_point", result);
-            return { success: false, message: "Falha ao criar preferência de pagamento (sem URL)." };
+            return { success: false, message: "Falha ao obter link de pagamento." };
         }
 
     } catch (error: any) {
-        console.error("Error creating preference:", error);
-        return { success: false, message: `Erro ao processar pagamento: ${error.message || 'Desconhecido'}` };
+        console.error("Checkout Pro Error:", error);
+        return { success: false, message: error.message };
     }
 }

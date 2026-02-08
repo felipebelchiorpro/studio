@@ -4,6 +4,20 @@ import type { CartItem, Product } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { syncCartAction } from '@/actions/cart';
 
+interface ShippingInfo {
+  method: 'shipping' | 'pickup';
+  address?: {
+    street: string;
+    number: string;
+    neighborhood: string;
+    city: string; // City Name
+    cityId?: string; // Shipping Rate ID
+    reference?: string;
+    cep?: string;
+  };
+  fee: number;
+}
+
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (product: Product & { couponCode?: string }, quantity?: number) => void;
@@ -13,6 +27,8 @@ interface CartContextType {
   getCartTotal: () => number;
   getCartItemCount: () => number;
   updateContactInfo: (email?: string, phone?: string) => void;
+  shippingInfo: ShippingInfo;
+  updateShippingInfo: (info: ShippingInfo) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -25,6 +41,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartId, setCartId] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
   const [contactInfo, setContactInfo] = useState<{ email?: string; phone?: string }>({});
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ method: 'shipping', fee: 0 });
 
   // 1. Load Cart on Mount (existing code)
   useEffect(() => {
@@ -110,10 +127,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const clearCart = () => {
     setCartItems([]);
+    setShippingInfo({ method: 'shipping', fee: 0 }); // Reset shipping too
   };
 
   const updateContactInfo = (email?: string, phone?: string) => {
     setContactInfo(prev => ({ ...prev, ...(email && { email }), ...(phone && { phone }) }));
+  };
+
+  const updateShippingInfo = (info: ShippingInfo) => {
+    setShippingInfo(info);
   };
 
   const getCartTotal = () => {
@@ -125,7 +147,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount, updateContactInfo }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount, updateContactInfo, shippingInfo, updateShippingInfo }}>
       {children}
     </CartContext.Provider>
   );
@@ -138,3 +160,4 @@ export const useCart = (): CartContextType => {
   }
   return context;
 };
+

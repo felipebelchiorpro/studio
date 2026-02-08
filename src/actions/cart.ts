@@ -1,9 +1,12 @@
 'use server';
 
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { supabase } from '@/lib/supabaseClient';
 
 export async function syncCartAction(cartId: string, items: any[], total: number, email?: string, phone?: string) {
     try {
+        console.log("SyncCart Debug:");
+        // ... debug logs ...
+
         const payload: any = {
             id: cartId,
             items,
@@ -15,7 +18,7 @@ export async function syncCartAction(cartId: string, items: any[], total: number
         if (phone) payload.user_phone = phone;
 
         // Upsert the cart
-        const { error } = await supabaseAdmin
+        const { error } = await supabase
             .from('carts')
             .upsert(payload, { onConflict: 'id' });
 

@@ -2,17 +2,23 @@
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { incrementCouponUsage } from '@/actions/coupons';
+import { getIntegrationSettings } from '@/actions/settings';
 
 export async function processPayment(formData: any) {
     console.log("Processing payment with data:", JSON.stringify(formData, null, 2));
 
-    if (!process.env.MP_ACCESS_TOKEN) {
+    const settingsRes = await getIntegrationSettings();
+    const mpAccessToken = settingsRes.success && settingsRes.data?.mp_access_token
+        ? settingsRes.data.mp_access_token
+        : process.env.MP_ACCESS_TOKEN;
+
+    if (!mpAccessToken) {
         console.error("MP_ACCESS_TOKEN not found");
         return { success: false, message: "Erro de configuração: Token de acesso não encontrado." };
     }
 
     try {
-        const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+        const client = new MercadoPagoConfig({ accessToken: mpAccessToken });
         const payment = new Payment(client);
 
         const paymentData = {

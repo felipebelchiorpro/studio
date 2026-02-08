@@ -4,13 +4,14 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { triggerOrderCreatedWebhook } from '@/services/webhookTriggerService';
 import { CartItem } from '@/types';
 
-interface CreateOrderParams {
+export interface CreateOrderParams {
     userId?: string;
     items: CartItem[];
     totalAmount: number;
     paymentId: string;
     status?: string;
-    shippingAddress?: any; // Simplified for now
+    shippingAddress?: any;
+    shippingFee?: number;
     userEmail: string;
     userPhone: string;
     channel?: string;
@@ -21,16 +22,18 @@ export async function createOrderAction(params: CreateOrderParams) {
 
     try {
         // 1. Create Order Record
+        // NOTE: Uses ADMIN client to bypass RLS issues during checkout
         const { data: order, error: orderError } = await supabaseAdmin
             .from('orders')
             .insert({
-                user_id: params.userId || null, // Can be null for guest? Database might allow or we create a guest user.
+                user_id: params.userId || null,
                 total_amount: params.totalAmount,
+                shipping_fee: params.shippingFee || 0,
                 status: params.status || 'Pending',
                 payment_id: params.paymentId,
                 shipping_address: params.shippingAddress, // JSONB
-                user_email: params.userEmail, // Ensure DB has this column or we rely on user_id
-                user_phone: params.userPhone, // Ensure DB has this column
+                user_email: params.userEmail,
+                user_phone: params.userPhone,
                 channel: params.channel || 'ecommerce',
                 order_date: new Date().toISOString()
             })
@@ -39,9 +42,6 @@ export async function createOrderAction(params: CreateOrderParams) {
 
         if (orderError) {
             console.error("Error creating order record:", orderError);
-            // If user_email/phone columns missing, we might fail here if they are not in schema.
-            // Assumption: DB schema matches. If not, we might need migration.
-            // Based on previous reads, 'orders' table has 'user_phone'.
             throw new Error(`Falha ao criar pedido: ${orderError.message}`);
         }
 
@@ -83,6 +83,44 @@ export async function createOrderAction(params: CreateOrderParams) {
 
     } catch (error: any) {
         console.error("Create Order Exception:", error);
+        return { success: false, message: error.message };
+    }
+}
+
+export async function updateOrderStatusAction(orderId: string, newStatus: string) {
+    try {
+        console.log(`Updating Order ${orderId} to ${newStatus}`);
+
+        // 1. Update Status in DB
+        // Using ADMIN client to bypass RLS
+        const { error } = await supabaseAdmin
+            .from('orders')
+            .update({
+                status: newStatus,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', orderId);
+
+        if (error) {
+            console.error("Update Status Error:", error);
+            return { success: false, message: error.message };
+        }
+
+        // 2. Trigger Webhook
+        // We need to dynamically import or call the service
+        // Since this file is server-side, we can import directly? 
+        // Circular dependency check: order.ts imports webhookService. webhookService imports types. types imported by order.ts.
+        // Seems cyclic if webhookService imports order.ts, but it doesn't.
+
+        try {
+            const { triggerOrderStatusUpdateWebhook } = await import('@/services/webhookTriggerService');
+            await triggerOrderStatusUpdateWebhook(orderId, newStatus);
+        } catch (whError) {
+            console.error("Webhook trigger failed:", whError);
+        }
+
+        return { success: true };
+    } catch (error: any) {
         return { success: false, message: error.message };
     }
 }

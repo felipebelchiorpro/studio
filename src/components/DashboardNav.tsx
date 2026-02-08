@@ -3,15 +3,36 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useCart } from '@/context/CartContext';
 import { CartSheet } from './CartSheet';
-import { Home, Package, BarChart3, Layers, LogOut, Settings, UserCircle, Edit, Tags, LayoutGrid, Truck, Users, TrendingUp, Palette, Ticket } from 'lucide-react';
+import {
+  Home, Package, BarChart3, Layers, LogOut, Settings,
+  Edit, Tags, LayoutGrid, Truck, Users, TrendingUp, Palette, Ticket,
+  ChevronDown, ChevronRight, ShoppingBag, Store
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from 'next/image';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useState } from 'react';
 
+// Define the structure for Nav Items
+type NavItemType = {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+};
+
+type NavGroupType = {
+  label: string;
+  icon: React.ElementType;
+  items: NavItemType[];
+};
 
 const NavItem = ({ href, icon: Icon, label, currentPath, onClick }: { href: string; icon: React.ElementType; label: string; currentPath: string; onClick?: () => void; }) => {
   const isActive = currentPath === href || (href !== "/dashboard" && currentPath.startsWith(href));
@@ -19,19 +40,44 @@ const NavItem = ({ href, icon: Icon, label, currentPath, onClick }: { href: stri
     <Link href={href} passHref>
       <Button
         variant={isActive ? "secondary" : "ghost"}
-        className={`w-full justify-start text-sm ${isActive ? 'font-semibold text-primary' : 'text-foreground hover:bg-muted/50 hover:text-primary'}`}
+        className={`w-full justify-start text-sm pl-8 ${isActive ? 'font-semibold text-primary' : 'text-foreground hover:bg-muted/50 hover:text-primary'}`}
         aria-current={isActive ? "page" : undefined}
         onClick={onClick}
       >
-        <Icon className="mr-3 h-5 w-5" />
+        <Icon className="mr-3 h-4 w-4" />
         {label}
       </Button>
     </Link>
   );
 };
 
+const NavGroup = ({ group, currentPath, onClick }: { group: NavGroupType; currentPath: string; onClick?: () => void }) => {
+  // Check if any child is active to keep open
+  const isChildActive = group.items.some(item => currentPath === item.href || currentPath.startsWith(item.href));
+  const [isOpen, setIsOpen] = useState(isChildActive);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full space-y-1">
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between font-semibold hover:bg-muted/50">
+          <div className="flex items-center">
+            <group.icon className="mr-3 h-5 w-5" />
+            {group.label}
+          </div>
+          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-1">
+        {group.items.map(item => (
+          <NavItem key={item.href} {...item} currentPath={currentPath} onClick={onClick} />
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
 interface DashboardNavProps {
-  onNavItemClick?: () => void; // Optional callback for when a nav item is clicked (e.g., to close mobile sheet)
+  onNavItemClick?: () => void;
 }
 
 export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
@@ -45,22 +91,6 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
     if (onNavItemClick) onNavItemClick();
   };
 
-  const navItems = [
-    { href: '/dashboard', icon: Home, label: 'Visão Geral' },
-    { href: '/dashboard/promotions', icon: Palette, label: 'Banners da Loja' },
-    { href: '/dashboard/appearance', icon: LayoutGrid, label: 'Aparência da Loja' }, // Changed Icon to distinguish
-    { href: '/dashboard/bi-analytics', icon: TrendingUp, label: 'BI Analytics' },
-    { href: '/dashboard/products', icon: Package, label: 'Gerenciar Produtos' },
-    { href: '/dashboard/sales', icon: BarChart3, label: 'Relatório de Vendas' },
-    { href: '/dashboard/stock', icon: Layers, label: 'Controle de Estoque' },
-    { href: '/dashboard/quick-edit', icon: Edit, label: 'Edição Rápida' },
-    { href: '/dashboard/customers', icon: Users, label: 'Clientes' },
-    { href: '/dashboard/categories', icon: Tags, label: 'Gerenciar Categorias' },
-    { href: '/dashboard/brands', icon: Tags, label: 'Gerenciar Marcas' },
-    { href: '/dashboard/shipping/pack-station', icon: Truck, label: 'Estação de Embalagem' },
-    { href: '/dashboard/coupons', icon: Ticket, label: 'Cupons' },
-  ];
-
   const getInitials = (name?: string) => {
     if (!name) return "U";
     const parts = name.split(' ');
@@ -70,50 +100,112 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
     return name.substring(0, 2).toUpperCase();
   };
 
+  // Define Navigation Groups
+  const catalogGroup: NavGroupType = {
+    label: 'Catálogo',
+    icon: ShoppingBag,
+    items: [
+      { href: '/dashboard/products', icon: Package, label: 'Produtos' },
+      { href: '/dashboard/categories', icon: Tags, label: 'Categorias' },
+      { href: '/dashboard/brands', icon: Tags, label: 'Marcas' },
+      { href: '/dashboard/stock', icon: Layers, label: 'Estoque' },
+      { href: '/dashboard/quick-edit', icon: Edit, label: 'Edição Rápida' },
+    ]
+  };
+
+  const salesGroup: NavGroupType = {
+    label: 'Vendas',
+    icon: BarChart3,
+    items: [
+      { href: '/dashboard/orders', icon: Package, label: 'Pedidos' },
+      { href: '/dashboard/customers', icon: Users, label: 'Clientes' },
+      { href: '/dashboard/sales', icon: TrendingUp, label: 'Relatórios' },
+      { href: '/dashboard/coupons', icon: Ticket, label: 'Cupons' },
+    ]
+  };
+
+  const shippingGroup: NavGroupType = {
+    label: 'Envio',
+    icon: Truck,
+    items: [
+      { href: '/dashboard/shipping/pack-station', icon: Package, label: 'Estação de Embalagem' },
+      { href: '/dashboard/shipping', icon: Truck, label: 'Config. Frete' },
+    ]
+  };
+
+  const storeGroup: NavGroupType = {
+    label: 'Loja',
+    icon: Store,
+    items: [
+      { href: '/dashboard', icon: Home, label: 'Visão Geral' }, // Kept Dashboard here or could be top level
+      { href: '/dashboard/bi-analytics', icon: BarChart3, label: 'Analytics (BI)' },
+      { href: '/dashboard/promotions', icon: Palette, label: 'Banners' },
+      { href: '/dashboard/appearance', icon: LayoutGrid, label: 'Aparência' },
+      { href: '/dashboard/automations', icon: Ticket, label: 'Automação Zap' },
+      { href: '/dashboard/settings', icon: Settings, label: 'Configurações' },
+    ]
+  };
+
+  // Top level item example (if Dashboard should be outside groups)
+  const dashboardItem: NavItemType = { href: '/dashboard', icon: Home, label: 'Visão Geral' };
+
 
   return (
-    // Adjusted classes for use in both fixed desktop sidebar and mobile sheet
-    <aside className="w-full md:w-64 h-full bg-card border-r-0 md:border-r md:border-border/60 p-4 flex flex-col">
-      {/* Logo for mobile sheet header */}
+    <aside className="w-full md:w-64 h-full bg-card border-r-0 md:border-r md:border-border/60 p-4 flex flex-col overflow-y-auto">
+      {/* Mobile Logo */}
       <div className="md:hidden p-4 mb-2 border-b border-border/60 flex justify-center">
         <Link href="/dashboard" onClick={onNavItemClick}>
           <Image
             src="/darkstore-logo.png"
-            alt="DarkStore Suplementos Logo"
+            alt="DarkStore Logo"
             width={150}
             height={37}
             className="object-contain"
           />
         </Link>
-        {/* Replaced Link with CartSheet and UserMenu as per instruction */}
         <CartSheet />
       </div>
 
+      {/* User Profile */}
       <div className="p-4 mb-4 border-b border-border/60">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.email === "merchant@darkstore.com" ? "https://placehold.co/100x100.png" : undefined} alt={user?.name || "User"} data-ai-hint="user profile" />
+            <AvatarImage src={user?.email === "merchant@darkstore.com" ? "https://placehold.co/100x100.png" : undefined} alt={user?.name || "User"} />
             <AvatarFallback className="bg-primary text-primary-foreground font-bold">
               {getInitials(user?.name || user?.email)}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm font-semibold text-foreground">{user?.name || "Usuário"}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
+            <p className="text-sm font-semibold text-foreground truncate max-w-[140px]" title={user?.name || "Usuário"}>{user?.name || "Usuário"}</p>
+            <p className="text-xs text-muted-foreground truncate max-w-[140px]" title={user?.email}>{user?.email}</p>
           </div>
         </div>
       </div>
-      <nav className="flex-grow space-y-1">
-        {navItems.sort((a, b) => {
-          if (a.label === 'Visão Geral') return -1;
-          if (b.label === 'Visão Geral') return 1;
-          if (a.label === 'BI Analytics' && b.label !== 'Visão Geral') return -1;
-          if (b.label === 'BI Analytics' && a.label !== 'Visão Geral') return 1;
-          return a.label.localeCompare(b.label);
-        }).map(item => (
-          <NavItem key={item.href} {...item} currentPath={pathname} onClick={onNavItemClick} />
-        ))}
+
+      <nav className="flex-grow space-y-2">
+        {/* Top Level Dashboard Link */}
+        <Link href={dashboardItem.href} passHref>
+          <Button
+            variant={pathname === dashboardItem.href ? "secondary" : "ghost"}
+            className={`w-full justify-start text-sm ${pathname === dashboardItem.href ? 'font-semibold text-primary' : 'text-foreground hover:bg-muted/50 hover:text-primary'}`}
+            onClick={onNavItemClick}
+          >
+            <dashboardItem.icon className="mr-3 h-5 w-5" />
+            {dashboardItem.label}
+          </Button>
+        </Link>
+
+        <NavGroup group={catalogGroup} currentPath={pathname} onClick={onNavItemClick} />
+        <NavGroup group={salesGroup} currentPath={pathname} onClick={onNavItemClick} />
+        <NavGroup group={shippingGroup} currentPath={pathname} onClick={onNavItemClick} />
+
+        <Separator className="my-2" />
+
+        {/* Store Group as individual items or group? User asked for groupings. Let's group Loja stuff. */}
+        <NavGroup group={{ ...storeGroup, items: storeGroup.items.filter(i => i.href !== '/dashboard') }} currentPath={pathname} onClick={onNavItemClick} />
+
       </nav>
+
       <Separator className="my-4" />
       <Button
         variant="ghost"
@@ -126,5 +218,3 @@ export default function DashboardNav({ onNavItemClick }: DashboardNavProps) {
     </aside>
   );
 }
-
-

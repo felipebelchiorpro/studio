@@ -78,6 +78,7 @@ export interface User {
   email: string;
   name?: string;
   phone?: string;
+  user_metadata?: any; // Added to support storing address/metadata
   // For simulated auth, no password stored
 }
 

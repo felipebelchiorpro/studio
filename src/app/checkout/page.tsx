@@ -1,267 +1,241 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { processPayment } from '@/actions/payment';
-import { createOrderAction } from '@/actions/order';
-
-declare global {
-    interface Window {
-        MercadoPago: any;
-    }
-}
+import { processCheckout } from '@/actions/checkout';
+import { MapPin, Truck, Store, Edit2, ShieldCheck, CreditCard } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CheckoutPage() {
-    const { cartItems, getCartTotal, updateContactInfo, clearCart } = useCart();
+    const { cartItems, getCartTotal, updateContactInfo, shippingInfo } = useCart();
     const { user, isAuthenticated } = useAuth();
     const router = useRouter();
-    const [mpLoaded, setMpLoaded] = useState(false);
+    const { toast } = useToast();
     const [loading, setLoading] = useState(false);
 
-    // Local state for inputs to manage pre-fill and manual entry
+    // Contact State
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+
+    // Redirect if no shipping info (basic check)
+    useEffect(() => {
+        if (!shippingInfo.method) {
+            router.replace('/checkout/delivery');
+        }
+        if (shippingInfo.method === 'shipping' && (!shippingInfo.address || !shippingInfo.address.city)) {
+            router.replace('/checkout/delivery');
+        }
+    }, [shippingInfo, router]);
 
     // Pre-fill from Auth
     useEffect(() => {
         if (isAuthenticated && user) {
             if (user.email) setEmail(user.email);
             if (user.phone) setPhone(user.phone);
-            // Sync immediately if we have data
             updateContactInfo(user.email, user.phone);
         }
     }, [isAuthenticated, user, updateContactInfo]);
-
-    // Handle input changes
-    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setEmail(e.target.value);
-    };
-
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPhone(e.target.value);
-    };
 
     const handleContactBlur = () => {
         updateContactInfo(email, phone);
     };
 
-    useEffect(() => {
-        if (mpLoaded && window.MercadoPago) {
-            const mp = new window.MercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
-
-            const cardForm = mp.cardForm({
-                amount: getCartTotal().toString(),
-                iframe: true,
-                form: {
-                    id: "form-checkout",
-                    cardNumber: {
-                        id: "form-checkout__cardNumber",
-                        placeholder: "Número do cartão",
-                    },
-                    expirationDate: {
-                        id: "form-checkout__expirationDate",
-                        placeholder: "MM/YY",
-                    },
-                    securityCode: {
-                        id: "form-checkout__securityCode",
-                        placeholder: "CVC",
-                    },
-                    cardholderName: {
-                        id: "form-checkout__cardholderName",
-                        placeholder: "Titular do cartão",
-                    },
-                    issuer: {
-                        id: "form-checkout__issuer",
-                        placeholder: "Banco emissor",
-                    },
-                    installments: {
-                        id: "form-checkout__installments",
-                        placeholder: "Parcelas",
-                    },
-                    identificationType: {
-                        id: "form-checkout__identificationType",
-                        placeholder: "Tipo de documento",
-                    },
-                    identificationNumber: {
-                        id: "form-checkout__identificationNumber",
-                        placeholder: "Número do documento",
-                    },
-                    cardholderEmail: {
-                        id: "form-checkout__cardholderEmail",
-                        placeholder: "E-mail",
-                    },
-                },
-                callbacks: {
-                    onFormMounted: (error: any) => {
-                        if (error) return console.warn("Form Mounted Error:", error);
-                        console.log("Form Mounted");
-                    },
-                    onSubmit: async (event: any) => {
-                        event.preventDefault();
-                        setLoading(true);
-
-                        const {
-                            paymentMethodId: payment_method_id,
-                            issuerId: issuer_id,
-                            cardholderEmail: email, // MP gets this from the form input with ID form-checkout__cardholderEmail
-                            amount,
-                            token,
-                            installments,
-                            identificationNumber,
-                            identificationType,
-                        } = cardForm.getCardFormData();
-
-                        const payload = {
-                            token,
-                            issuer_id,
-                            payment_method_id,
-                            transaction_amount: Number(amount),
-                            installments: Number(installments),
-                            description: `Pedido Darkstore - ${cartItems.length} itens`,
-                            payer: {
-                                email,
-                                identification: {
-                                    type: identificationType,
-                                    number: identificationNumber,
-                                },
-                            },
-                        };
-
-                        const result = await processPayment(payload);
-
-
-                        if (result.success) {
-                            // Payment Approved! Now Create Order
-                            const orderRes = await createOrderAction({
-                                userId: user?.id,
-                                items: cartItems,
-                                totalAmount: Number(amount),
-                                paymentId: result.id ? result.id.toString() : 'unknown',
-                                status: 'approved',
-                                userEmail: email,
-                                userPhone: phone
-                            });
-
-                            if (orderRes.success) {
-                                clearCart();
-                                router.push(`/checkout/success?order_id=${orderRes.orderId}`);
-                            } else {
-                                setLoading(false);
-                                alert(`Pagamento Aprovado, mas erro ao salvar pedido: ${orderRes.message}`);
-                            }
-                        } else {
-                            setLoading(false);
-                            alert(`Erro: ${result.message}`);
-                        }
-                    },
-                    onFetching: (resource: any) => {
-                        console.log("Fetching resource: ", resource);
-                        setLoading(true);
-                        return () => setLoading(false);
-                    }
-                },
-            });
+    const handleCheckout = async () => {
+        if (!email || !phone) {
+            toast({ title: "Dados incompletos", description: "Preencha email e telefone para continuar.", variant: "destructive" });
+            return;
         }
-    }, [mpLoaded, getCartTotal, cartItems, user, phone, email, updateContactInfo, clearCart, router]);
+
+        setLoading(true);
+
+        const result = await processCheckout(
+            cartItems,
+            getCartTotal(),
+            {
+                id: user?.id,
+                email: email,
+                phone: phone
+            },
+            shippingInfo
+        );
+
+        if (result.success && result.url) {
+            // Redirect to Mercado Pago
+            window.location.href = result.url;
+        } else {
+            toast({ title: "Erro", description: result.message || "Falha ao iniciar pagamento.", variant: "destructive" });
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white p-8 pt-24">
-            <Script
-                src="https://sdk.mercadopago.com/js/v2"
-                onLoad={() => setMpLoaded(true)}
-            />
+        <div className="min-h-screen bg-[#0a0a0a] text-white p-4 sm:p-8 pt-24 relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[128px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-red-900/5 rounded-full blur-[128px] pointer-events-none" />
 
-            <div className="max-w-md mx-auto bg-neutral-900 p-6 rounded-xl border border-neutral-800 shadow-2xl">
-                <h2 className="text-2xl font-bold mb-6 text-red-500 neon-text">Checkout Transparente</h2>
+            <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
+                {/* Left Column: Summary */}
+                <div className="space-y-6">
+                    <Card className="bg-neutral-900/60 backdrop-blur-xl border-neutral-800 text-white shadow-2xl">
+                        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-neutral-800">
+                            <CardTitle className="text-xl font-bold flex items-center gap-2">
+                                <span className="bg-red-500/10 p-2 rounded-lg text-red-500">
+                                    {shippingInfo.method === 'shipping' ? <Truck className="h-5 w-5" /> : <Store className="h-5 w-5" />}
+                                </span>
+                                {shippingInfo.method === 'shipping' ? 'Entrega' : 'Retirada'}
+                            </CardTitle>
+                            <Button variant="ghost" size="sm" onClick={() => router.push('/checkout/delivery')} className="text-gray-400 hover:text-white hover:bg-neutral-800">
+                                <Edit2 className="h-4 w-4 mr-2" /> Alterar
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                            {shippingInfo.method === 'shipping' && shippingInfo.address ? (
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <MapPin className="h-5 w-5 text-red-500 mt-1 shrink-0" />
+                                        <div>
+                                            <p className="font-semibold text-white text-lg">{shippingInfo.address.street}, {shippingInfo.address.number}</p>
+                                            <p className="text-gray-400">{shippingInfo.address.neighborhood} - {shippingInfo.address.city}</p>
+                                            {shippingInfo.address.cep && <p className="text-sm text-gray-500">CEP: {shippingInfo.address.cep}</p>}
+                                        </div>
+                                    </div>
+                                    {shippingInfo.address.reference && (
+                                        <div className="bg-neutral-950/50 p-3 rounded-lg border border-neutral-800 text-sm text-gray-400">
+                                            <span className="font-semibold text-gray-300">Ref:</span> {shippingInfo.address.reference}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <Store className="h-5 w-5 text-red-500 mt-1 shrink-0" />
+                                        <div>
+                                            <p className="font-semibold text-white text-lg">Retirada na Loja DarkStore</p>
+                                            <p className="text-gray-400">Rua Principal, 123 - Centro</p>
+                                            <p className="text-gray-400">São Paulo - SP</p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-neutral-950/50 p-3 rounded-lg border border-neutral-800 text-sm text-gray-400 flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                        Horário de Retirada: 09:00 - 18:00
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
 
-                <form id="form-checkout" className="space-y-4">
-                    {/* Card Number */}
-                    <div className="space-y-1">
-                        <label className="text-xs text-gray-400">Número do Cartão</label>
-                        <div id="form-checkout__cardNumber" className="h-10 bg-neutral-800 rounded px-2" />
-                    </div>
+                    <div className="bg-neutral-900/60 backdrop-blur-xl p-6 rounded-xl border border-neutral-800 shadow-xl space-y-4">
+                        <h3 className="font-bold text-lg flex items-center gap-2">
+                            <CreditCard className="h-5 w-5 text-red-500" /> Resumo do Pedido
+                        </h3>
 
-                    {/* Date & CVC */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-xs text-gray-400">Validade</label>
-                            <div id="form-checkout__expirationDate" className="h-10 bg-neutral-800 rounded px-2" />
+                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                            {cartItems.map((item) => (
+                                <div key={item.id} className="flex justify-between items-center text-sm py-2 border-b border-neutral-800 last:border-0">
+                                    <span className="text-gray-300">
+                                        <span className="text-red-500 font-bold">{item.quantity}x</span> {item.name}
+                                    </span>
+                                    <span className="text-white font-medium">R$ {(Number(item.price) * item.quantity).toFixed(2)}</span>
+                                </div>
+                            ))}
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-xs text-gray-400">CVC</label>
-                            <div id="form-checkout__securityCode" className="h-10 bg-neutral-800 rounded px-2" />
+
+                        <div className="border-t border-neutral-800 pt-4 mt-4 space-y-3">
+                            <div className="flex justify-between text-sm text-gray-400">
+                                <span>Subtotal</span>
+                                <span>R$ {getCartTotal().toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm text-gray-400">
+                                <span>{shippingInfo.method === 'shipping' ? 'Frete' : 'Taxa de Retirada'}</span>
+                                <span className={shippingInfo.fee === 0 ? 'text-green-500' : ''}>
+                                    {shippingInfo.fee === 0 ? 'Grátis' : `R$ ${shippingInfo.fee.toFixed(2)}`}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-2xl font-bold text-white mt-2 pt-4 border-t border-neutral-800">
+                                <span>Total</span>
+                                <span className="text-red-500">R$ {(getCartTotal() + shippingInfo.fee).toFixed(2)}</span>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Name */}
-                    <div className="space-y-1">
-                        <label className="text-xs text-gray-400">Nome do Titular</label>
-                        <input type="text" id="form-checkout__cardholderName" className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 focus:border-red-500 outline-none text-white" />
-                    </div>
+                {/* Right Column: Checkout Action */}
+                <div className="flex flex-col gap-6">
+                    <Card className="bg-neutral-900/60 backdrop-blur-xl border-neutral-800 text-white shadow-2xl h-fit">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 to-red-900" />
+                        <CardHeader>
+                            <CardTitle className="text-2xl font-bold text-white">Dados de Contato</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-300">Email para contato e comprovante</label>
+                                <Input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    onBlur={handleContactBlur}
+                                    placeholder="seu@email.com"
+                                    className="bg-neutral-950 border-neutral-800 h-12 text-white focus-visible:ring-red-500"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-300">Telefone / WhatsApp</label>
+                                <Input
+                                    type="tel"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    onBlur={handleContactBlur}
+                                    placeholder="(11) 99999-9999"
+                                    className="bg-neutral-950 border-neutral-800 h-12 text-white focus-visible:ring-red-500"
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    {/* Issuer */}
-                    <div className="space-y-1">
-                        <label className="text-xs text-gray-400">Banco Emissor</label>
-                        <select id="form-checkout__issuer" className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white" />
-                    </div>
+                    <Card className="bg-neutral-900/60 backdrop-blur-xl border-neutral-800 text-white shadow-2xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 via-transparent to-transparent pointer-events-none" />
+                        <CardHeader>
+                            <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
+                                <ShieldCheck className="h-6 w-6 text-green-500" /> Pagamento Seguro
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <p className="text-gray-400">
+                                Você será redirecionado para o ambiente seguro do <strong>Mercado Pago</strong> para finalizar sua compra. Aceitamos Cartão de Crédito, Pix e Boleto.
+                            </p>
 
-                    {/* Installments */}
-                    <div className="space-y-1">
-                        <label className="text-xs text-gray-400">Parcelas</label>
-                        <select id="form-checkout__installments" className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white" />
-                    </div>
+                            <div className="grid grid-cols-3 gap-3 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                                <div className="bg-white p-2 rounded flex items-center justify-center h-10">
+                                    <img src="https://logopng.com.br/logos/mercado-pago-24.png" alt="Mercado Pago" className="h-full object-contain" />
+                                </div>
+                                <div className="bg-white p-2 rounded flex items-center justify-center h-10">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Pix_Banco_Central.svg" alt="Pix" className="h-full object-contain" />
+                                </div>
+                                <div className="bg-white p-2 rounded flex items-center justify-center h-10">
+                                    <img src="https://logodownload.org/wp-content/uploads/2019/09/mastercard-logo.png" alt="Mastercard" className="h-full object-contain" />
+                                </div>
+                            </div>
 
-                    {/* Doc Type & Number */}
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-1 col-span-1">
-                            <label className="text-xs text-gray-400">Tipo</label>
-                            <select id="form-checkout__identificationType" className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white" />
-                        </div>
-                        <div className="space-y-1 col-span-2">
-                            <label className="text-xs text-gray-400">Número do Documento</label>
-                            <input type="text" id="form-checkout__identificationNumber" className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white" />
-                        </div>
-                    </div>
+                            <Button
+                                onClick={handleCheckout}
+                                disabled={loading}
+                                className="w-full h-16 text-lg font-bold bg-green-600 hover:bg-green-700 text-white shadow-[0_0_20px_rgba(22,163,74,0.4)] hover:shadow-[0_0_30px_rgba(22,163,74,0.6)] transition-all transform hover:-translate-y-1 rounded-xl"
+                            >
+                                {loading ? 'Carregando...' : 'Pagar com Mercado Pago'}
+                            </Button>
 
-                    {/* Email */}
-                    <div className="space-y-1">
-                        <label className="text-xs text-gray-400">Email</label>
-                        <input
-                            type="email"
-                            id="form-checkout__cardholderEmail"
-                            className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white"
-                            value={email}
-                            onChange={handleEmailChange}
-                            onBlur={handleContactBlur}
-                            placeholder="seu@email.com"
-                        />
-                    </div>
-
-                    {/* Phone (New Field) */}
-                    <div className="space-y-1">
-                        <label className="text-xs text-gray-400">Telefone / WhatsApp</label>
-                        <input
-                            type="tel"
-                            className="w-full h-10 bg-neutral-800 rounded px-3 border border-neutral-700 text-white focus:border-red-500 outline-none"
-                            value={phone}
-                            onChange={handlePhoneChange}
-                            onBlur={handleContactBlur}
-                            placeholder="(11) 99999-9999"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        id="form-checkout__submit"
-                        disabled={loading}
-                        className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex justify-center items-center"
-                    >
-                        {loading ? 'Processando...' : 'Pagar Agora'}
-                    </button>
-                </form>
+                            <p className="text-xs text-center text-gray-500">
+                                Ambiente 100% criptografado e seguro.
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

@@ -26,11 +26,7 @@ export function CartSheet() {
     const itemCount = getCartItemCount();
     const total = getCartTotal();
 
-    const handleCheckout = async () => {
-        if (!process.env.NEXT_PUBLIC_BASE_URL && typeof window !== 'undefined') {
-            // just a safety check
-        }
-
+    const handleCheckout = () => {
         if (!customer) {
             setShowLogin(true);
             toast({
@@ -40,29 +36,8 @@ export function CartSheet() {
             return;
         }
 
-        // Phone check is now handled by customer data, or implied to be present/handled at checkout
-        const customerPhone = customer.phone || '00000000000'; // Fallback or handle missing phone if critical
-
-        setLoading(true);
-        try {
-            const { processCheckout } = await import('@/actions/checkout');
-            const result = await processCheckout(cartItems, total, customerPhone);
-
-            if (result.success && result.url) {
-                window.location.href = result.url;
-            } else {
-                toast({
-                    title: "Erro",
-                    description: result.message || "Erro ao iniciar pagamento.",
-                    variant: "destructive"
-                });
-            }
-        } catch (error) {
-            console.error(error);
-            toast({ title: "Erro", description: "Erro inesperado.", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
+        setOpen(false);
+        router.push('/checkout/delivery');
     };
 
     return (

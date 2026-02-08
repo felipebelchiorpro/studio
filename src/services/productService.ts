@@ -171,6 +171,79 @@ export const deleteProductService = async (productId: string): Promise<void> => 
 };
 
 
+const getFallbackProducts = (): Product[] => {
+    return [
+        {
+            id: 'fallback-1',
+            name: 'Whey Protein Isolado',
+            description: 'Proteína de alta qualidade para recuperação muscular.',
+            price: 199.90,
+            originalPrice: 249.90,
+            categoryId: 'cat-1',
+            category: 'Proteínas',
+            brand: 'DarkStore Nutrition',
+            imageUrl: 'https://placehold.co/600x400/1a1a1a/ffffff?text=Whey+Isolado',
+            hoverImageUrl: 'https://placehold.co/600x400/333333/ffffff?text=Whey+Detail',
+            stock: 50,
+            rating: 4.8,
+            salesCount: 150,
+            isNewRelease: true,
+            sizes: ['900g', '1.8kg'],
+            colors: [],
+            colorMapping: [],
+            flavors: ['Chocolate', 'Baunilha', 'Morango'],
+            flavorMapping: [],
+            weights: [],
+            reviews: []
+        },
+        {
+            id: 'fallback-2',
+            name: 'Creatina Monohidratada',
+            description: 'Aumento de força e explosão muscular.',
+            price: 89.90,
+            categoryId: 'cat-2',
+            category: 'Aminoácidos',
+            brand: 'DarkStore Nutrition',
+            imageUrl: 'https://placehold.co/600x400/1a1a1a/ffffff?text=Creatina',
+            hoverImageUrl: 'https://placehold.co/600x400/333333/ffffff?text=Creatina+Detail',
+            stock: 100,
+            rating: 4.9,
+            salesCount: 300,
+            isNewRelease: false,
+            sizes: ['300g'],
+            colors: [],
+            colorMapping: [],
+            flavors: ['Natural'],
+            flavorMapping: [],
+            weights: [],
+            reviews: []
+        },
+        {
+            id: 'fallback-3',
+            name: 'Pré-Treino Insano',
+            description: 'Energia extrema para seus treinos.',
+            price: 129.90,
+            originalPrice: 159.90,
+            categoryId: 'cat-3',
+            category: 'Pré-Treino',
+            brand: 'DarkStore Nutrition',
+            imageUrl: 'https://placehold.co/600x400/1a1a1a/ffffff?text=Pre-Treino',
+            hoverImageUrl: 'https://placehold.co/600x400/333333/ffffff?text=Pre+Detail',
+            stock: 30,
+            rating: 4.7,
+            salesCount: 80,
+            isNewRelease: true,
+            sizes: ['300g'],
+            colors: [],
+            colorMapping: [],
+            flavors: ['Uva', 'Limão'],
+            flavorMapping: [],
+            weights: [],
+            reviews: []
+        }
+    ];
+};
+
 export const fetchNewReleasesService = async (limit: number = 8): Promise<Product[]> => {
     try {
         const { data, error } = await supabase
@@ -184,15 +257,15 @@ export const fetchNewReleasesService = async (limit: number = 8): Promise<Produc
             .eq('is_new_release', true)
             .limit(limit);
 
-        if (error) {
-            console.error('Error fetching new releases (Full):', JSON.stringify(error, null, 2));
-            return [];
+        if (error || !data || data.length === 0) {
+            console.warn('Using fallback products for New Releases');
+            return getFallbackProducts();
         }
 
         return (data || []).map(mapProductFromDB);
     } catch (err) {
         console.error('Network/Unexpected Error fetching new releases:', err);
-        return [];
+        return getFallbackProducts();
     }
 };
 
@@ -209,15 +282,15 @@ export const fetchBestSellersService = async (limit: number = 8): Promise<Produc
             .order('sales_count', { ascending: false })
             .limit(limit);
 
-        if (error) {
-            console.error('Error fetching best sellers (Full):', JSON.stringify(error, null, 2));
-            return [];
+        if (error || !data || data.length === 0) {
+            console.warn('Using fallback products for Best Sellers');
+            return getFallbackProducts();
         }
 
         return (data || []).map(mapProductFromDB);
     } catch (err) {
         console.error('Network/Unexpected Error fetching best sellers:', err);
-        return [];
+        return getFallbackProducts();
     }
 };
 
@@ -246,9 +319,10 @@ export const fetchOnSaleService = async (limit: number = 8): Promise<Product[]> 
             .not('original_price', 'is', null)
             .limit(limit * 2); // Fetch a bit more to filter client side if needed
 
-        if (error) {
-            console.error('Error fetching on sale products (Full):', JSON.stringify(error, null, 2));
-            return [];
+        if (error || !data || data.length === 0) {
+            console.warn('Using fallback products for On Sale');
+            const fallback = getFallbackProducts();
+            return fallback.filter(p => p.originalPrice);
         }
 
         // Client-side refinement for the comparison
@@ -256,6 +330,7 @@ export const fetchOnSaleService = async (limit: number = 8): Promise<Product[]> 
         return products.filter(p => p.originalPrice && p.originalPrice > p.price).slice(0, limit);
     } catch (err) {
         console.error('Network/Unexpected Error fetching on sale products:', err);
-        return [];
+        const fallback = getFallbackProducts();
+        return fallback.filter(p => p.originalPrice);
     }
 };
