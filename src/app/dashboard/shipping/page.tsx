@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Edit2, Loader2, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getShippingRates, createShippingRate, updateShippingRate, deleteShippingRate, ShippingRate } from '@/actions/shipping';
+import { fetchShippingRatesService, createShippingRateService, updateShippingRateService, deleteShippingRateService, ShippingRate } from '@/services/shippingService';
 
 export default function ShippingPage() {
     const [rates, setRates] = useState<ShippingRate[]>([]);
@@ -41,7 +41,7 @@ export default function ShippingPage() {
 
     const fetchRates = async () => {
         setIsLoading(true);
-        const data = await getShippingRates();
+        const data = await fetchShippingRatesService();
         setRates(data);
         setIsLoading(false);
     };
@@ -80,9 +80,9 @@ export default function ShippingPage() {
 
         let res;
         if (editingRate) {
-            res = await updateShippingRate(editingRate.id, payload);
+            res = await updateShippingRateService(editingRate.id, payload);
         } else {
-            res = await createShippingRate(payload);
+            res = await createShippingRateService(payload);
         }
 
         if (res.success) {
@@ -96,7 +96,7 @@ export default function ShippingPage() {
 
     const handleDelete = async (id: string) => {
         if (confirm('Tem certeza que deseja remover esta cidade?')) {
-            const res = await deleteShippingRate(id);
+            const res = await deleteShippingRateService(id);
             if (res.success) {
                 toast({ title: "Removido", description: "Cidade removida das entregas." });
                 fetchRates();
@@ -110,7 +110,7 @@ export default function ShippingPage() {
         // Optimistic
         setRates(prev => prev.map(r => r.id === id ? { ...r, is_active: !currentStatus } : r));
 
-        const res = await updateShippingRate(id, { is_active: !currentStatus });
+        const res = await updateShippingRateService(id, { is_active: !currentStatus });
         if (!res.success) {
             fetchRates(); // Revert on failure
             toast({ title: "Erro", description: res.message, variant: "destructive" });
