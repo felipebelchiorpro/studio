@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Tag, Percent, DollarSign, Calendar } from 'lucide-react';
-import { createCoupon, deleteCoupon, toggleCouponStatus, Coupon } from '@/actions/coupons';
+import { createCouponService, deleteCouponService, toggleCouponStatusService, fetchCouponsService, Coupon } from '@/services/couponService';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User } from 'lucide-react';
@@ -37,9 +37,15 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
     // So we don't strictly need local state for the list unless implementing client-side filtering.
     // Let's use the props directly rendered.
 
+    const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
+
+    const refreshCoupons = async () => {
+        const data = await fetchCouponsService();
+        setCoupons(data);
+    };
 
     // Form State
     const [code, setCode] = useState('');
@@ -69,7 +75,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
 
         setIsLoading(true);
         try {
-            const res = await createCoupon({
+            const res = await createCouponService({
                 code,
                 discount_type: discountType,
                 discount_value: Number(discountValue),
@@ -83,6 +89,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
                 toast({ title: "Sucesso", description: "Cupom criado com sucesso!", className: "bg-green-600 text-white" });
                 setIsDialogOpen(false);
                 resetForm();
+                refreshCoupons();
             } else {
                 toast({ title: "Erro", description: res.message || "Erro ao criar cupom.", variant: "destructive" });
             }
@@ -97,18 +104,21 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
     const handleDelete = async (id: string) => {
         if (!confirm("Tem certeza que deseja excluir este cupom?")) return;
 
-        const res = await deleteCoupon(id);
+        const res = await deleteCouponService(id);
         if (res.success) {
             toast({ title: "Cupom excluído", description: "O cupom foi removido com sucesso." });
+            refreshCoupons();
         } else {
             toast({ title: "Erro", description: "Erro ao excluir cupom.", variant: "destructive" });
         }
     };
 
     const handleToggle = async (id: string, currentStatus: boolean) => {
-        const res = await toggleCouponStatus(id, currentStatus);
+        const res = await toggleCouponStatusService(id, currentStatus);
         if (!res.success) {
             toast({ title: "Erro", description: "Erro ao atualizar status.", variant: "destructive" });
+        } else {
+            refreshCoupons();
         }
     };
 
@@ -236,7 +246,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
 
                 <TabsContent value="general">
                     <CouponList
-                        coupons={initialCoupons.filter(c => !c.partner_name && !c.partner_id)}
+                        coupons={coupons.filter(c => !c.partner_name && !c.partner_id)}
                         handleToggle={handleToggle}
                         handleDelete={handleDelete}
                     />
@@ -244,7 +254,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
 
                 <TabsContent value="partners">
                     <CouponList
-                        coupons={initialCoupons.filter(c => c.partner_name || c.partner_id)}
+                        coupons={coupons.filter(c => c.partner_name || c.partner_id)}
                         handleToggle={handleToggle}
                         handleDelete={handleDelete}
                         isPartnerView
