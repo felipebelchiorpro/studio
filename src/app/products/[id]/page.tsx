@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProduct } from '@/context/ProductContext';
 import { notFound } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { validateCoupon } from '@/actions/coupons';
+
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import CustomerLoginForm from '@/components/CustomerLoginForm';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -44,9 +44,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   // Partner Discount State
-  const [partnerCode, setPartnerCode] = useState('');
-  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; value: number; type: string; name: string; percent?: number } | null>(null);
-  const [couponLoading, setCouponLoading] = useState(false);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
+
 
   const { addToCart } = useCart();
   const { toast } = useToast();
@@ -90,54 +90,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
-  const handleApplyCoupon = async () => {
-    if (!partnerCode) return;
-    setCouponLoading(true);
-
-    // Call Server Action
-    const result = await validateCoupon(partnerCode);
-
-    if (result.valid) {
-      setAppliedDiscount({
-        code: partnerCode,
-        percent: result.discountType === 'percent' ? result.value : 0, // Handle fixed later? For now logic expects percent
-        // If fixed value, we need to handle it differently in calc. 
-        // Let's assume percent for legacy UI compatibility for this moment or simply convert.
-        // Actually, let's just pass the value and type and handle in render/calc.
-        value: result.value,
-        type: result.discountType,
-        name: result.name
-      });
-      toast({
-        title: "Desconto Aplicado!",
-        description: result.message,
-        className: "bg-green-600 text-white border-none"
-      });
-    } else {
-      setAppliedDiscount(null);
-      toast({
-        title: "Cupom inválido",
-        description: result.message || "Código não encontrado.",
-        variant: "destructive"
-      });
-    }
-    setCouponLoading(false);
-  };
-
-  const currentPrice = product.price; // Base Price
-
-  // Calculate Final Price with Discount
-  // Calculate Final Price with Discount
-  const finalPrice = appliedDiscount
-    ? appliedDiscount.type === 'percent'
-      ? currentPrice * (1 - appliedDiscount.value / 100)
-      : Math.max(0, currentPrice - appliedDiscount.value)
-    : currentPrice;
-
-  // Calculate Pix Price (5% off on final price, typical in BR e-commerce)
-  // Actually, usually PIX price is the base for other calcs, but here let's assume PIX is final cash price
-  // If partner discount is applied, it applies to the PIX price too.
-
   const handleAddToCart = () => {
     if (!customer) {
       setShowLogin(true);
@@ -149,20 +101,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     }
 
     if (product) {
-      // NOTE: In a real app, you'd pass the applied discount to the cart here
       addToCart({
         ...product,
-        price: finalPrice, // Add to cart with discounted price if applied? 
-        // Ideally, cart logic should handle discounts, but for now we push the price.
-        // Wait, addToCart logic might override price based on ID? 
-        // Let's check addToCart later. For now, we communicate the success visually.
-        // The User requested "add a field to APPLY the discount", visual feedback is key.
-        couponCode: appliedDiscount?.code,
       }, quantity);
 
       toast({
         title: "Adicionado ao Carrinho!",
-        description: `${quantity}x ${product.name} ${appliedDiscount ? `(${appliedDiscount.type === 'percent' ? `${appliedDiscount.value}%` : `R$ ${appliedDiscount.value}`} OFF)` : ''} adicionado.`,
+        description: `${quantity}x ${product.name} adicionado.`,
       });
     }
   };
@@ -211,14 +156,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 Novo Lançamento
               </Badge>
             )}
-            {hasDiscount && !appliedDiscount && (
+            {hasDiscount && (
               <Badge className="absolute top-4 right-4 bg-destructive text-white rounded-none uppercase text-[10px] tracking-widest px-3 py-1">
                 {Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)}% OFF
-              </Badge>
-            )}
-            {appliedDiscount && (
-              <Badge className="absolute top-4 right-4 bg-[#16a34a] text-white rounded-none uppercase text-[10px] tracking-widest px-3 py-1 animate-pulse">
-                {appliedDiscount.type === 'percent' ? `${appliedDiscount.value}%` : `R$ ${appliedDiscount.value}`} OFF PARCEIRO
               </Badge>
             )}
           </div>
@@ -277,68 +217,28 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             {/* Price Section */}
             <div className="space-y-1 pt-2">
               {/* Show Original Price if Discounted (either by sale or partner) */}
-              {(hasDiscount || appliedDiscount) && (
+              {(hasDiscount) && (
                 <p className="text-sm text-muted-foreground line-through">
                   R$ {product.originalPrice ? product.originalPrice.toFixed(2).replace('.', ',') : product.price.toFixed(2).replace('.', ',')}
                 </p>
               )}
 
               <div className="flex items-baseline gap-2">
-                <span className={cn("text-3xl sm:text-4xl font-bold", appliedDiscount ? "text-[#16a34a]" : "text-[#16a34a]")}>
-                  R$ {finalPrice.toFixed(2).replace('.', ',')}
+                <span className={cn("text-3xl sm:text-4xl font-bold text-[#16a34a]")}>
+                  R$ {product.price.toFixed(2).replace('.', ',')}
                 </span>
                 <span className="text-sm font-semibold text-[#16a34a]">à vista no PIX</span>
               </div>
 
-              {appliedDiscount && (
-                <p className="text-sm text-[#16a34a] font-medium flex items-center gap-1">
-                  <Tag className="h-3 w-3" />
-                  Desconto de parceiro ({appliedDiscount.name}) aplicado!
-                </p>
-              )}
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <CreditCard className="h-4 w-4" />
-                <span>ou <strong>R$ {(finalPrice * 1.05).toFixed(2).replace('.', ',')}</strong> em até 6x (sem juros)</span>
+                <span>ou <strong>R$ {(product.price * 1.05).toFixed(2).replace('.', ',')}</strong> em até 6x (sem juros)</span>
               </div>
               <p className="text-xs text-muted-foreground underline cursor-pointer hover:text-foreground">
                 Mais formas de pagamento
               </p>
             </div>
-
-            {/* Partner Discount Input */}
-            <div className="flex items-center gap-2 pt-2">
-              <div className="relative flex-1 max-w-[200px]">
-                <input
-                  type="text"
-                  placeholder="Cupom"
-                  value={partnerCode}
-                  onChange={(e) => setPartnerCode(e.target.value)}
-                  disabled={!!appliedDiscount} // Disable if already applied
-                  className={cn(
-                    "flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-                    appliedDiscount ? "border-[#16a34a] text-[#16a34a]" : "border-input"
-                  )}
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9"
-                onClick={handleApplyCoupon}
-                disabled={couponLoading || !partnerCode || !!appliedDiscount}
-              >
-                {couponLoading ? "Validando..." : appliedDiscount ? "Aplicado" : "Aplicar"}
-              </Button>
-            </div>
-            {appliedDiscount && (
-              <button
-                onClick={() => { setAppliedDiscount(null); setPartnerCode(''); }}
-                className="text-xs text-red-500 hover:underline pt-0"
-              >
-                Remover cupom
-              </button>
-            )}
 
             <Separator className="bg-border/40" />
 
