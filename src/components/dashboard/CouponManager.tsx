@@ -202,7 +202,7 @@ export default function CouponManager({ initialCoupons, partners }: CouponManage
                                         placeholder={discountType === 'percent' ? "10" : "15.00"}
                                         required
                                         min="0"
-                                        step={discountType === 'percent' ? "1" : "0.01"}
+                                        step="0.01"
                                     />
                                 </div>
                             </div>
