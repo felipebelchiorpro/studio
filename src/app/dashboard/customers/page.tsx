@@ -2,8 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useCustomerAuth } from '@/context/CustomerAuthContext';
-import type { CustomerUser } from '@/types';
+import { CustomerUser } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
@@ -13,7 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Eye, ShieldAlert, Info, PlusCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import CustomerFormDialog from '@/components/CustomerFormDialog'; // Import the new component
+import CustomerFormDialog from '@/components/CustomerFormDialog';
+import { getCustomers } from '@/actions/customer';
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
@@ -24,8 +24,8 @@ const formatDate = (dateString?: string) => {
 };
 
 export default function ManageCustomersPage() {
-  const { getAllRegisteredCustomers, customerAuthLoading, registerCustomerByAdmin } = useCustomerAuth();
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerUser | null>(null);
   const [isPasswordPromptOpen, setIsPasswordPromptOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -33,17 +33,29 @@ export default function ManageCustomersPage() {
   const [isAddCustomerDialogOpen, setIsAddCustomerDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!customerAuthLoading) {
-      setCustomers(getAllRegisteredCustomers());
+  const fetchCustomers = async () => {
+    setLoading(true);
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+      toast({
+        title: "Erro ao carregar clientes",
+        description: "Não foi possível buscar a lista de clientes.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [getAllRegisteredCustomers, customerAuthLoading]);
+  };
 
-  // Re-fetch customers when one is added to see it immediately
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
   const handleCustomerAdded = () => {
-    if (!customerAuthLoading) {
-      setCustomers(getAllRegisteredCustomers());
-    }
+    fetchCustomers();
   };
 
   const handleViewDetails = (customer: CustomerUser) => {
@@ -53,7 +65,7 @@ export default function ManageCustomersPage() {
   };
 
   const handlePasswordSubmit = () => {
-    if (adminPassword === 'password') {
+    if (adminPassword === 'password') { // TODO: Change this hardcoded password
       setIsPasswordPromptOpen(false);
       setIsDetailsModalOpen(true);
     } else {
@@ -65,7 +77,7 @@ export default function ManageCustomersPage() {
     }
   };
 
-  if (customerAuthLoading) {
+  if (loading) {
     return (
       <div className="space-y-4 sm:space-y-6">
         <Skeleton className="h-9 sm:h-10 w-full sm:w-1/3" />
@@ -91,9 +103,11 @@ export default function ManageCustomersPage() {
         <h1 className="font-headline text-2xl sm:text-3xl font-bold text-foreground flex items-center">
           <Users className="mr-2 sm:mr-3 h-6 w-6 sm:h-8 sm:w-8 text-primary" /> Gerenciar Clientes
         </h1>
+        {/*
         <Button onClick={() => setIsAddCustomerDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
-          <PlusCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Adicionar Cliente
+          <PlusCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Adicionar Cliente (Manual)
         </Button>
+        */}
       </div>
 
       <div className="bg-card p-0 rounded-lg shadow-md overflow-x-auto">
@@ -112,10 +126,10 @@ export default function ManageCustomersPage() {
             <TableBody>
               {customers.length > 0 ? customers.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.name}</TableCell>
+                  <TableCell className="font-medium px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.name || 'Sem Nome'}</TableCell>
                   <TableCell className="px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.email}</TableCell>
-                  <TableCell className="hidden sm:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.phone || '-'}</TableCell>
-                  <TableCell className="hidden md:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.id}</TableCell>
+                  <TableCell className="hidden sm:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.phone || customer.user_metadata?.phone || '-'}</TableCell>
+                  <TableCell className="hidden md:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{customer.id.substring(0, 8)}...</TableCell>
                   <TableCell className="hidden lg:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{formatDate(customer.registeredAt)}</TableCell>
                   <TableCell className="text-center px-2 py-3 sm:px-4">
                     <Button
@@ -130,8 +144,8 @@ export default function ManageCustomersPage() {
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground text-sm sm:text-base">
-                    Nenhum cliente registrado encontrado.
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-sm sm:text-base">
+                    Nenhum cliente registrado encontrado no Auth.
                   </TableCell>
                 </TableRow>
               )}
@@ -198,7 +212,7 @@ export default function ManageCustomersPage() {
               </div>
               <div>
                 <span className="font-semibold text-foreground">Telefone: </span>
-                <span className="text-muted-foreground">{selectedCustomer.phone || 'Não informado'}</span>
+                <span className="text-muted-foreground">{selectedCustomer.phone || selectedCustomer.user_metadata?.phone || 'Não informado'}</span>
               </div>
               <div>
                 <span className="font-semibold text-foreground">ID Cliente: </span>
@@ -208,6 +222,13 @@ export default function ManageCustomersPage() {
                 <span className="font-semibold text-foreground">Registrado em: </span>
                 <span className="text-muted-foreground">{formatDate(selectedCustomer.registeredAt)}</span>
               </div>
+              {/* Show Metadata JSON nicely */}
+              {selectedCustomer.user_metadata && (
+                <div className="mt-2 text-xs text-muted-foreground bg-secondary/20 p-2 rounded max-h-32 overflow-y-auto">
+                  <pre>{JSON.stringify(selectedCustomer.user_metadata, null, 2)}</pre>
+                </div>
+              )}
+
               <div className="mt-4 pt-3 border-t border-border/40">
                 <p className="text-xs text-muted-foreground italic">
                   Nota: Em um sistema real, apenas dados não críticos seriam exibidos aqui. Senhas de clientes NUNCA são armazenadas ou exibidas.
@@ -223,7 +244,6 @@ export default function ManageCustomersPage() {
         </Dialog>
       )}
 
-      {/* Add New Customer Dialog */}
       <CustomerFormDialog
         open={isAddCustomerDialogOpen}
         onOpenChange={setIsAddCustomerDialogOpen}
@@ -232,3 +252,4 @@ export default function ManageCustomersPage() {
     </div>
   );
 }
+

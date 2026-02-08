@@ -1,6 +1,7 @@
 'use server';
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabase } from "@/lib/supabaseClient";
 
 export type ShippingRate = {
     id: string;
@@ -13,15 +14,28 @@ export type ShippingRate = {
 
 export async function getShippingRates() {
     try {
-        const { data, error } = await supabaseAdmin
+        // Use anon client for reading (Public RLS enabled) to avoid Service Key issues on some environments
+        const { data, error } = await supabase
             .from('shipping_rates')
             .select('*')
             .eq('is_active', true)
             .order('base_fee', { ascending: true });
 
         if (error) {
-            console.warn("Error fetching shipping rates:", error.message);
-            return []; // Return empty array to allow manual config from scratch
+            console.warn("Error fetching shipping rates (Anon):", error.message);
+
+            // Fallback to Admin if Anon fails (unlikely for public data)
+            const { data: adminData, error: adminError } = await supabaseAdmin
+                .from('shipping_rates')
+                .select('*')
+                .eq('is_active', true)
+                .order('base_fee', { ascending: true });
+
+            if (adminError) {
+                console.warn("Error fetching shipping rates (Admin):", adminError.message);
+                return [];
+            }
+            return adminData as ShippingRate[];
         }
 
         return data as ShippingRate[];
@@ -30,10 +44,6 @@ export async function getShippingRates() {
         return [];
     }
 }
-
-// function getFallbackRates(): ShippingRate[] {
-//     return [];
-// }
 
 export async function createShippingRate(data: Omit<ShippingRate, 'id' | 'is_active' | 'created_at'>) {
     const { error } = await supabaseAdmin
@@ -72,4 +82,3 @@ export async function deleteShippingRate(id: string) {
     }
     return { success: true };
 }
-

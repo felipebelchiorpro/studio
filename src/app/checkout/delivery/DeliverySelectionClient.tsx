@@ -100,7 +100,7 @@ export default function DeliverySelectionClient() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white p-4 sm:p-8 pt-24 flex justify-center items-start relative overflow-hidden">
+        <div className="min-h-screen bg-[#0a0a0a] text-white p-2 sm:p-8 pt-20 sm:pt-24 flex justify-center items-start relative overflow-hidden">
             {/* Neon Background Effects */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-[128px] pointer-events-none" />
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-900/10 rounded-full blur-[128px] pointer-events-none" />
@@ -108,48 +108,48 @@ export default function DeliverySelectionClient() {
             <Card className="w-full max-w-3xl border-neutral-800 bg-neutral-900/60 backdrop-blur-xl text-white relative z-10 shadow-2xl overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-50" />
 
-                <CardHeader className="pb-6">
-                    <CardTitle className="text-3xl font-bold flex items-center gap-3">
-                        <span className="bg-red-500/10 p-2.5 rounded-xl text-red-500 shadow-[0_0_15px_rgba(220,38,38,0.2)] border border-red-500/20">
-                            <Truck className="h-6 w-6" />
+                <CardHeader className="pb-4 sm:pb-6">
+                    <CardTitle className="text-xl sm:text-3xl font-bold flex items-center gap-3 flex-wrap">
+                        <span className="bg-red-500/10 p-2 sm:p-2.5 rounded-xl text-red-500 shadow-[0_0_15px_rgba(220,38,38,0.2)] border border-red-500/20">
+                            <Truck className="h-5 w-5 sm:h-6 sm:w-6" />
                         </span>
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
                             Método de Entrega
                         </span>
                     </CardTitle>
-                    <CardDescription className="text-gray-400 text-lg">
+                    <CardDescription className="text-gray-400 text-sm sm:text-lg">
                         Como você prefere receber seu pedido?
                     </CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-8">
-                    <RadioGroup defaultValue={method} onValueChange={(val) => setMethod(val as 'shipping' | 'pickup')} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CardContent className="space-y-6 sm:space-y-8">
+                    <RadioGroup defaultValue={method} onValueChange={(val) => setMethod(val as 'shipping' | 'pickup')} className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
                         <label
                             htmlFor="shipping"
-                            className={`group relative flex flex-col p-6 rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${method === 'shipping' ? 'border-red-500 bg-red-500/10 shadow-[0_0_30px_rgba(220,38,38,0.15)]' : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 hover:bg-neutral-800/80'}`}
+                            className={`group relative flex flex-col p-4 sm:p-6 rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${method === 'shipping' ? 'border-red-500 bg-red-500/10 shadow-[0_0_30px_rgba(220,38,38,0.15)]' : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 hover:bg-neutral-800/80'}`}
                         >
                             <div className={`absolute inset-0 bg-gradient-to-br from-red-600/5 to-transparent opacity-0 transition-opacity duration-300 ${method === 'shipping' ? 'opacity-100' : 'group-hover:opacity-100'}`} />
 
                             <RadioGroupItem value="shipping" id="shipping" className="absolute right-4 top-4 border-red-500 text-red-500" />
-                            <div className={`p-3 rounded-xl w-fit mb-4 transition-colors ${method === 'shipping' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-neutral-800 text-gray-400 group-hover:text-white'}`}>
-                                <Truck className="h-6 w-6" />
+                            <div className={`p-2 sm:p-3 rounded-xl w-fit mb-3 sm:mb-4 transition-colors ${method === 'shipping' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-neutral-800 text-gray-400 group-hover:text-white'}`}>
+                                <Truck className="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
-                            <span className={`text-xl font-bold mb-2 ${method === 'shipping' ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>Entrega em Casa</span>
-                            <span className="text-sm text-gray-400 leading-relaxed font-light">Receba no conforto da sua casa com agilidade e segurança total.</span>
+                            <span className={`text-lg sm:text-xl font-bold mb-1 sm:mb-2 ${method === 'shipping' ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>Entrega em Casa</span>
+                            <span className="text-xs sm:text-sm text-gray-400 leading-relaxed font-light">Receba no conforto da sua casa com agilidade e segurança total.</span>
                         </label>
 
                         <label
                             htmlFor="pickup"
-                            className={`group relative flex flex-col p-6 rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${method === 'pickup' ? 'border-red-500 bg-red-500/10 shadow-[0_0_30px_rgba(220,38,38,0.15)]' : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 hover:bg-neutral-800/80'}`}
+                            className={`group relative flex flex-col p-4 sm:p-6 rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${method === 'pickup' ? 'border-red-500 bg-red-500/10 shadow-[0_0_30px_rgba(220,38,38,0.15)]' : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 hover:bg-neutral-800/80'}`}
                         >
                             <div className={`absolute inset-0 bg-gradient-to-br from-red-600/5 to-transparent opacity-0 transition-opacity duration-300 ${method === 'pickup' ? 'opacity-100' : 'group-hover:opacity-100'}`} />
 
                             <RadioGroupItem value="pickup" id="pickup" className="absolute right-4 top-4 border-red-500 text-red-500" />
-                            <div className={`p-3 rounded-xl w-fit mb-4 transition-colors ${method === 'pickup' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-neutral-800 text-gray-400 group-hover:text-white'}`}>
-                                <Store className="h-6 w-6" />
+                            <div className={`p-2 sm:p-3 rounded-xl w-fit mb-3 sm:mb-4 transition-colors ${method === 'pickup' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-neutral-800 text-gray-400 group-hover:text-white'}`}>
+                                <Store className="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
-                            <span className={`text-xl font-bold mb-2 ${method === 'pickup' ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>Retirar na Loja</span>
-                            <span className="text-sm text-gray-400 leading-relaxed font-light">Busque seu pedido em nossa loja física sem custo de frete.</span>
+                            <span className={`text-lg sm:text-xl font-bold mb-1 sm:mb-2 ${method === 'pickup' ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>Retirar na Loja</span>
+                            <span className="text-xs sm:text-sm text-gray-400 leading-relaxed font-light">Busque seu pedido em nossa loja física sem custo de frete.</span>
                         </label>
                     </RadioGroup>
 
