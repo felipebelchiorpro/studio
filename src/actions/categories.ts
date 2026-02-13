@@ -1,76 +1,60 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { pb } from '@/lib/pocketbase';
 import { Category } from '@/types';
 import { revalidatePath } from 'next/cache';
 
 export async function createCategoryAction(category: Partial<Category>) {
-    const dbPayload = {
-        name: category.name,
-        image_url: category.imageUrl,
-        parent_id: category.parentId || null, // Ensure null if empty/undefined
-        type: category.type || 'supplement',
-        // If ID is provided use it, otherwise let DB generate or generate one
-        // For compatibility with current logic, let's generate if missing, or trust DB defaults if column allows
-        // Since we saw 'cat-...' IDs, we stick to that pattern for consistency if needed, 
-        // OR we let Supabase generate UUIDs if the column is UUID.
-        // Given existing data has 'cat-...', we should probably generate one to be safe.
-        id: category.id || `cat-${Date.now()}`
-    };
+    try {
+        const payload = {
+            name: category.name,
+            slug: category.name?.toLowerCase().replace(/ /g, '-') || `cat-${Date.now()}`,
+            image: category.imageUrl, // Assuming schema updated to text
+            parent_id: category.parentId || "",
+            type: category.type || 'supplement'
+        };
 
-    const { data, error } = await supabaseAdmin
-        .from('categories')
-        .insert([dbPayload])
-        .select()
-        .single();
+        const record = await pb.collection('categories').create(payload);
 
-    if (error) {
-        console.error('Create Category Error:', JSON.stringify(error, null, 2));
-        throw new Error(error.message);
+        revalidatePath('/dashboard/categories');
+        return {
+            id: record.id,
+            name: record.name,
+            imageUrl: record.image, // text
+            totalRevenue: 0, // Not tracking revenue directly on category yet
+            parentId: record.parent_id,
+            type: record.type
+        };
+    } catch (error: any) {
+        console.error('Create Category Error:', error);
+        throw new Error(error.message || "Failed to create category");
     }
-
-    revalidatePath('/dashboard/categories');
-    return {
-        id: data.id,
-        name: data.name,
-        imageUrl: data.image_url,
-        totalRevenue: data.total_revenue ? Number(data.total_revenue) : 0,
-        parentId: data.parent_id,
-        type: data.type
-    };
 }
 
 export async function updateCategoryAction(category: Category) {
-    const dbPayload = {
-        name: category.name,
-        image_url: category.imageUrl,
-        parent_id: category.parentId || null,
-        type: category.type
-    };
+    try {
+        const payload = {
+            name: category.name,
+            image: category.imageUrl,
+            parent_id: category.parentId || "",
+            type: category.type
+        };
 
-    const { error } = await supabaseAdmin
-        .from('categories')
-        .update(dbPayload)
-        .eq('id', category.id);
+        await pb.collection('categories').update(category.id, payload);
 
-    if (error) {
-        console.error('Update Category Error:', JSON.stringify(error, null, 2));
-        throw new Error(error.message);
+        revalidatePath('/dashboard/categories');
+    } catch (error: any) {
+        console.error('Update Category Error:', error);
+        throw new Error(error.message || "Failed to update category");
     }
-
-    revalidatePath('/dashboard/categories');
 }
 
 export async function deleteCategoryAction(categoryId: string) {
-    const { error } = await supabaseAdmin
-        .from('categories')
-        .delete()
-        .eq('id', categoryId);
-
-    if (error) {
-        console.error('Delete Category Error:', JSON.stringify(error, null, 2));
-        throw new Error(error.message);
+    try {
+        await pb.collection('categories').delete(categoryId);
+        revalidatePath('/dashboard/categories');
+    } catch (error: any) {
+        console.error('Delete Category Error:', error);
+        throw new Error(error.message || "Failed to delete category");
     }
-
-    revalidatePath('/dashboard/categories');
 }

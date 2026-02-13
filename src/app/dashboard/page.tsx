@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Package, Users } from "lucide-react";
+import { getDashboardStats } from "@/actions/dashboard";
 
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({
@@ -22,92 +22,24 @@ export default function DashboardOverviewPage() {
     async function fetchData() {
       try {
         setLoading(true);
+        const data = await getDashboardStats();
 
-        // 1. Fetch Products Count
-        const { count: productsCount, error: productsError } = await supabase
-          .from("products")
-          .select("*", { count: "exact", head: true });
-
-        if (productsError) throw productsError;
-
-        // 2. Fetch Orders using Service
-        const { fetchOrdersService } = await import('@/services/orderService');
-        const orders = await fetchOrdersService();
-
-        if (!orders) {
-          throw new Error("Não foi possível carregar os pedidos.");
-        }
-
-        const totalOrders = orders.length;
-        const totalRevenue = orders.reduce((acc, order) => acc + (order.totalAmount || 0), 0);
-        const uniqueCustomers = new Set(orders.map(o => o.userId).filter(Boolean)).size;
-
-        // 3. Process Chart Data
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const dailyRevenueMap = new Map<string, number>();
-
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          const dateKey = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-          dailyRevenueMap.set(dateKey, 0);
-        }
-
-        orders.forEach(order => {
-          const orderDate = new Date(order.orderDate);
-          if (orderDate >= sevenDaysAgo) {
-            const dateKey = orderDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-            if (dailyRevenueMap.has(dateKey)) {
-              dailyRevenueMap.set(dateKey, dailyRevenueMap.get(dateKey)! + (order.totalAmount || 0));
-            }
-          }
-        });
-
-        const dailyRevenueData = Array.from(dailyRevenueMap.entries()).map(([date, revenue]) => ({
-          date,
-          revenue
-        }));
-
-        // 4. Sales by Category (Simplified Estimate via recent items)
-        // Note: Client-side join might be heavy, so checking if we can fetch order_items
-        const { data: orderItems } = await supabase
-          .from("order_items")
-          .select("product_id, products(category)") // Assuming relation and column exists
-          .limit(100);
-
-        const categoryCount: Record<string, number> = {};
-        if (orderItems) {
-          orderItems.forEach((item: any) => {
-            // products might be an array or object depending on relation
-            const prod = Array.isArray(item.products) ? item.products[0] : item.products;
-            const catName = prod?.category || "Outros";
-            categoryCount[catName] = (categoryCount[catName] || 0) + 1;
+        if (data) {
+          setStats({
+            totalRevenue: data.totalRevenue,
+            totalOrders: data.totalOrders,
+            totalProducts: data.totalProducts,
+            totalCustomers: data.totalCustomers,
+            dailyRevenueData: data.dailyRevenueData,
+            salesByCategoryData: data.salesByCategoryData
           });
+        } else {
+          setError("Não foi possível carregar os dados.");
         }
-
-        // If order_items fetch fails or is empty, use empty data
-        const salesByCategoryData = Object.entries(categoryCount).map(([category, count], index) => ({
-          category,
-          sales: count,
-          fill: `var(--chart-${(index % 5) + 1})`
-        }));
-
-        setStats({
-          totalRevenue,
-          totalOrders,
-          totalProducts: productsCount || 0,
-          totalCustomers: uniqueCustomers,
-          dailyRevenueData,
-          salesByCategoryData
-        });
 
       } catch (err: any) {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError) console.error("Auth check error:", authError);
-
         console.error("Dashboard fetch error:", err);
-        setError(`Debug: ${JSON.stringify(err)} | User: ${user?.id || "Sem usuario"} | AuthErr: ${authError?.message || "N/A"}`);
+        setError(`Erro ao carregar dados: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -117,7 +49,7 @@ export default function DashboardOverviewPage() {
   }, []);
 
   if (loading) {
-    return <div className="p-8">Carregando dados do dashboard (v2.0 New)...</div>;
+    return <div className="p-8">Carregando dados do dashboard...</div>;
   }
 
   if (error) {

@@ -1,41 +1,53 @@
 
-import { supabase } from '@/lib/supabaseClient';
+import { pb } from '@/lib/pocketbase';
 import type { IntegrationSettings, WebhookPayload } from '@/types/integration';
 
 export const fetchIntegrationSettingsService = async (): Promise<IntegrationSettings | null> => {
-    const { data, error } = await supabase
-        .from('integration_settings')
-        .select('*')
-        .single();
-
-    if (error) {
-        if (error.code === 'PGRST116') { // Not found - should be seeded, but safe check
+    try {
+        // PB doesn't support .single() on list unless we filter, but getFirstListItem does.
+        // Or we can assume there is only one record.
+        const record = await pb.collection('integration_settings').getFirstListItem('');
+        return {
+            id: record.id,
+            status_order_created: record.status_order_created,
+            webhook_order_created: record.webhook_order_created,
+            status_abandoned_cart: record.status_abandoned_cart,
+            webhook_abandoned_cart: record.webhook_abandoned_cart,
+            auth_token: record.auth_token,
+            store_address: record.store_address,
+            store_hours: record.store_hours,
+            created_at: record.created,
+            updated_at: record.updated
+        };
+    } catch (error: any) {
+        if (error.status === 404) {
+            // Create default if missing? Or return null.
             return null;
         }
         console.error('Error fetching integration settings:', error);
         return null;
     }
-    return data;
 };
 
 export const updateIntegrationSettingsService = async (settings: Partial<IntegrationSettings>): Promise<void> => {
-    // Upsert logic: if id exists, update. If not (shouldn't happen with seed), Insert.
-    // For safety, we check if we have an ID or fetch the single row first.
+    try {
+        // Check if exists
+        let record;
+        try {
+            record = await pb.collection('integration_settings').getFirstListItem('');
+        } catch (e: any) {
+            if (e.status !== 404) throw e;
+        }
 
-    // Simplest: update the single existing row or insert if empty table
-    const { data: existing } = await supabase.from('integration_settings').select('id').single();
-
-    if (existing) {
-        const { error } = await supabase
-            .from('integration_settings')
-            .update(settings)
-            .eq('id', existing.id);
-        if (error) throw error;
-    } else {
-        const { error } = await supabase
-            .from('integration_settings')
-            .insert([settings]);
-        if (error) throw error;
+        if (record) {
+            await pb.collection('integration_settings').update(record.id, settings);
+        } else {
+            // Create
+            await pb.collection('integration_settings').create(settings);
+        }
+    } catch (error) {
+        console.error('Error updating integration settings:', error);
+        throw error;
     }
 };
 

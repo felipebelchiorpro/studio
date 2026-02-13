@@ -6,6 +6,9 @@ export interface IntegrationSettings {
     status_order_created: boolean;
     status_abandoned_cart: boolean;
     auth_token?: string;
+    store_address?: string;
+    store_hours?: string;
+    created_at?: string;
     updated_at?: string;
 }
 

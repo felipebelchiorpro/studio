@@ -4,7 +4,7 @@
 import type { Brand } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabaseClient';
+import { fetchBrandsService, createBrandService, deleteBrandService } from '@/services/brandService';
 
 interface BrandContextType {
   brands: Brand[];
@@ -23,24 +23,10 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchBrands = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('brands')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-
-      if (data) {
-        // Map database fields to frontend type
-        const mappedBrands: Brand[] = data.map((b: any) => ({
-          id: b.id,
-          name: b.name,
-          imageUrl: b.image_url // Map snake_case to camelCase
-        }));
-        setBrands(mappedBrands);
-      }
+      const data = await fetchBrandsService();
+      setBrands(data);
     } catch (error) {
-      console.error("Erro ao buscar marcas (Full):", JSON.stringify(error, null, 2));
+      console.error("Erro ao buscar marcas:", error);
       toast({ title: "Erro", description: "Falha ao carregar marcas.", variant: "destructive" });
     }
   }, [toast]);
@@ -54,28 +40,12 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Erro", description: "Nome da marca não pode ser vazio.", variant: "destructive" });
       return;
     }
-    if (!brandData.imageUrl) {
-      toast({ title: "Erro", description: "Logo da marca é obrigatória.", variant: "destructive" });
-      return;
-    }
+    // We allow empty image for now or handled by service
+    // if (!brandData.imageUrl) { ... }
 
     try {
-      const { data, error } = await supabase
-        .from('brands')
-        .insert([{
-          name: brandData.name.trim(),
-          image_url: brandData.imageUrl
-        }])
-        .select();
-
-      if (error) throw error;
-
-      if (data && data[0]) {
-        const newBrand: Brand = {
-          id: data[0].id,
-          name: data[0].name,
-          imageUrl: data[0].image_url
-        };
+      const newBrand = await createBrandService(brandData);
+      if (newBrand) {
         setBrands(prev => [...prev, newBrand].sort((a, b) => a.name.localeCompare(b.name)));
         toast({ title: "Marca Adicionada", description: `Marca "${newBrand.name}" adicionada com sucesso.` });
       }
@@ -87,13 +57,7 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
 
   const removeBrand = async (brandId: string) => {
     try {
-      const { error } = await supabase
-        .from('brands')
-        .delete()
-        .eq('id', brandId);
-
-      if (error) throw error;
-
+      await deleteBrandService(brandId);
       setBrands(prev => prev.filter(b => b.id !== brandId));
       toast({ title: "Marca Removida", description: "Marca removida com sucesso." });
     } catch (error) {

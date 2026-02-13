@@ -1,7 +1,6 @@
 'use server';
 
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { supabase } from "@/lib/supabaseClient";
+import { pb } from "@/lib/pocketbase";
 
 export type ShippingRate = {
     id: string;
@@ -14,31 +13,19 @@ export type ShippingRate = {
 
 export async function getShippingRates() {
     try {
-        // Use anon client for reading (Public RLS enabled) to avoid Service Key issues on some environments
-        const { data, error } = await supabase
-            .from('shipping_rates')
-            .select('*')
-            .eq('is_active', true)
-            .order('base_fee', { ascending: true });
+        const records = await pb.collection('shipping_rates').getFullList({
+            sort: 'base_fee',
+            filter: 'is_active=true'
+        });
 
-        if (error) {
-            console.warn("Error fetching shipping rates (Anon):", error.message);
-
-            // Fallback to Admin if Anon fails (unlikely for public data)
-            const { data: adminData, error: adminError } = await supabaseAdmin
-                .from('shipping_rates')
-                .select('*')
-                .eq('is_active', true)
-                .order('base_fee', { ascending: true });
-
-            if (adminError) {
-                console.warn("Error fetching shipping rates (Admin):", adminError.message);
-                return [];
-            }
-            return adminData as ShippingRate[];
-        }
-
-        return data as ShippingRate[];
+        return records.map((r: any) => ({
+            id: r.id,
+            city_name: r.city_name,
+            base_fee: r.base_fee,
+            estimated_delivery_time: r.estimated_delivery_time,
+            is_active: r.is_active,
+            created_at: r.created
+        })) as ShippingRate[];
     } catch (err) {
         console.warn("Exception fetching shipping rates:", err);
         return [];
@@ -46,39 +33,36 @@ export async function getShippingRates() {
 }
 
 export async function createShippingRate(data: Omit<ShippingRate, 'id' | 'is_active' | 'created_at'>) {
-    const { error } = await supabaseAdmin
-        .from('shipping_rates')
-        .insert(data);
-
-    if (error) {
+    try {
+        await pb.collection('shipping_rates').create({
+            city_name: data.city_name,
+            base_fee: data.base_fee,
+            estimated_delivery_time: data.estimated_delivery_time,
+            is_active: true
+        });
+        return { success: true };
+    } catch (error: any) {
         console.error("Error creating shipping rate:", error);
         return { success: false, message: error.message };
     }
-    return { success: true };
 }
 
 export async function updateShippingRate(id: string, data: Partial<ShippingRate>) {
-    const { error } = await supabaseAdmin
-        .from('shipping_rates')
-        .update(data)
-        .eq('id', id);
-
-    if (error) {
+    try {
+        await pb.collection('shipping_rates').update(id, data);
+        return { success: true };
+    } catch (error: any) {
         console.error("Error updating shipping rate:", error);
         return { success: false, message: error.message };
     }
-    return { success: true };
 }
 
 export async function deleteShippingRate(id: string) {
-    const { error } = await supabaseAdmin
-        .from('shipping_rates')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
+    try {
+        await pb.collection('shipping_rates').delete(id);
+        return { success: true };
+    } catch (error: any) {
         console.error("Error deleting shipping rate:", error);
         return { success: false, message: error.message };
     }
-    return { success: true };
 }

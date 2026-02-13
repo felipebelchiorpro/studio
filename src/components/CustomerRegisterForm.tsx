@@ -11,13 +11,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabaseClient";
+import { pb } from "@/lib/pocketbase";
+import { useRouter } from "next/navigation";
 
 const registerSchema = z.object({
     name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
     email: z.string().email("Email inválido"),
     phone: z.string().min(10, "Telefone inválido (inclua DDD)"),
-    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+    password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres"),
     confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",
@@ -28,6 +29,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function CustomerRegisterForm() {
     const { toast } = useToast();
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
 
     const form = useForm<RegisterFormValues>({
@@ -44,29 +46,59 @@ export default function CustomerRegisterForm() {
     const onSubmit = async (data: RegisterFormValues) => {
         setLoading(true);
         try {
-            const { error } = await supabase.auth.signUp({
+            // 1. Create User
+            // We omit 'username' to let PocketBase auto-generate it.
+            // PocketBase expects: email, password, passwordConfirm, emailVisibility, name, phone.
+            const payload = {
                 email: data.email,
+                emailVisibility: true,
                 password: data.password,
-                options: {
-                    data: {
-                        full_name: data.name,
-                        phone: data.phone,
-                    }
-                }
-            });
+                passwordConfirm: data.confirmPassword,
+                name: data.name,
+                phone: data.phone,
+            };
 
-            if (error) throw error;
+            await pb.collection('users').create(payload);
+
+            // 2. Auto Login
+            await pb.collection('users').authWithPassword(data.email, data.password);
 
             toast({
                 title: "Cadastro realizado!",
-                description: "Verifique seu email para confirmar o cadastro (se necessário) ou faça login.",
+                description: "Bem-vindo à DarkStore!",
                 className: "bg-green-600 text-white"
             });
 
+            // 3. Redirect
+            router.push('/');
+
         } catch (error: any) {
+            console.error("Registration error details:", error.data);
+
+            // Extract specific validation error if available
+            let errorMsg = "Erro ao criar conta. Verifique os dados.";
+
+            if (error.data?.data) {
+                const fields = error.data.data;
+                const fieldErrors = Object.entries(fields)
+                    .map(([key, value]: [string, any]) => {
+                        const fieldName = key === 'email' ? 'Email' :
+                            key === 'password' ? 'Senha' :
+                                key === 'passwordConfirm' ? 'Confirmação de Senha' :
+                                    key === 'phone' ? 'Telefone' : key;
+                        return `${fieldName}: ${value.message}`;
+                    });
+
+                if (fieldErrors.length > 0) {
+                    errorMsg = fieldErrors.join(" | ");
+                }
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+
             toast({
                 title: "Erro no cadastro",
-                description: error.message,
+                description: errorMsg,
                 variant: "destructive"
             });
         } finally {

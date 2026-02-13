@@ -1,6 +1,6 @@
 'use server';
 
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getPocketBaseAdmin } from "@/lib/pocketbaseAdmin";
 import { revalidatePath } from "next/cache";
 
 import { validatePartnerCode } from "./partners";
@@ -16,118 +16,125 @@ export type Coupon = {
     active: boolean;
     created_at?: string;
     used_count: number;
-    partner_id?: string | null; // Deprecated but kept for compatibility
-    partner_name?: string | null; // New Simple Field
-    partners?: { name: string } | null; // Legacy Join
+    partner_id?: string | null;
+    partner_name?: string | null;
+    partners?: { name: string } | null;
 };
 
 export async function createCoupon(data: Omit<Coupon, 'id' | 'created_at' | 'used_count' | 'partners'>) {
     const { code, discount_type, discount_value, expiration_date, usage_limit, active, partner_name } = data;
 
-    const { data: coupon, error } = await supabaseAdmin
-        .from('coupons')
-        .insert([{
+    const pb = await getPocketBaseAdmin();
+
+    try {
+        const payload = {
             code: code.toUpperCase(),
             discount_type,
             discount_value,
-            expiration_date,
+            expiration_date: expiration_date ? new Date(expiration_date).toISOString() : null,
             usage_limit,
             active,
-            partner_name: partner_name || null // Store the name directly
-        }])
-        .select()
-        .single();
+            partner_name: partner_name || null,
+            usage_count: 0
+        };
 
-    if (error) {
+        const coupon = await pb.collection('coupons').create(payload);
+
+        revalidatePath('/dashboard/coupons');
+        return { success: true, coupon };
+    } catch (error: any) {
         console.error("Error creating coupon:", error);
-        if (error.code === '23505') { // Postgres unique_violation code
+        if (error.status === 400 && error.response?.data?.code?.code === "validation_not_unique") {
             return { success: false, message: "Este código de cupom já existe." };
         }
-        return { success: false, message: "Erro ao criar cupom. Tente novamente." };
+        return { success: false, message: error.message || "Erro ao criar cupom." };
     }
-
-    revalidatePath('/dashboard/coupons');
-    return { success: true, coupon };
 }
 
 export async function getCoupons() {
-    const { data: coupons, error } = await supabaseAdmin
-        .from('coupons')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) {
+    const pb = await getPocketBaseAdmin();
+    try {
+        const coupons = await pb.collection('coupons').getFullList({
+            sort: '-created',
+        });
+        return coupons.map((c: any) => ({
+            id: c.id,
+            code: c.code,
+            discount_type: c.discount_type,
+            discount_value: c.discount_value,
+            expiration_date: c.expiration_date,
+            usage_limit: c.usage_limit,
+            active: c.active,
+            created_at: c.created,
+            used_count: c.used_count,
+            partner_name: c.partner_name,
+        })) as Coupon[];
+    } catch (error) {
         console.error("Error fetching coupons:", error);
         return [];
     }
-
-    // No mapping needed for partner_name, it's directly in the row now.
-    return coupons as Coupon[];
 }
 
 export async function deleteCoupon(id: string) {
-    const { error } = await supabaseAdmin
-        .from('coupons')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
+    const pb = await getPocketBaseAdmin();
+    try {
+        await pb.collection('coupons').delete(id);
+        revalidatePath('/dashboard/coupons');
+        return { success: true };
+    } catch (error: any) {
         console.error("Error deleting coupon:", error);
         return { success: false, message: "Erro ao excluir cupom." };
     }
-
-    revalidatePath('/dashboard/coupons');
-    return { success: true };
 }
 
 export async function toggleCouponStatus(id: string, currentStatus: boolean) {
-    const { error } = await supabaseAdmin
-        .from('coupons')
-        .update({ active: !currentStatus })
-        .eq('id', id);
-
-    if (error) {
+    const pb = await getPocketBaseAdmin();
+    try {
+        await pb.collection('coupons').update(id, { active: !currentStatus });
+        revalidatePath('/dashboard/coupons');
+        return { success: true };
+    } catch (error: any) {
         console.error("Error toggling coupon status:", error);
         return { success: false, message: "Erro ao atualizar status do cupom." };
     }
-
-    revalidatePath('/dashboard/coupons');
-    return { success: true };
 }
 
 export async function validateCoupon(code: string) {
     const upperCode = code.toUpperCase();
+    const pb = await getPocketBaseAdmin();
 
-    // 1. Check Custom Coupons
-    const { data: coupon, error } = await supabaseAdmin
-        .from('coupons')
-        .select('*')
-        .eq('code', upperCode)
-        .single();
+    try {
+        // 1. Check Custom Coupons
+        const coupon = await pb.collection('coupons').getFirstListItem(`code="${upperCode}"`);
 
-    if (coupon) {
-        if (!coupon.active) return { valid: false, message: "Cupom inativo." };
-        if (coupon.expiration_date && new Date(coupon.expiration_date) < new Date()) {
-            return { valid: false, message: "Cupom expirado." };
+        if (coupon) {
+            if (!coupon.active) return { valid: false, message: "Cupom inativo." };
+            if (coupon.expiration_date && new Date(coupon.expiration_date) < new Date()) {
+                return { valid: false, message: "Cupom expirado." };
+            }
+            if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
+                return { valid: false, message: "Cupom esgotado." };
+            }
+
+            const partnerName = coupon.partner_name || 'Cupom';
+
+            return {
+                valid: true,
+                type: 'coupon',
+                discountType: coupon.discount_type,
+                value: coupon.discount_value,
+                name: partnerName.startsWith('Cupom') ? `Cupom ${coupon.code}` : partnerName,
+                message: `Desconto aplicado! ${coupon.discount_type === 'percent' ? `${coupon.discount_value}% OFF` : `R$ ${coupon.discount_value} OFF`}`
+            };
         }
-        if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
-            return { valid: false, message: "Cupom esgotado." };
+    } catch (e: any) {
+        if (e.status !== 404) {
+            console.error("Error validating coupon:", e);
         }
-
-        // Use stored partner_name if available
-        const partnerName = coupon.partner_name || 'Cupom';
-
-        return {
-            valid: true,
-            type: 'coupon',
-            discountType: coupon.discount_type,
-            value: coupon.discount_value,
-            name: partnerName.startsWith('Cupom') ? `Cupom ${coupon.code}` : partnerName,
-            message: `Desconto aplicado! ${coupon.discount_type === 'percent' ? `${coupon.discount_value}% OFF` : `R$ ${coupon.discount_value} OFF`}`
-        };
+        // Not found, try logic below
     }
 
-    // 2. Check Partners (Legacy Fallback - can be removed if unused)
+    // 2. Check Partners (Legacy Fallback)
     const partnerValidation = await validatePartnerCode(upperCode);
     if (partnerValidation.valid) {
         return {
@@ -143,25 +150,14 @@ export async function validateCoupon(code: string) {
 }
 
 export async function incrementCouponUsage(code: string) {
-    const { data: coupon, error: fetchError } = await supabaseAdmin
-        .from('coupons')
-        .select('id, used_count')
-        .eq('code', code)
-        .single();
-
-    if (fetchError || !coupon) {
-        // Not a managed coupon (maybe partner code or invalid)
-        return;
-    }
-
-    const { error: updateError } = await supabaseAdmin
-        .from('coupons')
-        .update({ used_count: (coupon.used_count || 0) + 1 })
-        .eq('id', coupon.id);
-
-    if (updateError) {
-        console.error(`Failed to increment usage for coupon ${code}`, updateError);
-    } else {
+    const pb = await getPocketBaseAdmin();
+    try {
+        const coupon = await pb.collection('coupons').getFirstListItem(`code="${code}"`);
+        await pb.collection('coupons').update(coupon.id, {
+            used_count: (coupon.used_count || 0) + 1
+        });
         revalidatePath('/dashboard/coupons');
+    } catch (error) {
+        // Ignore if not found or error
     }
 }

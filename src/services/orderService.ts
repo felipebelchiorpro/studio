@@ -1,53 +1,35 @@
 
-import { supabase } from '@/lib/supabaseClient';
+import { pb } from '@/lib/pocketbase';
 import { Order, CartItem } from '@/types';
 
 export const fetchOrdersService = async (): Promise<Order[]> => {
     try {
-        const { data, error } = await supabase
-            .from('orders')
-            .select(`
-                *,
-                order_items (
-                    *,
-                    products (*)
-                )
-            `)
-            .order('order_date', { ascending: false });
+        const records = await pb.collection('orders').getFullList({
+            sort: '-created',
+        });
 
-        if (error) {
-            console.error('Error fetching orders:', error);
-            throw error;
-        }
-
-        return (data || []).map((dbOrder: any) => {
-            const items: CartItem[] = (dbOrder.order_items || []).map((item: any) => {
-                const product = item.products;
-                return {
-                    id: product.id,
-                    name: product.name,
-                    description: product.description,
-                    price: Number(product.price),
-                    originalPrice: product.original_price ? Number(product.original_price) : undefined,
-                    category: product.category || '',
-                    brand: product.brand || '',
-                    imageUrl: product.image_url,
-                    stock: product.stock,
-                    quantity: item.quantity,
-                    // Map other product properties if needed
-                } as CartItem;
-            });
+        return records.map((record: any) => {
+            const items: CartItem[] = (record.items || []).map((item: any) => ({
+                id: item.id || item.product_id, // Fallback
+                name: item.name,
+                description: item.description || '',
+                price: Number(item.price),
+                quantity: item.quantity,
+                imageUrl: item.image || item.imageUrl || '',
+                // ... map other fields if present in JSON
+            }));
 
             return {
-                id: dbOrder.id,
-                userId: dbOrder.user_id,
+                id: record.id,
+                userId: record.user,
                 items,
-                totalAmount: Number(dbOrder.total_amount),
-                orderDate: dbOrder.order_date,
-                status: dbOrder.status as Order['status'],
-                shippingAddress: dbOrder.shipping_address,
-                channel: dbOrder.channel,
-                userPhone: dbOrder.user_phone
+                totalAmount: record.total,
+                orderDate: record.created,
+                status: record.status as Order['status'], // Ensure case matches
+                shippingAddress: record.shipping_address, // JSON or String?
+                channel: record.channel || 'ecommerce',
+                userPhone: record.user_phone // Need to fetch from user or if stored in order?
+                // Note: user_phone isn't in my schema update for orders, but might be in shipping_address
             };
         });
     } catch (err) {
@@ -58,52 +40,27 @@ export const fetchOrdersService = async (): Promise<Order[]> => {
 
 export const fetchOrderByIdService = async (id: string): Promise<Order | null> => {
     try {
-        const { data: dbOrder, error } = await supabase
-            .from('orders')
-            .select(`
-                *,
-                order_items (
-                    *,
-                    products (*)
-                )
-            `)
-            .eq('id', id)
-            .single();
+        const record = await pb.collection('orders').getOne(id);
 
-        if (error) {
-            console.error('Error fetching order by ID:', error);
-            return null;
-        }
-
-        if (!dbOrder) return null;
-
-        // Map items
-        const items: CartItem[] = (dbOrder.order_items || []).map((item: any) => {
-            const product = item.products;
-            return {
-                id: product.id,
-                name: product.name,
-                description: product.description,
-                price: Number(item.price), // Use item price at time of purchase
-                // originalPrice: ...
-                category: product.category || '',
-                brand: product.brand || '',
-                imageUrl: product.image_url,
-                // stock: ...
-                quantity: item.quantity,
-            } as CartItem;
-        });
+        const items: CartItem[] = (record.items || []).map((item: any) => ({
+            id: item.id || item.product_id,
+            name: item.name,
+            description: item.description || '',
+            price: Number(item.price),
+            quantity: item.quantity,
+            imageUrl: item.image || item.imageUrl || '',
+        }));
 
         return {
-            id: dbOrder.id,
-            userId: dbOrder.user_id,
+            id: record.id,
+            userId: record.user,
             items,
-            totalAmount: Number(dbOrder.total_amount),
-            orderDate: dbOrder.order_date,
-            status: dbOrder.status as Order['status'],
-            shippingAddress: dbOrder.shipping_address,
-            channel: dbOrder.channel,
-            userPhone: dbOrder.user_phone
+            totalAmount: record.total,
+            orderDate: record.created,
+            status: record.status as Order['status'],
+            shippingAddress: record.shipping_address,
+            channel: record.channel,
+            userPhone: record.user_phone
         };
     } catch (err) {
         console.error('Service error fetching order by ID:', err);

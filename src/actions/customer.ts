@@ -1,37 +1,31 @@
 'use server';
 
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getPocketBaseAdmin } from '@/lib/pocketbaseAdmin';
 import { CustomerUser } from '@/types';
 
 export async function getCustomers(): Promise<CustomerUser[]> {
-    console.log("Fetching customers from Supabase Auth (Admin)...");
-
     try {
-        const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
+        const pb = await getPocketBaseAdmin();
 
-        if (error) {
-            console.error("Error fetching users from Supabase Auth:", error);
-            throw new Error(error.message);
-        }
+        // Fetch all users
+        const records = await pb.collection('users').getFullList({
+            sort: '-created'
+        });
 
-        if (!users) {
-            return [];
-        }
-
-        // Map Supabase User to CustomerUser type
-        const customers: CustomerUser[] = users.map(user => ({
+        // Map PB User to CustomerUser type
+        const customers: CustomerUser[] = records.map((user: any) => ({
             id: user.id,
-            email: user.email || '',
-            name: user.user_metadata?.full_name || user.user_metadata?.name || 'Cliente',
-            phone: user.phone || user.user_metadata?.phone,
-            registeredAt: user.created_at,
-            user_metadata: user.user_metadata
+            email: user.email,
+            name: user.name || 'Cliente',
+            phone: user.phone || '',
+            registeredAt: user.created,
+            user_metadata: {
+                full_name: user.name,
+                phone: user.phone
+            }
         }));
 
-        // Sort by name or created_at
-        return customers.sort((a, b) =>
-            new Date(b.registeredAt || 0).getTime() - new Date(a.registeredAt || 0).getTime()
-        );
+        return customers;
 
     } catch (error) {
         console.error("Unexpected error fetching customers:", error);

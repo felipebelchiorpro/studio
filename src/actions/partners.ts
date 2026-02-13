@@ -1,7 +1,7 @@
 "use server";
 
 import { PARTNERS } from "@/config/partners";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getPocketBaseAdmin } from "@/lib/pocketbaseAdmin";
 import { revalidatePath } from "next/cache";
 
 export async function getPartners() {
@@ -17,34 +17,36 @@ export async function createPartner(formData: FormData) {
         return { error: "Nome e Código são obrigatórios." };
     }
 
-    const { error } = await supabaseAdmin.from("partners").insert({
-        name,
-        code: code.toUpperCase().trim(),
-        score: 0
-    });
+    const pb = await getPocketBaseAdmin();
 
-    if (error) {
-        if (error.code === '23505') { // Unique violation
+    try {
+        await pb.collection('partners').create({
+            name,
+            code: code.toUpperCase().trim(),
+            score: 0
+        });
+
+        revalidatePath("/dashboard/partners");
+        return { success: true };
+    } catch (error: any) {
+        if (error.status === 400 && error.response?.data?.code?.code === "validation_not_unique") { // Unique violation
             return { error: "Este código de parceiro já existe." };
         }
         console.error("Error creating partner:", error);
         return { error: "Erro ao criar parceiro." };
     }
-
-    revalidatePath("/dashboard/partners");
-    return { success: true };
 }
 
 export async function deletePartner(id: string) {
-    const { error } = await supabaseAdmin.from("partners").delete().match({ id });
-
-    if (error) {
+    const pb = await getPocketBaseAdmin();
+    try {
+        await pb.collection('partners').delete(id);
+        revalidatePath("/dashboard/partners");
+        return { success: true };
+    } catch (error: any) {
         console.error("Error deleting partner:", error);
         return { error: "Erro ao excluir parceiro." };
     }
-
-    revalidatePath("/dashboard/partners");
-    return { success: true };
 }
 
 export async function validatePartnerCode(code: string) {
@@ -62,21 +64,17 @@ export async function validatePartnerCode(code: string) {
         };
     }
 
-    // 2. Check DB (Fallback, might fail with current keys)
-    const { data, error } = await supabaseAdmin
-        .from("partners")
-        .select("name, code")
-        .eq("code", cleanCode)
-        .single();
-
-    if (error || !data) {
+    // 2. Check DB
+    const pb = await getPocketBaseAdmin();
+    try {
+        const data = await pb.collection('partners').getFirstListItem(`code="${cleanCode}"`);
+        return {
+            valid: true,
+            partner: data,
+            discountPercentage: 7.5,
+            message: `Cupom de ${data.name} aplicado! (7.5% OFF)`
+        };
+    } catch (error) {
         return { valid: false, message: "Cupom inválido." };
     }
-
-    return {
-        valid: true,
-        partner: data,
-        discountPercentage: 7.5,
-        message: `Cupom de ${data.name} aplicado! (7.5% OFF)`
-    };
 }

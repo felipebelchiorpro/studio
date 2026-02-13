@@ -13,7 +13,7 @@ import { Users, Eye, ShieldAlert, Info, PlusCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import CustomerFormDialog from '@/components/CustomerFormDialog';
-import { getCustomers } from '@/actions/customer';
+import { supabase } from '@/lib/supabaseClient';
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
@@ -36,6 +36,8 @@ export default function ManageCustomersPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
+      // Use Server Action
+      const { getCustomers } = await import('@/actions/customer');
       const data = await getCustomers();
       setCustomers(data);
     } catch (error) {

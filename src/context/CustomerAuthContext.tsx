@@ -4,7 +4,7 @@ import type { CustomerUser } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabaseClient';
+import { pb } from '@/lib/pocketbase';
 
 interface CustomerAuthContextType {
   isCustomerAuthenticated: boolean;
@@ -18,7 +18,6 @@ interface CustomerAuthContextType {
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(undefined);
 
-// Keep this for the "Admin Dashboard" mock list only
 const ALL_CUSTOMERS_STORAGE_KEY = 'darkstore-all-customers';
 
 export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
@@ -29,7 +28,6 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Load "Mock" customers for Admin Dashboard view
   useEffect(() => {
     try {
       const storedAllCustomers = localStorage.getItem(ALL_CUSTOMERS_STORAGE_KEY);
@@ -41,19 +39,45 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Supabase Auth Listener
+  // PocketBase Auth Listener
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        // Map Supabase User to CustomerUser
-        const user: CustomerUser = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Cliente',
-          registeredAt: session.user.created_at,
-          phone: session.user.phone
-        };
-        setCustomer(user);
+    const checkInitialAuth = () => {
+      if (pb.authStore.isValid && pb.authStore.model) {
+        const model = pb.authStore.model;
+        // Check if it's a record from the 'users' collection
+        // Admins don't have collectionId/collectionName usually
+        if ((model as any).collectionName === 'users') {
+          setCustomer({
+            id: model.id,
+            email: model.email || '',
+            name: (model as any).name || model.email?.split('@')[0] || 'Cliente',
+            registeredAt: model.created,
+            phone: (model as any).phone || ''
+          });
+          setIsCustomerAuthenticated(true);
+        } else {
+          // It's an admin or other type, but not our customer session
+          setCustomer(null);
+          setIsCustomerAuthenticated(false);
+        }
+      } else {
+        setCustomer(null);
+        setIsCustomerAuthenticated(false);
+      }
+      setCustomerAuthLoading(false);
+    };
+
+    checkInitialAuth();
+
+    const unsubscribe = pb.authStore.onChange((token, model) => {
+      if (token && model && (model as any).collectionName === 'users') {
+        setCustomer({
+          id: model.id,
+          email: model.email || '',
+          name: (model as any).name || model.email?.split('@')[0] || 'Cliente',
+          registeredAt: model.created,
+          phone: (model as any).phone || ''
+        });
         setIsCustomerAuthenticated(true);
       } else {
         setCustomer(null);
@@ -63,7 +87,7 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
 
@@ -73,32 +97,27 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    try {
+      await pb.collection('users').authWithPassword(email, password);
 
-    if (error) {
-      console.error("Supabase login error:", error);
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Bem-vindo de volta.",
+      });
+    } catch (error: any) {
+      console.error("PocketBase login error:", error);
       toast({
         title: "Falha no Login",
-        description: error.message === "Invalid login credentials" ? "Email ou senha incorretos." : error.message,
+        description: "Email ou senha incorretos.",
         variant: "destructive"
       });
-      return;
     }
-
-    toast({
-      title: "Login realizado com sucesso!",
-      description: "Bem-vindo de volta.",
-    });
-    // Redirect is handled by the calling component or let the auth state change trigger it? 
-    // Usually better to let the caller redirect on success if needed, or have a gloabl listener. 
-    // The existing code has redirect logic in the Page component watching `isCustomerAuthenticated`.
   };
 
   const customerLogout = async () => {
-    await supabase.auth.signOut();
+    pb.authStore.clear();
+    setCustomer(null);
+    setIsCustomerAuthenticated(false);
     router.push('/account/login');
   };
 
@@ -115,8 +134,6 @@ export const CustomerAuthProvider = ({ children }: { children: ReactNode }) => {
   }, [allCustomers]);
 
   const registerCustomerByAdmin = useCallback(async (data: { name: string; email: string; phone?: string }): Promise<boolean> => {
-    // This remains a "Mock" feature for now as creating users in Supabase requires Service Role or SignUp (which logs you in).
-    // Keeping local logic for display purposes in Admin Panel.
     const { name, email, phone } = data;
     const customerExists = allCustomers.some(c => c.email.toLowerCase() === email.toLowerCase());
 

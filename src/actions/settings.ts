@@ -1,10 +1,10 @@
 'use server';
 
-import { supabase } from '@/lib/supabaseClient';
+import { getPocketBaseAdmin } from "@/lib/pocketbaseAdmin";
 import { revalidatePath } from 'next/cache';
 
 export interface IntegrationSettings {
-    id: string; // usually UUID
+    id: string; // PB ID
     webhook_order_created?: string;
     webhook_abandoned_cart?: string;
     status_order_created?: boolean;
@@ -14,64 +14,67 @@ export interface IntegrationSettings {
     mp_public_key?: string;
     store_address?: string;
     store_hours?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export async function getIntegrationSettings() {
+    const pb = await getPocketBaseAdmin();
     try {
-        const { data, error } = await supabase
-            .from('integration_settings')
-            .select('*')
-            .single();
+        // Assume single row.
+        const settings = await pb.collection('integration_settings').getFirstListItem('');
 
-        if (error) {
-            console.error("Error fetching integration settings:", error);
-            // If table is empty or error, return default structure to avoid crashes
-            return {
-                success: false,
-                data: null,
-                message: error.message
-            };
-        }
+        return {
+            success: true, data: {
+                id: settings.id,
+                webhook_order_created: settings.webhook_order_created,
+                webhook_abandoned_cart: settings.webhook_abandoned_cart,
+                status_order_created: settings.status_order_created,
+                status_abandoned_cart: settings.status_abandoned_cart,
+                auth_token: settings.auth_token,
+                mp_access_token: settings.mp_access_token,
+                mp_public_key: settings.mp_public_key,
+                store_address: settings.store_address,
+                store_hours: settings.store_hours,
+                created_at: settings.created,
+                updated_at: settings.updated
+            } as IntegrationSettings
+        };
 
-        return { success: true, data: data as IntegrationSettings };
     } catch (error: any) {
+        if (error.status === 404) {
+            // Return empty or defaults if not found
+            return { success: true, data: null };
+        }
+        console.error("Error fetching integration settings:", error);
         return { success: false, message: error.message };
     }
 }
 
 export async function updateIntegrationSettings(data: Partial<IntegrationSettings>) {
+    const pb = await getPocketBaseAdmin();
     try {
-        // We assume there's only one row, or we upsert based on a known ID if we had one.
-        // Since it's a settings table, often we just update the single existing row.
-        // First, check if there is a row.
-
-        const { data: existing } = await supabase.from('integration_settings').select('id').single();
-
-        let error;
-
-        if (existing) {
-            const result = await supabase
-                .from('integration_settings')
-                .update(data)
-                .eq('id', existing.id);
-            error = result.error;
-        } else {
-            // If no row exists, insert (rare but possible if fresh db)
-            const result = await supabase
-                .from('integration_settings')
-                .insert([data]);
-            error = result.error;
+        // Check if exists
+        let existingId;
+        try {
+            const existing = await pb.collection('integration_settings').getFirstListItem('');
+            existingId = existing.id;
+        } catch (e: any) {
+            if (e.status !== 404) throw e;
         }
 
-        if (error) {
-            console.error("Error updating integration settings:", error);
-            return { success: false, message: "Erro ao atualizar configurações." };
+        if (existingId) {
+            await pb.collection('integration_settings').update(existingId, data);
+        } else {
+            // Create
+            await pb.collection('integration_settings').create(data);
         }
 
         revalidatePath('/dashboard/settings');
         return { success: true, message: "Configurações salvas com sucesso!" };
 
     } catch (error: any) {
+        console.error("Error updating integration settings:", error);
         return { success: false, message: error.message };
     }
 }

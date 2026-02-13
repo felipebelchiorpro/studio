@@ -1,0 +1,447 @@
+[
+    {
+        "name": "categories",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": true,
+                "presentable": true,
+                "unique": false
+            },
+            {
+                "name": "slug",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": true
+            },
+            {
+                "name": "image",
+                "type": "text",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "name": "parent_id",
+                "type": "text",
+                "required": false
+            },
+            {
+                "name": "type",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "supplement",
+                        "clothing",
+                        "other"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "name": "brands",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": true,
+                "presentable": true,
+                "unique": false
+            },
+            {
+                "name": "slug",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": true
+            },
+            {
+                "name": "logo",
+                "type": "text",
+                "required": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            }
+        ]
+    },
+    {
+        "name": "products",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": true,
+                "presentable": true
+            },
+            {
+                "name": "description",
+                "type": "editor",
+                "required": false
+            },
+            {
+                "name": "price",
+                "type": "number",
+                "required": false
+            },
+            {
+                "name": "original_price",
+                "type": "number",
+                "required": false
+            },
+            {
+                "name": "image",
+                "type": "text",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "name": "hover_image_url",
+                "type": "text",
+                "required": false
+            },
+            {
+                "name": "category",
+                "type": "relation",
+                "required": false,
+                "options": {
+                    "collectionId": "categories",
+                    "cascadeDelete": false,
+                    "maxSelect": 1
+                }
+            },
+            {
+                "name": "brand",
+                "type": "relation",
+                "required": false,
+                "options": {
+                    "collectionId": "brands",
+                    "cascadeDelete": false,
+                    "maxSelect": 1
+                }
+            },
+            {
+                "name": "active",
+                "type": "bool",
+                "required": false
+            },
+            {
+                "name": "stock",
+                "type": "number",
+                "required": false
+            },
+            {
+                "name": "featured",
+                "type": "bool",
+                "required": false
+            },
+            {
+                "name": "sizes",
+                "type": "json",
+                "required": false
+            },
+            {
+                "name": "flavors",
+                "type": "json",
+                "required": false
+            }
+        ]
+    },
+    {
+        "name": "shipping_rates",
+        "type": "base",
+        "schema": [
+            {
+                "name": "city_name",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "base_fee",
+                "type": "number",
+                "required": false
+            },
+            {
+                "name": "estimated_delivery_time",
+                "type": "text",
+                "required": false
+            },
+            {
+                "name": "is_active",
+                "type": "bool",
+                "required": false
+            }
+        ]
+    },
+    {
+        "name": "orders",
+        "type": "base",
+        "schema": [
+            {
+                "name": "user",
+                "type": "relation",
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": false,
+                    "maxSelect": 1
+                }
+            },
+            {
+                "name": "items",
+                "type": "json"
+            },
+            {
+                "name": "total",
+                "type": "number"
+            },
+            {
+                "name": "status",
+                "type": "select",
+                "options": {
+                    "values": [
+                        "pending",
+                        "paid",
+                        "packing",
+                        "sent",
+                        "delivered",
+                        "cancelled"
+                    ]
+                }
+            },
+            {
+                "name": "payment_method",
+                "type": "text"
+            },
+            {
+                "name": "payment_id",
+                "type": "text"
+            },
+            {
+                "name": "shipping_address",
+                "type": "json"
+            },
+            {
+                "name": "shipping_cost",
+                "type": "number"
+            }
+        ],
+        "listRule": null,
+        "viewRule": null,
+        "createRule": null
+    },
+    {
+        "name": "media",
+        "type": "base",
+        "schema": [
+            {
+                "name": "file",
+                "type": "file",
+                "required": true,
+                "options": {
+                    "maxSelect": 1,
+                    "maxSize": 52428800
+                }
+            }
+        ]
+    },
+    {
+        "name": "partners",
+        "type": "base",
+        "schema": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "code",
+                "type": "text",
+                "required": true,
+                "unique": true
+            },
+            {
+                "name": "score",
+                "type": "number"
+            }
+        ]
+    },
+    {
+        "name": "coupons",
+        "type": "base",
+        "schema": [
+            {
+                "name": "code",
+                "type": "text",
+                "required": true,
+                "unique": true
+            },
+            {
+                "name": "discount_type",
+                "type": "select",
+                "required": true,
+                "options": {
+                    "values": [
+                        "percent",
+                        "fixed"
+                    ]
+                }
+            },
+            {
+                "name": "discount_value",
+                "type": "number",
+                "required": true
+            },
+            {
+                "name": "expiration_date",
+                "type": "date"
+            },
+            {
+                "name": "usage_limit",
+                "type": "number"
+            },
+            {
+                "name": "used_count",
+                "type": "number"
+            },
+            {
+                "name": "active",
+                "type": "bool"
+            },
+            {
+                "name": "partner",
+                "type": "relation",
+                "options": {
+                    "collectionId": "partners",
+                    "cascadeDelete": false,
+                    "maxSelect": 1
+                }
+            }
+        ]
+    },
+    {
+        "name": "promotions",
+        "type": "base",
+        "schema": [
+            {
+                "name": "title",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "description",
+                "type": "text"
+            },
+            {
+                "name": "image_url",
+                "type": "text"
+            },
+            {
+                "name": "mobile_image_url",
+                "type": "text"
+            },
+            {
+                "name": "link",
+                "type": "text"
+            },
+            {
+                "name": "position",
+                "type": "select",
+                "options": {
+                    "values": [
+                        "main_carousel",
+                        "grid_left",
+                        "grid_top_right",
+                        "grid_bottom_left",
+                        "grid_bottom_right"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "name": "integration_settings",
+        "type": "base",
+        "schema": [
+            {
+                "name": "status_order_created",
+                "type": "bool"
+            },
+            {
+                "name": "webhook_order_created",
+                "type": "text"
+            },
+            {
+                "name": "status_abandoned_cart",
+                "type": "bool"
+            },
+            {
+                "name": "webhook_abandoned_cart",
+                "type": "text"
+            },
+            {
+                "name": "auth_token",
+                "type": "text"
+            },
+            {
+                "name": "store_address",
+                "type": "text"
+            },
+            {
+                "name": "store_hours",
+                "type": "text"
+            }
+        ]
+    },
+    {
+        "name": "carts",
+        "type": "base",
+        "schema": [
+            {
+                "name": "items",
+                "type": "json"
+            },
+            {
+                "name": "total",
+                "type": "number"
+            },
+            {
+                "name": "user_email",
+                "type": "email"
+            },
+            {
+                "name": "user_phone",
+                "type": "text"
+            },
+            {
+                "name": "session_id",
+                "type": "text",
+                "required": true,
+                "unique": true
+            }
+        ]
+    }
+]

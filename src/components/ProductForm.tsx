@@ -437,7 +437,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                                             <Select onValueChange={field.onChange} value={field.value}>
                                                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                                                 <SelectContent>
-                                                    {availableBrands.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                                                    {availableBrands.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
                                         )}

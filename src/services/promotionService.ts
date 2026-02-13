@@ -1,25 +1,27 @@
-import { supabase } from '@/lib/supabaseClient';
+import { getPocketBaseAdmin } from '@/lib/pocketbaseAdmin';
 import { Promotion } from '@/types';
+import { pb as clientPb } from '@/lib/pocketbase';
+
+const getImageUrl = (record: any) => {
+    if (record.image_url) return record.image_url;
+    if (record.image) return `${clientPb.baseUrl}/api/files/${record.collectionId}/${record.id}/${record.image}`;
+    return '';
+};
 
 export const fetchPromotionsService = async (): Promise<Promotion[]> => {
     try {
-        const { data, error } = await supabase
-            .from('promotions')
-            .select('*');
+        // Use clientPb for public access (list/view rules should be public)
+        const records = await clientPb.collection('promotions').getFullList({
+            sort: '-created'
+        });
 
-        if (error) {
-            console.error('Error fetching promotions:', error);
-            // Don't throw, just return empty to prevent build crash
-            return [];
-        }
-
-        return (data || []).map((p: any) => ({
+        return records.map((p: any) => ({
             id: p.id,
             title: p.title,
             description: p.description,
-            imageUrl: p.image_url,
-            mobileImageUrl: p.mobile_image_url,
-            link: p.link,
+            imageUrl: getImageUrl(p),
+            mobileImageUrl: p.mobile_image_url || '',
+            link: p.link || '',
             position: p.position || 'main_carousel'
         }));
     } catch (err) {
@@ -29,116 +31,58 @@ export const fetchPromotionsService = async (): Promise<Promotion[]> => {
 };
 
 export const createPromotionService = async (promotion: Partial<Promotion>): Promise<Promotion | null> => {
-    const dbPayload = {
-        title: promotion.title,
-        description: promotion.description,
-        image_url: promotion.imageUrl,
-        mobile_image_url: promotion.mobileImageUrl,
-        link: promotion.link,
-        position: promotion.position || 'main_carousel',
-        id: promotion.id || `promo-${Date.now()}`
-    };
+    try {
+        const pb = await getPocketBaseAdmin();
+        const payload = {
+            title: promotion.title,
+            description: promotion.description,
+            image_url: promotion.imageUrl,
+            mobile_image_url: promotion.mobileImageUrl,
+            link: promotion.link,
+            position: promotion.position || 'main_carousel',
+            active: true
+        };
 
-    console.log('Creating promotion with payload:', dbPayload);
-
-    const { data, error } = await supabase
-        .from('promotions')
-        .insert([dbPayload])
-        .select();
-
-    if (error) {
-        console.error('Detailed error creating promotion:', error);
-        // Special check for missing column
-        if (error.message.includes('column "position" does not exist')) {
-            console.warn('Fallback: "position" column missing. Retrying without it.');
-            const { position, ...fallbackPayload } = dbPayload;
-            const { data: fallbackData, error: fallbackError } = await supabase
-                .from('promotions')
-                .insert([fallbackPayload])
-                .select();
-
-            if (fallbackError) throw fallbackError;
-            if (fallbackData && fallbackData.length > 0) {
-                const p = fallbackData[0];
-                return {
-                    id: p.id,
-                    title: p.title,
-                    description: p.description,
-                    imageUrl: p.image_url,
-                    link: p.link,
-                    position: 'main_carousel'
-                };
-            }
-        }
+        const record = await pb.collection('promotions').create(payload);
+        return {
+            id: record.id,
+            title: record.title,
+            description: record.description,
+            imageUrl: record.image_url,
+            mobileImageUrl: record.mobile_image_url,
+            link: record.link,
+            position: record.position
+        };
+    } catch (error) {
+        console.error('Error creating promotion:', error);
         throw error;
     }
-
-    if (!data || data.length === 0) {
-        // This might happen if RLS allows insert but not reading back
-        return {
-            id: dbPayload.id,
-            title: dbPayload.title || '',
-            description: dbPayload.description || '',
-            imageUrl: dbPayload.image_url || '',
-            link: dbPayload.link || '',
-            position: dbPayload.position as any
-        };
-    }
-
-    const p = data[0];
-    return {
-        id: p.id,
-        title: p.title,
-        description: p.description,
-        imageUrl: p.image_url,
-        mobileImageUrl: p.mobile_image_url,
-        link: p.link,
-        position: p.position
-    };
 };
 
 export const updatePromotionService = async (promotion: Promotion): Promise<void> => {
-    const dbPayload = {
-        title: promotion.title,
-        description: promotion.description,
-        image_url: promotion.imageUrl,
-        mobile_image_url: promotion.mobileImageUrl,
-        link: promotion.link,
-        position: promotion.position
-    };
+    try {
+        const pb = await getPocketBaseAdmin();
+        const payload = {
+            title: promotion.title,
+            description: promotion.description,
+            image_url: promotion.imageUrl,
+            mobile_image_url: promotion.mobileImageUrl,
+            link: promotion.link,
+            position: promotion.position
+        };
 
-    console.log(`Updating promotion ${promotion.id} with payload:`, dbPayload);
-
-    const { error } = await supabase
-        .from('promotions')
-        .update(dbPayload)
-        .eq('id', promotion.id);
-
-    if (error) {
-        console.error('Detailed error updating promotion:', error);
-        // Special check for missing column
-        if (error.message.includes('column "position" does not exist')) {
-            console.warn('Fallback: "position" column missing. Retrying update without it.');
-            const { position, ...fallbackPayload } = dbPayload;
-            const { error: fallbackError } = await supabase
-                .from('promotions')
-                .update(fallbackPayload)
-                .eq('id', promotion.id);
-
-            if (fallbackError) throw fallbackError;
-            return;
-        }
+        await pb.collection('promotions').update(promotion.id, payload);
+    } catch (error) {
+        console.error('Error updating promotion:', error);
         throw error;
     }
 };
 
 export const deletePromotionService = async (id: string): Promise<void> => {
-    const { error } = await supabase
-        .from('promotions')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
+    try {
+        const pb = await getPocketBaseAdmin();
+        await pb.collection('promotions').delete(id);
+    } catch (error) {
         console.error('Error deleting promotion:', error);
         throw error;
     }

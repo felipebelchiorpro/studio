@@ -139,7 +139,8 @@ export default function CategoriesPage() {
 
   const handleFormSubmit = async (data: Category) => {
     try {
-      if (editingCategory) {
+
+      if (editingCategory && editingCategory.id) {
         // Update
         await updateCategoryService({ ...editingCategory, ...data }); // Use Service
         toast({ title: "Categoria atualizada!" });
