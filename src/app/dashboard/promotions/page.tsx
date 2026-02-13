@@ -25,7 +25,8 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Promotion } from "@/types";
-import { fetchPromotionsService, createPromotionService, updatePromotionService, deletePromotionService } from "@/services/promotionService";
+import { fetchPromotionsService } from "@/services/promotionService";
+import { createPromotion, updatePromotion, deletePromotion } from "@/app/actions/promotions";
 import PromotionForm from "@/components/PromotionForm";
 
 export default function PromotionsPage() {
@@ -75,7 +76,7 @@ export default function PromotionsPage() {
     const confirmDelete = async () => {
         if (deleteId) {
             try {
-                await deletePromotionService(deleteId);
+                await deletePromotion(deleteId);
                 toast({
                     title: "Banner removido",
                     description: "O banner foi removido com sucesso.",
@@ -97,13 +98,13 @@ export default function PromotionsPage() {
     const handleFormSubmit = async (data: Promotion) => {
         try {
             if (editingPromotion) {
-                await updatePromotionService(data);
+                await updatePromotion(data);
                 toast({
                     title: "Banner atualizado",
                     description: "As alterações foram salvas com sucesso.",
                 });
             } else {
-                await createPromotionService(data);
+                await createPromotion(data);
                 toast({
                     title: "Banner criado",
                     description: "O novo banner foi adicionado com sucesso.",

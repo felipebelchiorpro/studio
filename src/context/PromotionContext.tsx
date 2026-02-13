@@ -67,8 +67,8 @@ export const PromotionProvider = ({ children }: { children: ReactNode }) => {
   // I will just make them async and call the service to be safe.
 
   const addPromotion = async (promotionData: Omit<Promotion, 'id'>) => {
-    const { createPromotionService } = await import('@/services/promotionService');
-    const newPromo = await createPromotionService(promotionData);
+    const { createPromotion } = await import('@/app/actions/promotions');
+    const newPromo = await createPromotion(promotionData);
     if (newPromo) {
       setPromotions(prev => [newPromo, ...prev]);
       return newPromo;
@@ -76,14 +76,14 @@ export const PromotionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updatePromotion = async (promotion: Promotion) => {
-    const { updatePromotionService } = await import('@/services/promotionService');
-    await updatePromotionService(promotion);
+    const { updatePromotion } = await import('@/app/actions/promotions');
+    await updatePromotion(promotion);
     setPromotions(prev => prev.map(p => p.id === promotion.id ? promotion : p));
   };
 
   const deletePromotion = async (id: string) => {
-    const { deletePromotionService } = await import('@/services/promotionService');
-    await deletePromotionService(id);
+    const { deletePromotion } = await import('@/app/actions/promotions');
+    await deletePromotion(id);
     setPromotions(prev => prev.filter(p => p.id !== id));
   };
 

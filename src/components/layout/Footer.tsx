@@ -2,10 +2,79 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Github, Linkedin, Instagram, ShieldCheck } from 'lucide-react';
+import { Github, Linkedin, Instagram, ShieldCheck, Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getIntegrationSettings } from '@/actions/settings';
+
+type TimeSlot = { start: string; end: string; };
+type DaySchedule = { enabled: boolean; slots: TimeSlot[]; };
+type OperatingHours = { [key: string]: DaySchedule; };
+
+const DAY_LABELS: { [key: string]: string } = {
+    monday: "Seg", tuesday: "Ter", wednesday: "Qua", thursday: "Qui", friday: "Sex", saturday: "Sáb", sunday: "Dom"
+};
+
+const ORDERED_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
+    const [hours, setHours] = useState<OperatingHours | string | null>(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const result = await getIntegrationSettings();
+            if (result.success && result.data?.store_hours) {
+                try {
+                    const parsed = JSON.parse(result.data.store_hours);
+                    if (parsed.monday) {
+                        setHours(parsed);
+                    } else {
+                        setHours(result.data.store_hours); // fallback text
+                    }
+                } catch (e) {
+                    setHours(result.data.store_hours); // fallback text
+                }
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    const renderHours = () => {
+        if (!hours) return null;
+
+        if (typeof hours === 'string') {
+            return <p className="text-sm text-muted-foreground mt-2">{hours}</p>;
+        }
+
+        return (
+            <div className="mt-4 space-y-1">
+                <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                    <Clock className="w-4 h-4" /> Horário de Funcionamento
+                </h4>
+                {ORDERED_DAYS.map(day => {
+                    const schedule = hours[day];
+                    if (!schedule) return null;
+
+                    return (
+                        <div key={day} className="flex justify-between text-xs text-muted-foreground">
+                            <span className="w-8 font-medium">{DAY_LABELS[day]}</span>
+                            <span>
+                                {schedule.enabled ? (
+                                    schedule.slots.map((slot, i) => (
+                                        <span key={i}>
+                                            {i > 0 && ", "}{slot.start}-{slot.end}
+                                        </span>
+                                    ))
+                                ) : (
+                                    "Fechado"
+                                )}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
 
     return (
         <footer className="bg-card text-card-foreground border-t border-border/40">
@@ -14,6 +83,8 @@ export default function Footer() {
                     <div className="md:col-span-1">
                         <h3 className="font-headline text-lg font-semibold text-primary mb-2">DarkStore Suplementos</h3>
                         <p className="text-sm text-muted-foreground">Sua jornada para o próximo nível começa aqui. Qualidade e performance em cada scoop.</p>
+
+                        {renderHours()}
                     </div>
                     <div>
                         <h4 className="text-md font-semibold mb-3">Institucional</h4>

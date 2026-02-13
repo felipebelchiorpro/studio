@@ -12,6 +12,7 @@ import { getIntegrationSettings, updateIntegrationSettings, testWebhook } from '
 import { Loader2, Save, CreditCard, Webhook, Store, User } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
+import { OperatingHoursEditor } from '@/components/settings/OperatingHoursEditor';
 
 export default function SettingsPage() {
     const { toast } = useToast();
@@ -218,13 +219,10 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="store_hours">Horário de Funcionamento</Label>
-                                <Input
-                                    id="store_hours"
-                                    name="store_hours"
+                                <Label>Horário de Funcionamento</Label>
+                                <OperatingHoursEditor
                                     value={integrationData.store_hours}
-                                    onChange={handleIntegrationChange}
-                                    placeholder="Seg à Sex: 09h às 18h"
+                                    onChange={(val) => setIntegrationData(prev => ({ ...prev, store_hours: val }))}
                                 />
                             </div>
                         </CardContent>
