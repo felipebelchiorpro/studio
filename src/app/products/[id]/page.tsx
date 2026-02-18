@@ -137,7 +137,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start">
         {/* Left Column: Images */}
         <div className="relative w-full max-w-[450px] mx-auto">
-          <div className="aspect-[3/4] w-full relative overflow-hidden bg-secondary/20 rounded-sm">
+          <div className="aspect-[3/4] w-full relative overflow-hidden bg-white rounded-sm">
             <Image
               src={
                 (selectedColor && product.colorMapping?.find(c => c.color === selectedColor)?.image)
@@ -177,7 +177,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             return (activeGallery.length > 0) && (
               <div className="flex gap-2 mt-4 overflow-x-auto pb-2 no-scrollbar">
                 <button
-                  className={cn("relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden",
+                  className={cn("relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden bg-white",
                     // Highlight if main image is the cover, or something. Simplified logic:
                     "hover:opacity-80 transition"
                   )}
@@ -194,7 +194,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </button>
 
                 {activeGallery.map((img, idx) => (
-                  <div key={idx} className="relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden">
+                  <div key={idx} className="relative w-20 h-24 flex-shrink-0 border rounded-sm overflow-hidden bg-white">
                     <Image src={img} layout="fill" objectFit="cover" alt={`Gallery ${idx}`} />
                   </div>
                 ))}

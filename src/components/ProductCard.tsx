@@ -42,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="flex flex-col h-full group select-none relative">
-      <div className="relative aspect-[3/4] w-full bg-[#f0f0f0] mb-3 overflow-hidden rounded-lg shadow-sm group-hover:shadow-md transition-all duration-300">
+      <div className="relative aspect-[3/4] w-full bg-white mb-3 overflow-hidden rounded-lg shadow-sm group-hover:shadow-md transition-all duration-300">
 
         <Link href={`/products/${product.id}`} passHref className="block w-full h-full relative cursor-pointer">
           {/* Main Image */}
