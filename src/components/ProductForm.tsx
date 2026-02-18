@@ -54,6 +54,7 @@ type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
     product?: Product | null;
+    initialData?: Partial<Product> | null; // Added for duplication
     onSubmitProduct: (data: Product, isEditing: boolean) => void;
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -69,7 +70,7 @@ const PRODUCT_TYPES = [
     { id: 'other', name: 'Outro (Sem variações)' }
 ];
 
-export default function ProductForm({ product, onSubmitProduct, open, onOpenChange }: ProductFormProps) {
+export default function ProductForm({ product, initialData, onSubmitProduct, open, onOpenChange }: ProductFormProps) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [hoverImagePreview, setHoverImagePreview] = useState<string | null>(null);
     const { getBrands } = useBrand();
@@ -78,6 +79,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
     const [productType, setProductType] = useState<string>('other');
     const [flavorsInput, setFlavorsInput] = useState<string>("");
     const [uploading, setUploading] = useState(false);
+    const [keepOpen, setKeepOpen] = useState(false); // New state
     const { toast } = useToast();
 
     useEffect(() => {
@@ -115,41 +117,43 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
 
     useEffect(() => {
         if (open) {
-            if (product) {
+            const dataToLoad = product || initialData; // Prioritize product (edit), then initialData (duplicate)
+
+            if (dataToLoad) {
                 form.reset({
-                    name: product.name,
-                    description: product.description,
-                    price: product.price,
-                    originalPrice: product.originalPrice || null,
-                    category: product.categoryId || "",
-                    brand: product.brand,
-                    imageUrl: product.imageUrl || DEFAULT_PLACEHOLDER_IMAGE,
-                    stock: product.stock,
-                    isNewRelease: product.isNewRelease || false,
-                    sizes: product.sizes || [],
-                    flavors: product.flavors || [],
-                    weights: product.weights || [],
-                    gallery: product.gallery || [],
-                    hoverImageUrl: product.hoverImageUrl || "",
-                    colorMapping: product.colorMapping || [],
-                    flavorMapping: product.flavorMapping || [],
+                    name: product ? dataToLoad.name : `${dataToLoad.name} (Cópia)`, // Add copy suffix if duplicating
+                    description: dataToLoad.description,
+                    price: dataToLoad.price,
+                    originalPrice: dataToLoad.originalPrice || null,
+                    category: dataToLoad.categoryId || dataToLoad.category || "", // Handle both just in case
+                    brand: dataToLoad.brand,
+                    imageUrl: dataToLoad.imageUrl || DEFAULT_PLACEHOLDER_IMAGE,
+                    stock: product ? dataToLoad.stock : 0, // Reset stock on duplicate
+                    isNewRelease: dataToLoad.isNewRelease || false,
+                    sizes: dataToLoad.sizes || [],
+                    flavors: dataToLoad.flavors || [],
+                    weights: dataToLoad.weights || [],
+                    gallery: dataToLoad.gallery || [],
+                    hoverImageUrl: dataToLoad.hoverImageUrl || "",
+                    colorMapping: dataToLoad.colorMapping || [],
+                    flavorMapping: dataToLoad.flavorMapping || [],
                 });
 
                 // Determine type based on features present
-                if ((product.sizes && product.sizes.length > 0) || (product.colorMapping && product.colorMapping.length > 0)) {
+                if ((dataToLoad.sizes && dataToLoad.sizes.length > 0) || (dataToLoad.colorMapping && dataToLoad.colorMapping.length > 0)) {
                     setProductType('clothing');
-                } else if ((product.flavors && product.flavors.length > 0) || (product.weights && product.weights.length > 0)) {
+                } else if ((dataToLoad.flavors && dataToLoad.flavors.length > 0) || (dataToLoad.weights && dataToLoad.weights.length > 0)) {
                     setProductType('supplement');
                     // Ensure flavor input is populated if usage of mapping not detected or fallback
-                    if (!product.flavorMapping || product.flavorMapping.length === 0) {
-                        setFlavorsInput(product.flavors?.join(', ') || "");
+                    if (!dataToLoad.flavorMapping || dataToLoad.flavorMapping.length === 0) {
+                        setFlavorsInput(dataToLoad.flavors?.join(', ') || "");
                     }
                 } else {
                     setProductType('other');
                 }
 
-                setImagePreview(product.imageUrl || DEFAULT_PLACEHOLDER_IMAGE);
-                setHoverImagePreview(product.hoverImageUrl || null);
+                setImagePreview(dataToLoad.imageUrl || DEFAULT_PLACEHOLDER_IMAGE);
+                setHoverImagePreview(dataToLoad.hoverImageUrl || null);
             } else {
                 form.reset({
                     name: "",
@@ -175,7 +179,7 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
                 setHoverImagePreview(null);
             }
         }
-    }, [product, form, open]);
+    }, [product, initialData, form, open]);
 
     const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -362,9 +366,40 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
             gallery: data.gallery,
             colorMapping: data.colorMapping,
         };
+
         onSubmitProduct(finalData, !!product);
-        onOpenChange(false);
+
+        if (keepOpen) {
+            toast({ title: "Produto Salvo", description: "Produto salvo com sucesso. Adicione o próximo." });
+            // Reset form for next entry
+            form.reset({
+                name: "",
+                description: "",
+                price: 0,
+                originalPrice: null,
+                category: "",
+                brand: "",
+                imageUrl: DEFAULT_PLACEHOLDER_IMAGE,
+                stock: 0,
+                isNewRelease: false,
+                sizes: [],
+                flavors: [],
+                weights: [],
+                gallery: [],
+                hoverImageUrl: "",
+                colorMapping: [],
+                flavorMapping: [],
+            });
+            setProductType('other');
+            setFlavorsInput("");
+            setImagePreview(DEFAULT_PLACEHOLDER_IMAGE);
+            setHoverImagePreview(null);
+            // Don't close modal
+        } else {
+            onOpenChange(false);
+        }
     };
+
 
     return (
         <>
@@ -748,13 +783,25 @@ export default function ProductForm({ product, onSubmitProduct, open, onOpenChan
 
                     </div>
 
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button type="button" variant="outline">Cancelar</Button>
-                        </DialogClose>
-                        <Button type="button" onClick={form.handleSubmit(handleSubmit)} disabled={form.formState.isSubmitting || uploading} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                            {form.formState.isSubmitting || uploading ? "Salvando..." : "Salvar Produto"}
-                        </Button>
+                    <DialogFooter className="sm:justify-between">
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="keepOpen"
+                                checked={keepOpen}
+                                onCheckedChange={(checked) => setKeepOpen(checked as boolean)}
+                            />
+                            <Label htmlFor="keepOpen" className="text-sm font-normal cursor-pointer">
+                                Criar e adicionar outro
+                            </Label>
+                        </div>
+                        <div className="flex gap-2">
+                            <DialogClose asChild>
+                                <Button type="button" variant="outline">Cancelar</Button>
+                            </DialogClose>
+                            <Button type="button" onClick={form.handleSubmit(handleSubmit)} disabled={form.formState.isSubmitting || uploading} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                                {form.formState.isSubmitting || uploading ? "Salvando..." : "Salvar Produto"}
+                            </Button>
+                        </div>
                     </DialogFooter>
 
                 </DialogContent>

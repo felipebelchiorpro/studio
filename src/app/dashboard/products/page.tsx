@@ -20,17 +20,26 @@ export default function ManageProductsPage() {
   const { products: contextProducts, addProduct: contextAddProduct, updateProduct: contextUpdateProduct, deleteProduct: contextDeleteProduct, loading: productsLoading } = useProduct();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [duplicatingProduct, setDuplicatingProduct] = useState<Product | null>(null); // Added state
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   const handleAddProduct = () => {
     setEditingProduct(null);
+    setDuplicatingProduct(null);
     setIsFormOpen(true);
   };
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
+    setDuplicatingProduct(null);
+    setIsFormOpen(true);
+  };
+
+  const handleDuplicateProduct = (product: Product) => {
+    setDuplicatingProduct(product);
+    setEditingProduct(null);
     setIsFormOpen(true);
   };
 
@@ -65,6 +74,7 @@ export default function ManageProductsPage() {
       }
       setIsFormOpen(false);
       setEditingProduct(null);
+      setDuplicatingProduct(null);
     } catch (error: any) {
       console.error("Erro detalhado:", error);
       toast({
@@ -180,6 +190,9 @@ export default function ManageProductsPage() {
                       <DropdownMenuItem onClick={() => handleEditProduct(product)} className="text-xs sm:text-sm">
                         <Edit3 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Editar
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDuplicateProduct(product)} className="text-xs sm:text-sm">
+                        <PlusCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Duplicar
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleDeleteProduct(product)} className="text-destructive focus:text-destructive focus:bg-destructive/10 text-xs sm:text-sm">
                         <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Remover
@@ -201,11 +214,15 @@ export default function ManageProductsPage() {
 
       <ProductForm
         product={editingProduct}
+        initialData={duplicatingProduct}
         onSubmitProduct={handleSubmitProduct}
         open={isFormOpen}
         onOpenChange={(isOpen) => {
           setIsFormOpen(isOpen);
-          if (!isOpen) setEditingProduct(null);
+          if (!isOpen) {
+            setEditingProduct(null);
+            setDuplicatingProduct(null);
+          }
         }}
       />
 
