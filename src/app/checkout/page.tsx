@@ -212,13 +212,13 @@ export default function CheckoutPage() {
 
                             <div className="grid grid-cols-3 gap-3 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
                                 <div className="bg-white p-2 rounded flex items-center justify-center h-10">
-                                    <img src="https://logopng.com.br/logos/mercado-pago-24.png" alt="Mercado Pago" className="h-full object-contain" />
+                                    <img src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/ui-navigation/5.21.3/mercadopago/logo__small.png" alt="Mercado Pago" className="h-full object-contain" />
                                 </div>
                                 <div className="bg-white p-2 rounded flex items-center justify-center h-10">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Pix_Banco_Central.svg" alt="Pix" className="h-full object-contain" />
+                                    <img src="https://logospng.org/download/pix/logo-pix-icone-512.png" alt="Pix" className="h-full object-contain" />
                                 </div>
                                 <div className="bg-white p-2 rounded flex items-center justify-center h-10">
-                                    <img src="https://logodownload.org/wp-content/uploads/2019/09/mastercard-logo.png" alt="Mastercard" className="h-full object-contain" />
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" alt="Mastercard" className="h-full object-contain" />
                                 </div>
                             </div>
 

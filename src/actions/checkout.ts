@@ -5,6 +5,7 @@ import { triggerOrderCreatedWebhook } from '@/services/webhookTriggerService';
 import { incrementCouponUsage } from '@/actions/coupons';
 
 import { createOrderAction } from '@/actions/order';
+import { getIntegrationSettings } from '@/actions/settings';
 
 export async function processCheckout(
     cartItems: any[],

@@ -88,6 +88,19 @@ export interface CustomerUser extends User {
   // e.g., defaultShippingAddressId?: string;
   registeredAt?: string; // Added for customer management
   phone?: string; // Added for contact info
+  addresses?: Address[]; // Added addresses
+}
+
+export interface Address {
+  id: string;
+  alias: string; // e.g. "Casa", "Trabalho"
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string; // UF
+  zipCode: string; // CEP
 }
 
 
