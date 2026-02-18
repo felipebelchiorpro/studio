@@ -40,7 +40,7 @@ const mapProductFromDB = (record: any): Product => {
         colors: [], // specific logic needed if storing color mapping
         colorMapping: [],
         flavors: record.flavors || [],
-        flavorMapping: [],
+        flavorMapping: record.flavor_details || [], // Map DB flavor_details to flavorMapping
         weights: [],
         reviews: []
     };
@@ -100,7 +100,8 @@ export const createProductService = async (product: Partial<Product>): Promise<P
             sizes: product.sizes,
             flavors: product.flavors,
             original_price: product.originalPrice,
-            hover_image_url: product.hoverImageUrl
+            hover_image_url: product.hoverImageUrl,
+            flavor_details: product.flavorMapping
         };
 
         const record = await pb.collection('products').create(payload);
@@ -124,7 +125,8 @@ export const updateProductService = async (product: Product): Promise<void> => {
             flavors: product.flavors,
             image: product.imageUrl,
             original_price: product.originalPrice,
-            hover_image_url: product.hoverImageUrl
+            hover_image_url: product.hoverImageUrl,
+            flavor_details: product.flavorMapping
         };
         await pb.collection('products').update(product.id, payload);
     } catch (error) {

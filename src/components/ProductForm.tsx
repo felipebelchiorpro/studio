@@ -46,7 +46,8 @@ const productSchema = z.object({
     })).optional(),
     flavorMapping: z.array(z.object({
         flavor: z.string().min(1, "Nome do sabor obrigatório"),
-        image: z.string().optional()
+        image: z.string().optional(),
+        stock: z.coerce.number().int().min(0, "Estoque deve ser positivo").optional().default(0) // Added Stock Validation
     })).optional(),
 });
 
@@ -308,7 +309,7 @@ export default function ProductForm({ product, initialData, onSubmitProduct, ope
 
     // Flavor Mapping Logic
     const addFlavor = () => {
-        setValue("flavorMapping", [...flavorMapping, { flavor: "Novo Sabor", image: "" }]);
+        setValue("flavorMapping", [...flavorMapping, { flavor: "Novo Sabor", image: "", stock: 0 }]); // Init with stock 0
     };
 
     const removeFlavor = (index: number) => {
@@ -317,7 +318,7 @@ export default function ProductForm({ product, initialData, onSubmitProduct, ope
         setValue("flavorMapping", newMapping);
     };
 
-    const updateFlavor = (index: number, field: keyof typeof flavorMapping[0], value: string) => {
+    const updateFlavor = (index: number, field: keyof typeof flavorMapping[0], value: any) => {
         const newMapping = [...flavorMapping];
         newMapping[index] = { ...newMapping[index], [field]: value };
         setValue("flavorMapping", newMapping);
@@ -362,7 +363,7 @@ export default function ProductForm({ product, initialData, onSubmitProduct, ope
             colors: refinedColors, // Maintain legacy array for search/filter if needed
             weights: productType === 'supplement' ? data.weights : [],
             flavors: refinedFlavors, // Use refined flavors which prioritizes mapping
-            flavorMapping: data.flavorMapping, // New field persistence
+            flavorMapping: data.flavorMapping, // New field persistence (mapped to flavor_details in service)
             gallery: data.gallery,
             colorMapping: data.colorMapping,
         };
@@ -673,10 +674,20 @@ export default function ProductForm({ product, initialData, onSubmitProduct, ope
                                                         placeholder="Nome (ex: Chocolate Belga)"
                                                         value={item.flavor}
                                                         onChange={(e) => updateFlavor(idx, 'flavor', e.target.value)}
-                                                        className="h-8 flex-1"
+                                                        className="h-8 flex-[2]"
                                                     />
+                                                    <div className="flex items-center gap-1 flex-1">
+                                                        <Label className="text-xs text-muted-foreground whitespace-nowrap">Qtd:</Label>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="0"
+                                                            value={item.stock || 0}
+                                                            onChange={(e) => updateFlavor(idx, 'stock', parseInt(e.target.value) || 0)}
+                                                            className="h-8 w-20"
+                                                        />
+                                                    </div>
                                                     <div className="flex items-center gap-2">
-                                                        <div className="relative w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80">
+                                                        <div className="relative w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80" title="Adicionar foto do sabor">
                                                             <input type="file" accept="image/*" disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={(e) => handleFlavorImageUpload(idx, e.target.files)} />
                                                             {item.image ? (
                                                                 <Image src={item.image} alt={item.flavor} layout="fill" objectFit="cover" />
