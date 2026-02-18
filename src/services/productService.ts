@@ -152,7 +152,7 @@ export const fetchNewReleasesService = async (limit: number = 8): Promise<Produc
         // Use public instance
         const records = await pb.collection('products').getList(1, limit, {
             filter: 'featured = true',
-            sort: '-created',
+            // sort: '-created', // Removed unsafe sort
             expand: 'category,brand',
         });
         return records.items.map(mapProductFromDB);
@@ -175,7 +175,7 @@ export const fetchOnSaleService = async (limit: number = 8): Promise<Product[]> 
         // Fetch products with an original price set (implying a discount)
         const records = await pb.collection('products').getList(1, limit, {
             filter: 'original_price > 0 && active = true',
-            sort: '-created',
+            // sort: '-created', // Removed unsafe sort
             expand: 'category,brand',
         });
         return records.items.map(mapProductFromDB);
