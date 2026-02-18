@@ -1,5 +1,6 @@
 import { Promotion } from '@/types';
 import { pb as clientPb } from '@/lib/pocketbase';
+import { getPocketBaseAdmin } from '@/lib/pocketbaseAdmin';
 
 const getImageUrl = (record: any) => {
     if (record.image_url) return record.image_url;
@@ -9,8 +10,9 @@ const getImageUrl = (record: any) => {
 
 export const fetchPromotionsService = async (): Promise<Promotion[]> => {
     try {
-        // Use clientPb for public access (list/view rules should be public)
-        const records = await clientPb.collection('promotions').getFullList({
+        // Use admin client to ensure we see all records regardless of RLS
+        const pb = await getPocketBaseAdmin();
+        const records = await pb.collection('promotions').getFullList({
             sort: '-created'
         });
 
