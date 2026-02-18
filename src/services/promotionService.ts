@@ -12,9 +12,8 @@ export const fetchPromotionsService = async (): Promise<Promotion[]> => {
     try {
         // Use admin client to ensure we see all records regardless of RLS
         const pb = await getPocketBaseAdmin();
-        const records = await pb.collection('promotions').getFullList({
-            sort: '-created'
-        });
+        // remove sort: '-created' as it causes 400 error
+        const records = await pb.collection('promotions').getFullList();
 
         return records.map((p: any) => ({
             id: p.id,

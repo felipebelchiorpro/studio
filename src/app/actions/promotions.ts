@@ -14,9 +14,11 @@ const getImageUrl = (record: any) => {
 export async function fetchPromotions(): Promise<Promotion[]> {
     try {
         const pb = await getPocketBaseAdmin();
-        const records = await pb.collection('promotions').getFullList({
-            sort: '-created'
-        });
+        const records = await pb.collection('promotions').getFullList();
+        // Sort manually if needed, or rely on default DB order (usually created if base)
+        // If 'created' field is missing, this Javascript sort might fail if we try to access it.
+        // Let's just return as is for now, or sort by 'updated' if available?
+        // Safest: no sort or sort by ID.
 
         return records.map((p: any) => ({
             id: p.id,
