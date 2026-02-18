@@ -56,7 +56,7 @@ export default function PromotionsPage() {
     }, []);
 
     const filteredPromotions = promotions.filter((promo) =>
-        promo.title.toLowerCase().includes(searchTerm.toLowerCase())
+        (promo.title || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleCreatePromotion = () => {
