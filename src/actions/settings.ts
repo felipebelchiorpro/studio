@@ -67,7 +67,7 @@ export async function updateIntegrationSettings(data: Partial<IntegrationSetting
             await pb.collection('integration_settings').update(existingId, data);
         } else {
             // Create
-            await pb.collection('integration_settings').create(data);
+            await pb.collection('integration_settings').create({ ...data, provider: 'general' });
         }
 
         revalidatePath('/dashboard/settings');

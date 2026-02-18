@@ -8,7 +8,7 @@ export async function createPromotion(promotion: Partial<Promotion>): Promise<Pr
     try {
         const pb = await getPocketBaseAdmin();
         const payload = {
-            title: promotion.title,
+            name: promotion.title,
             description: promotion.description,
             image_url: promotion.imageUrl,
             mobile_image_url: promotion.mobileImageUrl,
@@ -25,7 +25,7 @@ export async function createPromotion(promotion: Partial<Promotion>): Promise<Pr
 
         return {
             id: record.id,
-            title: record.title,
+            title: record.name,
             description: record.description,
             imageUrl: record.image_url,
             mobileImageUrl: record.mobile_image_url,
@@ -42,7 +42,7 @@ export async function updatePromotion(promotion: Promotion): Promise<void> {
     try {
         const pb = await getPocketBaseAdmin();
         const payload = {
-            title: promotion.title,
+            name: promotion.title,
             description: promotion.description,
             image_url: promotion.imageUrl,
             mobile_image_url: promotion.mobileImageUrl,
