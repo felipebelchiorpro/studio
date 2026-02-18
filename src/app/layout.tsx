@@ -16,6 +16,11 @@ export const metadata: Metadata = {
   title: 'DarkStore Suplementos',
   description: 'Sua loja de suplementos para performance e saúde.',
   keywords: 'suplementos, whey protein, creatina, vitaminas, e-commerce, fitness, darkstore',
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({
