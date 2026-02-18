@@ -17,7 +17,7 @@ export const fetchPromotionsService = async (): Promise<Promotion[]> => {
 
         return records.map((p: any) => ({
             id: p.id,
-            title: p.name,
+            title: p.title || '',
             description: p.description,
             imageUrl: getImageUrl(p),
             mobileImageUrl: p.mobile_image_url || '',

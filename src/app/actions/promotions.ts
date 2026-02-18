@@ -24,7 +24,7 @@ export async function fetchPromotions(): Promise<Promotion[]> {
 
         return records.map((p: any) => ({
             id: p.id,
-            title: p.name || 'Sem Título',
+            title: p.title || '', // Now using the explicit title field
             description: p.description,
             imageUrl: getImageUrl(p),
             mobileImageUrl: p.mobile_image_url || '',
@@ -42,7 +42,8 @@ export async function createPromotion(promotion: Partial<Promotion>): Promise<Pr
     try {
         const pb = await getPocketBaseAdmin();
         const payload = {
-            name: promotion.title || `Banner ${new Date().toLocaleString()}`,
+            name: `Banner-${Date.now()}`,
+            title: promotion.title,
             description: promotion.description,
             image_url: promotion.imageUrl,
             mobile_image_url: promotion.mobileImageUrl,
@@ -59,7 +60,7 @@ export async function createPromotion(promotion: Partial<Promotion>): Promise<Pr
 
         return {
             id: record.id,
-            title: record.name,
+            title: record.title,
             description: record.description,
             imageUrl: record.image_url,
             mobileImageUrl: record.mobile_image_url,
@@ -76,7 +77,7 @@ export async function updatePromotion(promotion: Promotion): Promise<void> {
     try {
         const pb = await getPocketBaseAdmin();
         const payload = {
-            name: promotion.title || `Banner ${new Date().toLocaleString()}`,
+            title: promotion.title,
             description: promotion.description,
             image_url: promotion.imageUrl,
             mobile_image_url: promotion.mobileImageUrl,
