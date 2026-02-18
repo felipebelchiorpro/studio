@@ -171,7 +171,17 @@ export const fetchBestSellersService = async (limit: number = 8): Promise<Produc
 };
 
 export const fetchOnSaleService = async (limit: number = 8): Promise<Product[]> => {
-    // Mock
-    return fetchProductsService();
+    try {
+        // Fetch products with an original price set (implying a discount)
+        const records = await pb.collection('products').getList(1, limit, {
+            filter: 'original_price > 0 && active = true',
+            sort: '-created',
+            expand: 'category,brand',
+        });
+        return records.items.map(mapProductFromDB);
+    } catch (error: any) {
+        console.error('Error fetching on sale details:', error);
+        return [];
+    }
 };
 
