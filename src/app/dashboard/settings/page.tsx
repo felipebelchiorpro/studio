@@ -26,6 +26,8 @@ export default function SettingsPage() {
         mp_access_token: '',
         mp_public_key: '',
         webhook_order_created: '',
+        status_order_created: false,
+        status_abandoned_cart: false,
         auth_token: '',
         store_address: '',
         store_hours: ''
@@ -55,6 +57,8 @@ export default function SettingsPage() {
                 mp_access_token: result.data.mp_access_token || '',
                 mp_public_key: result.data.mp_public_key || '',
                 webhook_order_created: result.data.webhook_order_created || '',
+                status_order_created: result.data.status_order_created || false,
+                status_abandoned_cart: result.data.status_abandoned_cart || false,
                 auth_token: result.data.auth_token || '',
                 store_address: result.data.store_address || '',
                 store_hours: result.data.store_hours || ''

@@ -58,6 +58,19 @@ export function OperatingHoursEditor({ value, onChange }: OperatingHoursEditorPr
         }
     });
 
+    // Sync with value prop if it changes externally
+    useEffect(() => {
+        try {
+            const parsed = JSON.parse(value);
+            // Deep check to avoid infinite loop with stringify
+            if (JSON.stringify(parsed) !== JSON.stringify(schedule)) {
+                setSchedule(parsed);
+            }
+        } catch (e) {
+            // Ignore parse error from value prop if it's invalid/empty
+        }
+    }, [value]);
+
     useEffect(() => {
         onChange(JSON.stringify(schedule));
     }, [schedule]);

@@ -5,7 +5,7 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-async function fixPromotionsSchema() {
+async function fixIntegrationSchema() {
     const pb = new PocketBase('https://pb.darkstoresuplementos.com/');
     const email = process.env.POCKETBASE_ADMIN_EMAIL;
     const password = process.env.POCKETBASE_ADMIN_PASSWORD;
@@ -13,37 +13,35 @@ async function fixPromotionsSchema() {
     try {
         await pb.admins.authWithPassword(email!, password!);
 
-        const col = await pb.collections.getOne('promotions');
+        const col = await pb.collections.getOne('integration_settings');
         let fields = (col as any).fields;
 
-        // 1. Ensure new fields for Banners exist
         const newFields = [
-            { name: 'image_url', type: 'text' },
-            { name: 'mobile_image_url', type: 'text' },
-            { name: 'link', type: 'text' },
-            { name: 'position', type: 'text' },
-            { name: 'active', type: 'bool' }
+            { name: 'mp_access_token', type: 'text' },
+            { name: 'mp_public_key', type: 'text' }
         ];
 
+        let changed = false;
         newFields.forEach(nf => {
             if (!fields.find((f: any) => f.name === nf.name)) {
                 console.log(`➕ Adding '${nf.name}' field...`);
                 fields.push(nf);
+                changed = true;
             }
         });
 
-        // 2. Update Collection with new fields AND Public Rules
-        await pb.collections.update(col.id, {
-            fields: fields,
-            listRule: "", // Public
-            viewRule: ""  // Public
-        });
-
-        console.log("✅ Updated 'promotions' schema and rules.");
+        if (changed) {
+            await pb.collections.update(col.id, {
+                fields: fields
+            });
+            console.log("✅ Updated 'integration_settings' schema.");
+        } else {
+            console.log("👌 Schema already up to date.");
+        }
 
     } catch (e: any) {
         console.error("❌ Error:", e.message);
     }
 }
 
-fixPromotionsSchema();
+fixIntegrationSchema();

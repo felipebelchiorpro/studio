@@ -379,6 +379,11 @@
                         "grid_bottom_right"
                     ]
                 }
+            },
+            {
+                "name": "active",
+                "type": "bool",
+                "required": false
             }
         ]
     },
@@ -400,6 +405,14 @@
             },
             {
                 "name": "webhook_abandoned_cart",
+                "type": "text"
+            },
+            {
+                "name": "mp_access_token",
+                "type": "text"
+            },
+            {
+                "name": "mp_public_key",
                 "type": "text"
             },
             {
