@@ -25,8 +25,8 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Promotion } from "@/types";
-import { fetchPromotionsService } from "@/services/promotionService";
-import { createPromotion, updatePromotion, deletePromotion } from "@/app/actions/promotions";
+// import { fetchPromotionsService } from "@/services/promotionService"; // Deprecated
+import { createPromotion, updatePromotion, deletePromotion, fetchPromotions } from "@/app/actions/promotions"; // Import fetchPromotions
 import PromotionForm from "@/components/PromotionForm";
 
 export default function PromotionsPage() {
@@ -39,7 +39,7 @@ export default function PromotionsPage() {
 
     const loadPromotions = async () => {
         try {
-            const data = await fetchPromotionsService();
+            const data = await fetchPromotions();
             setPromotions(data);
         } catch (error) {
             console.error("Failed to fetch promotions", error);
