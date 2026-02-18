@@ -8,7 +8,7 @@ export async function createPromotion(promotion: Partial<Promotion>): Promise<Pr
     try {
         const pb = await getPocketBaseAdmin();
         const payload = {
-            name: promotion.title,
+            name: promotion.title || `Banner ${new Date().toLocaleString()}`,
             description: promotion.description,
             image_url: promotion.imageUrl,
             mobile_image_url: promotion.mobileImageUrl,
@@ -42,12 +42,13 @@ export async function updatePromotion(promotion: Promotion): Promise<void> {
     try {
         const pb = await getPocketBaseAdmin();
         const payload = {
-            name: promotion.title,
+            name: promotion.title || `Banner ${new Date().toLocaleString()}`,
             description: promotion.description,
             image_url: promotion.imageUrl,
             mobile_image_url: promotion.mobileImageUrl,
             link: promotion.link,
-            position: promotion.position
+            position: promotion.position,
+            active: promotion.active !== undefined ? promotion.active : true // Preserve active status or default to true
         };
 
         await pb.collection('promotions').update(promotion.id, payload);
