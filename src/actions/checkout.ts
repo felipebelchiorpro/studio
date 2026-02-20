@@ -3,6 +3,7 @@
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { triggerOrderCreatedWebhook } from '@/services/webhookTriggerService';
 import { incrementCouponUsage } from '@/actions/coupons';
+import { headers } from 'next/headers';
 
 import { createOrderAction } from '@/actions/order';
 import { getIntegrationSettings } from '@/actions/settings';
@@ -67,7 +68,11 @@ export async function processCheckout(
             });
         }
 
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'; // Ensure this matches prod
+        // Resolve base URL dynamically to ensure back_urls are correct in any environment
+        const headersList = await headers();
+        const host = headersList.get('host');
+        const protocol = host?.includes('localhost') ? 'http' : 'https';
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (host ? `${protocol}://${host}` : 'http://localhost:3000');
 
         const preferenceData = {
             items: items,
