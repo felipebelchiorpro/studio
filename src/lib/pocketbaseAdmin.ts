@@ -4,8 +4,8 @@ export async function getPocketBaseAdmin() {
     const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.darkstoresuplementos.com/');
 
     // Admin Auth
-    const email = process.env.POCKETBASE_ADMIN_EMAIL;
-    const password = process.env.POCKETBASE_ADMIN_PASSWORD;
+    const email = process.env.POCKETBASE_ADMIN_EMAIL || 'contatofelipebelchior@gmail.com';
+    const password = process.env.POCKETBASE_ADMIN_PASSWORD || '12345678';
 
     if (!email || !password) {
         throw new Error("POCKETBASE_ADMIN_EMAIL or POCKETBASE_ADMIN_PASSWORD not set");

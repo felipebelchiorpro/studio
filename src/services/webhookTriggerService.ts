@@ -63,6 +63,7 @@ async function generateWhatsAppMessage(order: Order, status: string, settings: a
         case 'Confirmed': // Pedido Confirmado
         case 'pending': // Match PB status
         case 'Pending':
+        case 'paid': // Added paid status
             if (isPickup) {
                 message = `✅ Pedido Confirmado para Retirada!\n\nOlá ${customerName}, recebemos seu pedido!\n🛒 Itens: ${itemsList} \n💰 Total: ${total} \n\nAguarde: Enviaremos uma mensagem assim que tudo estiver separado para você vir buscar aqui na loja em Caconde.`;
             } else {
@@ -230,7 +231,7 @@ export const triggerOrderStatusUpdateWebhook = async (orderId: string, newStatus
             status: newStatus,
             order_id: orderRecord.id,
             customer_id: orderRecord.user,
-            customer_phone: (orderRecord as any).user_phone, // Not in schema but maybe passing through?
+            customer_phone: (orderRecord.items?.[0] as any)?.userPhone || (orderRecord as any).user_phone || '', // Extracting from items or record
             whatsapp_message: whatsappMessage,
             updated_at: new Date().toISOString()
         };

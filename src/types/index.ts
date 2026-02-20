@@ -70,6 +70,9 @@ export interface Brand {
 
 export interface CartItem extends Product {
   quantity: number;
+  selectedSize?: string;
+  selectedFlavor?: string;
+  selectedColor?: string;
   couponCode?: string; // Track applied coupon
 }
 
@@ -111,7 +114,7 @@ export interface Order {
   items: CartItem[]; // These are CartItems, which include full product details + quantity bought
   totalAmount: number;
   orderDate: string;
-  status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
+  status: 'pending' | 'paid' | 'packing' | 'sent' | 'delivered' | 'cancelled';
   shippingAddress?: string; // Simplified
   channel?: string; // Added for BI Dashboard
   userPhone?: string; // Added for WhatsApp Integration

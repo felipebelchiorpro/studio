@@ -1,6 +1,7 @@
 'use server';
 
 import { pb } from '@/lib/pocketbase';
+import { getPocketBaseAdmin } from "@/lib/pocketbaseAdmin";
 import { triggerOrderCreatedWebhook } from '@/services/webhookTriggerService';
 import { CartItem } from '@/types';
 
@@ -27,6 +28,7 @@ export async function createOrderAction(params: CreateOrderParams) {
         // If guest (no userId), 'user' relation might be empty or we need a guest user logic.
         // For now, if userId is present, we use it. If not, we leave it empty (if allowed by schema, which it is based on my update).
 
+        const pbAdmin = await getPocketBaseAdmin();
         const payload = {
             user: params.userId || "", // Empty string if guest? Or null? PB relation expects ID or null.
             total: params.totalAmount,
@@ -40,7 +42,7 @@ export async function createOrderAction(params: CreateOrderParams) {
             // user_phone: params.userPhone
         };
 
-        const record = await pb.collection('orders').create(payload);
+        const record = await pbAdmin.collection('orders').create(payload);
 
         // 2. Trigger Webhook
         // Construct full order matching Order interface
@@ -74,7 +76,8 @@ export async function updateOrderStatusAction(orderId: string, newStatus: string
     try {
         console.log(`Updating Order ${orderId} to ${newStatus}`);
 
-        await pb.collection('orders').update(orderId, {
+        const pbAdmin = await getPocketBaseAdmin();
+        await pbAdmin.collection('orders').update(orderId, {
             status: newStatus
         });
 
