@@ -137,11 +137,39 @@ export default function CheckoutPage() {
 
                         <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                             {cartItems.map((item) => (
-                                <div key={item.id} className="flex justify-between items-center text-sm py-2 border-b border-neutral-800 last:border-0">
-                                    <span className="text-gray-300">
-                                        <span className="text-red-500 font-bold">{item.quantity}x</span> {item.name}
-                                    </span>
-                                    <span className="text-white font-medium">R$ {(Number(item.price) * item.quantity).toFixed(2)}</span>
+                                <div key={item.id} className="flex justify-between items-center py-3 border-b border-neutral-800 last:border-0 gap-3">
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="flex-shrink-0 w-12 h-12 bg-white rounded-md overflow-hidden border border-neutral-800 flex items-center justify-center">
+                                            {item.imageUrl ? (
+                                                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                            ) : (
+                                                <Store className="w-6 h-6 text-neutral-400" />
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-gray-200 text-sm font-medium truncate" title={item.name}>
+                                                <span className="text-red-500 font-bold mr-1">{item.quantity}x</span>
+                                                {item.name}
+                                            </span>
+                                            {(item.selectedFlavor || item.selectedSize) && (
+                                                <span className="text-xs text-gray-500 truncate mt-0.5">
+                                                    {item.selectedFlavor && `Sabor: ${item.selectedFlavor}`}
+                                                    {item.selectedFlavor && item.selectedSize && ` | `}
+                                                    {item.selectedSize && `Tam: ${item.selectedSize}`}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end flex-shrink-0">
+                                        <span className="text-white font-medium text-sm">
+                                            R$ {(Number(item.price) * item.quantity).toFixed(2)}
+                                        </span>
+                                        {item.quantity > 1 && (
+                                            <span className="text-[10px] text-gray-500">
+                                                R$ {Number(item.price).toFixed(2)} cada
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>
