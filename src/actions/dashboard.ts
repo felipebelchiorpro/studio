@@ -29,25 +29,38 @@ export async function getDashboardStats() {
 
         // 2. Prepare Chart Data (Last 7 Days)
         const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0); // Start of day 7 days ago
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Keep it exactly a 7-day window including today
 
         const dailyRevenueMap = new Map<string, number>();
+        const categorySalesMap = new Map<string, number>();
 
         // Initialize last 7 days with 0
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
-            const dateKey = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }); // "18 jul"
+            const dateKey = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
             dailyRevenueMap.set(dateKey, 0);
         }
 
         orders.forEach((order: any) => {
-            const orderDate = new Date(order.created); // PB uses 'created'
+            const orderDate = new Date(order.created);
+
+            // Only aggregate if within the last 7 days window
             if (orderDate >= sevenDaysAgo) {
-                const dateKey = orderDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+                const dateKey = `${orderDate.getDate().toString().padStart(2, '0')}/${(orderDate.getMonth() + 1).toString().padStart(2, '0')}`;
                 if (dailyRevenueMap.has(dateKey)) {
                     dailyRevenueMap.set(dateKey, dailyRevenueMap.get(dateKey)! + (order.total || 0));
                 }
+            }
+
+            // Category Aggregation
+            if (order.items && Array.isArray(order.items)) {
+                order.items.forEach((item: any) => {
+                    const cat = item.category || 'Outros';
+                    const itemTotal = (Number(item.price) || 0) * (Number(item.quantity) || 1);
+                    categorySalesMap.set(cat, (categorySalesMap.get(cat) || 0) + itemTotal);
+                });
             }
         });
 
@@ -56,18 +69,10 @@ export async function getDashboardStats() {
             revenue
         }));
 
-        // 3. Category Data
-        // Needs expansion. orders -> expand: 'items' (if items stored as relation? No, items is JSON)
-        // Our products have categories.
-        // We'd need to iterate items JSON, extract product IDs, fetch products? Too slow.
-        // For now, let's mock or simplify.
-        // Supabase version used a join on 'order_items' table.
-        // In PB, 'items' is a JSON field in 'orders'.
-        // We can't easy aggregate.
-        // Let's return empty category data for now to not break UI, or mock/randomize.
-
-        const salesByCategoryData: any[] = [];
-        // TODO: Implement proper category aggregation when analytics collection is ready.
+        const salesByCategoryData = Array.from(categorySalesMap.entries()).map(([name, value]) => ({
+            name,
+            value
+        }));
 
         return {
             totalRevenue,
