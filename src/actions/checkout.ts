@@ -11,7 +11,7 @@ import { getIntegrationSettings } from '@/actions/settings';
 export async function processCheckout(
     cartItems: any[],
     total: number,
-    user: { id?: string, email: string, phone: string },
+    user: { id?: string, name?: string, email: string, phone: string },
     shippingInfo: { method: string, address?: any, fee: number }
 ) {
     console.log("Processing checkout Pro for", user.email);
@@ -38,6 +38,7 @@ export async function processCheckout(
             status: 'Pending', // Initial status
             userEmail: user.email,
             userPhone: user.phone,
+            userName: user.name,
             shippingFee: shippingInfo.fee,
             shippingAddress: shippingInfo.method === 'shipping' ? shippingInfo.address : { type: 'pickup' }
         });

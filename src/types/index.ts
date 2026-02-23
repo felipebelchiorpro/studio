@@ -111,11 +111,13 @@ export interface Address {
 export interface Order {
   id: string;
   userId: string; // Could be CustomerUser.id
+  userName?: string;
+  userEmail?: string;
   items: CartItem[]; // These are CartItems, which include full product details + quantity bought
   totalAmount: number;
   orderDate: string;
   status: 'pending' | 'paid' | 'packing' | 'sent' | 'delivered' | 'cancelled';
-  shippingAddress?: string; // Simplified
+  shippingAddress?: any; // Usually a JSON object with street, city, etc.
   channel?: string; // Added for BI Dashboard
   userPhone?: string; // Added for WhatsApp Integration
 }

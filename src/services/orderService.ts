@@ -7,7 +7,9 @@ import { pb } from '@/lib/pocketbase'; // Keep for other functions if needed
 export const fetchOrdersService = async (): Promise<Order[]> => {
     try {
         const pbAdmin = await getPocketBaseAdmin();
-        const records = await pbAdmin.collection('orders').getFullList();
+        const records = await pbAdmin.collection('orders').getFullList({
+            expand: 'user',
+        });
 
         return records.map((record: any) => {
             let rawItems = record.items || [];
@@ -25,17 +27,23 @@ export const fetchOrdersService = async (): Promise<Order[]> => {
                 imageUrl: item.image || item.imageUrl || '',
             }));
 
+            let parsedShipping = record.shipping_address;
+            if (typeof parsedShipping === 'string') {
+                try { parsedShipping = JSON.parse(parsedShipping); } catch (e) { }
+            }
+
             return {
                 id: record.id,
                 userId: record.user,
+                userName: record.expand?.user?.name || parsedShipping?.customerName || record.expand?.user?.email || parsedShipping?.customerEmail || 'Convidado',
+                userEmail: record.expand?.user?.email || parsedShipping?.customerEmail,
                 items,
                 totalAmount: record.total,
                 orderDate: record.created,
-                status: record.status as Order['status'], // Ensure case matches
-                shippingAddress: record.shipping_address, // JSON or String?
+                status: record.status as Order['status'],
+                shippingAddress: parsedShipping,
                 channel: record.channel || 'ecommerce',
-                userPhone: record.user_phone // Need to fetch from user or if stored in order?
-                // Note: user_phone isn't in my schema update for orders, but might be in shipping_address
+                userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone
             };
         });
     } catch (err) {
@@ -49,6 +57,7 @@ export const fetchMyOrdersService = async (userId: string): Promise<Order[]> => 
         const pbAdmin = await getPocketBaseAdmin();
         const records = await pbAdmin.collection('orders').getFullList({
             filter: `user = "${userId}"`,
+            expand: 'user',
         });
 
         return records.map((record: any) => {
@@ -67,16 +76,23 @@ export const fetchMyOrdersService = async (userId: string): Promise<Order[]> => 
                 imageUrl: item.image || item.imageUrl || '',
             }));
 
+            let parsedShipping = record.shipping_address;
+            if (typeof parsedShipping === 'string') {
+                try { parsedShipping = JSON.parse(parsedShipping); } catch (e) { }
+            }
+
             return {
                 id: record.id,
                 userId: record.user,
+                userName: record.expand?.user?.name || parsedShipping?.customerName || record.expand?.user?.email || parsedShipping?.customerEmail || 'Convidado',
+                userEmail: record.expand?.user?.email || parsedShipping?.customerEmail,
                 items,
                 totalAmount: record.total,
                 orderDate: record.created,
                 status: record.status as Order['status'],
-                shippingAddress: record.shipping_address,
+                shippingAddress: parsedShipping,
                 channel: record.channel || 'ecommerce',
-                userPhone: record.user_phone
+                userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone
             };
         });
     } catch (err) {
@@ -88,7 +104,9 @@ export const fetchMyOrdersService = async (userId: string): Promise<Order[]> => 
 export const fetchOrderByIdService = async (id: string): Promise<Order | null> => {
     try {
         const pbAdmin = await getPocketBaseAdmin();
-        const record = await pbAdmin.collection('orders').getOne(id);
+        const record = await pbAdmin.collection('orders').getOne(id, {
+            expand: 'user',
+        });
 
         let rawItems = record.items || [];
         if (typeof rawItems === 'string') {
@@ -105,16 +123,23 @@ export const fetchOrderByIdService = async (id: string): Promise<Order | null> =
             imageUrl: item.image || item.imageUrl || '',
         }));
 
+        let parsedShipping = record.shipping_address;
+        if (typeof parsedShipping === 'string') {
+            try { parsedShipping = JSON.parse(parsedShipping); } catch (e) { }
+        }
+
         return {
             id: record.id,
             userId: record.user,
+            userName: record.expand?.user?.name || parsedShipping?.customerName || record.expand?.user?.email || parsedShipping?.customerEmail || 'Convidado',
+            userEmail: record.expand?.user?.email || parsedShipping?.customerEmail,
             items,
             totalAmount: record.total,
             orderDate: record.created,
             status: record.status as Order['status'],
-            shippingAddress: record.shipping_address,
+            shippingAddress: parsedShipping,
             channel: record.channel,
-            userPhone: record.user_phone
+            userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone
         };
     } catch (err) {
         console.error('Service error fetching order by ID:', err);

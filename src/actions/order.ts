@@ -13,6 +13,7 @@ export interface CreateOrderParams {
     status?: string;
     shippingAddress?: any;
     shippingFee?: number;
+    userName?: string;
     userEmail: string;
     userPhone: string;
     channel?: string;
@@ -29,17 +30,22 @@ export async function createOrderAction(params: CreateOrderParams) {
         // For now, if userId is present, we use it. If not, we leave it empty (if allowed by schema, which it is based on my update).
 
         const pbAdmin = await getPocketBaseAdmin();
+        const enrichedShippingAddress = {
+            ...(typeof params.shippingAddress === 'object' ? params.shippingAddress : {}),
+            customerName: params.userName,
+            customerEmail: params.userEmail,
+            customerPhone: params.userPhone
+        };
+
         const payload = {
-            user: params.userId || "", // Empty string if guest? Or null? PB relation expects ID or null.
+            user: params.userId || "",
             total: params.totalAmount,
             shipping_cost: params.shippingFee || 0,
-            status: params.status || 'pending', // Lowercase match schema options
+            status: params.status || 'pending',
             payment_id: params.paymentId,
-            payment_method: 'credit_card', // Default or passed param?
-            shipping_address: params.shippingAddress,
-            items: params.items, // JSON field
-            // user_email: params.userEmail, // Not in schema, relying on user relation or shipping_address
-            // user_phone: params.userPhone
+            payment_method: 'credit_card',
+            shipping_address: enrichedShippingAddress,
+            items: params.items,
         };
 
         const record = await pbAdmin.collection('orders').create(payload);
@@ -49,11 +55,13 @@ export async function createOrderAction(params: CreateOrderParams) {
         const fullOrder = {
             id: record.id,
             userId: params.userId || 'guest',
+            userName: params.userName,
+            userEmail: params.userEmail,
             items: params.items,
-            totalAmount: params.totalAmount, // Map explicitly
-            orderDate: record.created, // PB created timestamp
-            status: (params.status || 'Pending') as any, // Cast to match type
-            shippingAddress: typeof params.shippingAddress === 'string' ? params.shippingAddress : JSON.stringify(params.shippingAddress),
+            totalAmount: params.totalAmount,
+            orderDate: record.created,
+            status: (params.status || 'Pending') as any,
+            shippingAddress: JSON.stringify(enrichedShippingAddress),
             channel: params.channel,
             userPhone: params.userPhone
         };

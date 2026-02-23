@@ -19,6 +19,7 @@ export default function CheckoutPage() {
     const [loading, setLoading] = useState(false);
 
     // Contact State
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
 
@@ -35,6 +36,7 @@ export default function CheckoutPage() {
     // Pre-fill from Auth
     useEffect(() => {
         if (isAuthenticated && user) {
+            if (user.name) setName(user.name);
             if (user.email) setEmail(user.email);
             if (user.phone) setPhone(user.phone);
             updateContactInfo(user.email, user.phone);
@@ -46,8 +48,8 @@ export default function CheckoutPage() {
     };
 
     const handleCheckout = async () => {
-        if (!email || !phone) {
-            toast({ title: "Dados incompletos", description: "Preencha email e telefone para continuar.", variant: "destructive" });
+        if (!name || !email || !phone) {
+            toast({ title: "Dados incompletos", description: "Preencha nome, email e telefone para continuar.", variant: "destructive" });
             return;
         }
 
@@ -58,6 +60,7 @@ export default function CheckoutPage() {
             getCartTotal(),
             {
                 id: user?.id,
+                name: name,
                 email: email,
                 phone: phone
             },
@@ -201,6 +204,16 @@ export default function CheckoutPage() {
                             <CardTitle className="text-2xl font-bold text-white">Dados de Contato</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-300">Nome Completo</label>
+                                <Input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="João da Silva"
+                                    className="bg-neutral-950 border-neutral-800 h-12 text-white focus-visible:ring-red-500"
+                                />
+                            </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-300">Email para contato e comprovante</label>
                                 <Input
