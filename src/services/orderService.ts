@@ -7,9 +7,7 @@ import { pb } from '@/lib/pocketbase'; // Keep for other functions if needed
 export const fetchOrdersService = async (): Promise<Order[]> => {
     try {
         const pbAdmin = await getPocketBaseAdmin();
-        const records = await pbAdmin.collection('orders').getFullList({
-            sort: '-created',
-        });
+        const records = await pbAdmin.collection('orders').getFullList();
 
         return records.map((record: any) => {
             let rawItems = record.items || [];
@@ -51,7 +49,6 @@ export const fetchMyOrdersService = async (userId: string): Promise<Order[]> => 
         const pbAdmin = await getPocketBaseAdmin();
         const records = await pbAdmin.collection('orders').getFullList({
             filter: `user = "${userId}"`,
-            sort: '-created',
         });
 
         return records.map((record: any) => {
