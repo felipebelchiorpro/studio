@@ -12,14 +12,19 @@ export const fetchOrdersService = async (): Promise<Order[]> => {
         });
 
         return records.map((record: any) => {
-            const items: CartItem[] = (record.items || []).map((item: any) => ({
-                id: item.id || item.product_id, // Fallback
-                name: item.name,
+            let rawItems = record.items || [];
+            if (typeof rawItems === 'string') {
+                try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
+            }
+            if (!Array.isArray(rawItems)) rawItems = [];
+
+            const items: CartItem[] = rawItems.map((item: any) => ({
+                id: item.id || item.product_id || 'unknown',
+                name: item.name || 'Desconhecido',
                 description: item.description || '',
-                price: Number(item.price),
-                quantity: item.quantity,
+                price: Number(item.price || 0),
+                quantity: item.quantity || 1,
                 imageUrl: item.image || item.imageUrl || '',
-                // ... map other fields if present in JSON
             }));
 
             return {
@@ -50,12 +55,18 @@ export const fetchMyOrdersService = async (userId: string): Promise<Order[]> => 
         });
 
         return records.map((record: any) => {
-            const items: CartItem[] = (record.items || []).map((item: any) => ({
-                id: item.id || item.product_id,
-                name: item.name,
+            let rawItems = record.items || [];
+            if (typeof rawItems === 'string') {
+                try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
+            }
+            if (!Array.isArray(rawItems)) rawItems = [];
+
+            const items: CartItem[] = rawItems.map((item: any) => ({
+                id: item.id || item.product_id || 'unknown',
+                name: item.name || 'Desconhecido',
                 description: item.description || '',
-                price: Number(item.price),
-                quantity: item.quantity,
+                price: Number(item.price || 0),
+                quantity: item.quantity || 1,
                 imageUrl: item.image || item.imageUrl || '',
             }));
 
@@ -82,12 +93,18 @@ export const fetchOrderByIdService = async (id: string): Promise<Order | null> =
         const pbAdmin = await getPocketBaseAdmin();
         const record = await pbAdmin.collection('orders').getOne(id);
 
-        const items: CartItem[] = (record.items || []).map((item: any) => ({
-            id: item.id || item.product_id,
-            name: item.name,
+        let rawItems = record.items || [];
+        if (typeof rawItems === 'string') {
+            try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
+        }
+        if (!Array.isArray(rawItems)) rawItems = [];
+
+        const items: CartItem[] = rawItems.map((item: any) => ({
+            id: item.id || item.product_id || 'unknown',
+            name: item.name || 'Desconhecido',
             description: item.description || '',
-            price: Number(item.price),
-            quantity: item.quantity,
+            price: Number(item.price || 0),
+            quantity: item.quantity || 1,
             imageUrl: item.image || item.imageUrl || '',
         }));
 

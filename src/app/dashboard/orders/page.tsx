@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Order } from "@/types";
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Eye, Loader2, Plus } from "lucide-react";
+import { Download, Eye, Loader2, Plus, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 
@@ -185,11 +185,34 @@ export default function OrdersPage() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-center px-2 py-3 sm:px-4">
-                                    <Link href={`/dashboard/orders/${order.id}`}>
-                                        <Button variant="ghost" size="sm">
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-                                    </Link>
+                                    <div className="flex items-center justify-center space-x-2">
+                                        {order.status === 'pending' && (
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                title="Remarketing no WhatsApp"
+                                                className="h-8 w-8 text-green-600 border-green-200 hover:bg-green-50 dark:border-green-900 dark:hover:bg-green-900/40"
+                                                onClick={() => {
+                                                    const phone = order.userPhone || "";
+                                                    const cleanPhone = phone.replace(/\D/g, '');
+                                                    if (!cleanPhone) {
+                                                        toast({ title: "Erro", description: "Telefone do cliente não encontrado.", variant: "destructive" });
+                                                        return;
+                                                    }
+                                                    const msg = `Olá, tudo bem? Notamos que você iniciou o pedido #${order.id.substring(0, 8)} na Dark Store Suplementos, mas o pagamento ficou pendente. 🛒\n\nFicou com alguma dúvida ou teve algum problema na hora de pagar? Me avisa aqui que te ajudo a finalizar! 💪`;
+                                                    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+                                                    window.open(url, '_blank');
+                                                }}
+                                            >
+                                                <MessageCircle className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                        <Link href={`/dashboard/orders/${order.id}`}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Ver detalhes">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )) : (
