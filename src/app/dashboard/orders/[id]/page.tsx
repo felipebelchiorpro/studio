@@ -12,6 +12,7 @@ import { ArrowLeft, Loader2, Save, MessageSquare, Calendar, User, Phone, MapPin,
 
 import { fetchOrderByIdService } from '@/services/orderService';
 import { updateOrderStatusAction } from '@/actions/order';
+import { translateOrderStatus } from '@/lib/utils/orderStatus';
 import type { Order } from '@/types';
 import Link from 'next/link';
 
@@ -101,7 +102,7 @@ export default function OrderDetailsPage() {
                 </div>
                 <div className="ml-auto flex gap-2">
                     <Badge variant="outline" className="text-base px-3 py-1 capitalize">
-                        {order.status}
+                        {translateOrderStatus(order.status)}
                     </Badge>
                 </div>
             </div>

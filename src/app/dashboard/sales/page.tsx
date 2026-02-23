@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 
 import { fetchOrdersService } from '@/services/orderService';
 import { useToast } from '@/hooks/use-toast';
+import { translateOrderStatus } from '@/lib/utils/orderStatus';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -62,10 +63,10 @@ export default function SalesReportPage() {
 
   const getStatusColorClass = (status: Order['status']): string => {
     switch (status) {
-      case 'Delivered': return 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/50';
-      case 'Shipped': return 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/50';
-      case 'Pending': return 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/50';
-      case 'Cancelled': return 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/50';
+      case 'delivered': return 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/50';
+      case 'sent': return 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/50';
+      case 'pending': return 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/50';
+      case 'cancelled': return 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/50';
       default: return 'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/50';
     }
   };
@@ -90,10 +91,10 @@ export default function SalesReportPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os Status</SelectItem>
-              <SelectItem value="Pending">Pendente</SelectItem>
-              <SelectItem value="Shipped">Enviado</SelectItem>
-              <SelectItem value="Delivered">Entregue</SelectItem>
-              <SelectItem value="Cancelled">Cancelado</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="sent">Enviado</SelectItem>
+              <SelectItem value="delivered">Entregue</SelectItem>
+              <SelectItem value="cancelled">Cancelado</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -129,7 +130,7 @@ export default function SalesReportPage() {
                 <TableCell className="text-right px-2 py-3 sm:px-4 text-xs sm:text-sm">R$ {order.totalAmount.toFixed(2).replace('.', ',')}</TableCell>
                 <TableCell className="text-center px-2 py-3 sm:px-4">
                   <Badge variant="outline" className={`text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 ${getStatusColorClass(order.status)}`}>
-                    {order.status}
+                    {translateOrderStatus(order.status)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-center hidden sm:table-cell px-2 py-3 sm:px-4 text-xs sm:text-sm">{order.items.reduce((sum, item) => sum + item.quantity, 0)}</TableCell>

@@ -8,18 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { translateOrderStatus } from '@/lib/utils/orderStatus';
 
 interface OrderListProps {
     orders: Order[];
     loading?: boolean;
 }
 
-const statusMap: Record<string, { label: string, color: string }> = {
-    'Pending': { label: 'Pendente', color: 'bg-yellow-500/20 text-yellow-500' },
-    'Shipped': { label: 'Enviado', color: 'bg-blue-500/20 text-blue-500' },
-    'Delivered': { label: 'Entregue', color: 'bg-green-500/20 text-green-500' },
-    'Cancelled': { label: 'Cancelado', color: 'bg-red-500/20 text-red-500' },
-};
+
 
 export function OrderList({ orders, loading }: OrderListProps) {
 
@@ -41,7 +37,21 @@ export function OrderList({ orders, loading }: OrderListProps) {
     return (
         <div className="space-y-4">
             {orders.map((order) => {
-                const status = statusMap[order.status] || { label: order.status, color: 'bg-gray-500/20' };
+                const getStatusColor = (status: string) => {
+                    switch (status?.toLowerCase()) {
+                        case 'pending': return 'bg-yellow-500/20 text-yellow-500';
+                        case 'paid': return 'bg-blue-500/20 text-blue-500';
+                        case 'packing': return 'bg-purple-500/20 text-purple-500';
+                        case 'sent':
+                        case 'shipped': return 'bg-blue-500/20 text-blue-500';
+                        case 'delivered': return 'bg-green-500/20 text-green-500';
+                        case 'cancelled': return 'bg-red-500/20 text-red-500';
+                        default: return 'bg-gray-500/20 text-gray-500';
+                    }
+                };
+
+                const translatedStatus = translateOrderStatus(order.status);
+                const statusColor = getStatusColor(order.status);
 
                 return (
                     <Card key={order.id} className="overflow-hidden border-neutral-800 bg-neutral-900/30">
@@ -52,7 +62,7 @@ export function OrderList({ orders, loading }: OrderListProps) {
                                     {format(new Date(order.orderDate), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
                                 </CardDescription>
                             </div>
-                            <Badge className={`${status.color} border-0`}>{status.label}</Badge>
+                            <Badge className={`${statusColor} border-0`}>{translatedStatus}</Badge>
                         </CardHeader>
                         <CardContent className="pt-4">
                             <div className="space-y-2">

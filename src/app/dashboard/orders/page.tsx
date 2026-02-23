@@ -16,6 +16,8 @@ import { useToast } from '@/hooks/use-toast';
 
 const ITEMS_PER_PAGE = 10;
 
+import { translateOrderStatus } from '@/lib/utils/orderStatus';
+
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
@@ -180,8 +182,8 @@ export default function OrdersPage() {
                                 <TableCell className="px-2 py-3 sm:px-4 text-xs sm:text-sm">{new Date(order.orderDate).toLocaleDateString('pt-BR')}</TableCell>
                                 <TableCell className="text-right px-2 py-3 sm:px-4 text-xs sm:text-sm">R$ {order.totalAmount.toFixed(2).replace('.', ',')}</TableCell>
                                 <TableCell className="text-center px-2 py-3 sm:px-4">
-                                    <Badge variant="outline" className={`text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 ${getStatusColorClass(order.status)}`}>
-                                        {order.status}
+                                    <Badge variant="outline" className={`text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 ${getStatusColorClass(order.status)} whitespace-nowrap`}>
+                                        {translateOrderStatus(order.status)}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-center px-2 py-3 sm:px-4">
