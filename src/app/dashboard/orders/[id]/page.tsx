@@ -175,11 +175,11 @@ export default function OrderDetailsPage() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Pending">Pendente</SelectItem>
-                                        <SelectItem value="Confirmed">Confirmado (Aprovado)</SelectItem>
-                                        <SelectItem value="Packing">Embalando (Separação)</SelectItem>
-                                        <SelectItem value="Delivered">Entregue / Pronto (Saiu)</SelectItem>
-                                        <SelectItem value="Cancelled">Cancelado</SelectItem>
+                                        <SelectItem value="pending">Pendente</SelectItem>
+                                        <SelectItem value="paid">Confirmado (Aprovado)</SelectItem>
+                                        <SelectItem value="packing">Embalando (Separação)</SelectItem>
+                                        <SelectItem value="delivered">Entregue / Pronto (Saiu)</SelectItem>
+                                        <SelectItem value="cancelled">Cancelado</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

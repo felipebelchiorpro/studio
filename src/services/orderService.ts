@@ -1,10 +1,13 @@
+'use server';
 
-import { pb } from '@/lib/pocketbase';
+import { getPocketBaseAdmin } from '@/lib/pocketbaseAdmin';
 import { Order, CartItem } from '@/types';
+import { pb } from '@/lib/pocketbase'; // Keep for other functions if needed
 
 export const fetchOrdersService = async (): Promise<Order[]> => {
     try {
-        const records = await pb.collection('orders').getFullList({
+        const pbAdmin = await getPocketBaseAdmin();
+        const records = await pbAdmin.collection('orders').getFullList({
             sort: '-created',
         });
 
@@ -40,7 +43,8 @@ export const fetchOrdersService = async (): Promise<Order[]> => {
 
 export const fetchMyOrdersService = async (userId: string): Promise<Order[]> => {
     try {
-        const records = await pb.collection('orders').getFullList({
+        const pbAdmin = await getPocketBaseAdmin();
+        const records = await pbAdmin.collection('orders').getFullList({
             filter: `user = "${userId}"`,
             sort: '-created',
         });
@@ -75,7 +79,8 @@ export const fetchMyOrdersService = async (userId: string): Promise<Order[]> => 
 
 export const fetchOrderByIdService = async (id: string): Promise<Order | null> => {
     try {
-        const record = await pb.collection('orders').getOne(id);
+        const pbAdmin = await getPocketBaseAdmin();
+        const record = await pbAdmin.collection('orders').getOne(id);
 
         const items: CartItem[] = (record.items || []).map((item: any) => ({
             id: item.id || item.product_id,
