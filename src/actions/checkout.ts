@@ -52,17 +52,30 @@ export async function processCheckout(
         const client = new MercadoPagoConfig({ accessToken: mpAccessToken });
         const preference = new Preference(client);
 
-        const items = cartItems.map(item => ({
-            id: item.id,
-            title: item.name,
-            quantity: item.quantity,
-            unit_price: Number(item.price)
-        }));
+        const items = cartItems.map(item => {
+            let itemTitle = item.name;
+            const variations = [];
+            if (item.selectedFlavor) variations.push(`Sabor: ${item.selectedFlavor}`);
+            if (item.selectedSize) variations.push(`Tam: ${item.selectedSize}`);
+
+            if (variations.length > 0) {
+                itemTitle += ` (${variations.join(' | ')})`;
+            }
+
+            return {
+                id: item.id,
+                title: itemTitle,
+                picture_url: item.imageUrl || undefined,
+                quantity: item.quantity,
+                unit_price: Number(item.price)
+            };
+        });
 
         if (shippingInfo.fee > 0) {
             items.push({
                 id: 'shipping-fee',
                 title: 'Frete / Entrega',
+                picture_url: undefined,
                 quantity: 1,
                 unit_price: Number(shippingInfo.fee)
             });
