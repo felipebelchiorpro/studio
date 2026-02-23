@@ -62,21 +62,16 @@ export default function ProductFilters({ onFilterChange, initialFilters }: Produ
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
-  // Sync state with props (URL changes)
-  useEffect(() => {
-    if (initialFilters) {
-      if (initialFilters.categories) setSelectedCategories(initialFilters.categories);
-      if (initialFilters.brands) setSelectedBrands(initialFilters.brands);
-      if (initialFilters.priceRange) setPriceRange(initialFilters.priceRange);
-    }
-  }, [initialFilters]);
-
   useEffect(() => {
     const fetchCats = async () => {
       try {
         const { fetchCategoriesService } = await import('@/services/categoryService');
         const cats = await fetchCategoriesService();
-        setAvailableCategories(cats.map(c => c.name));
+        // Filter out categories that are parents of other categories
+        const parentIds = new Set(cats.map(c => c.parentId).filter(Boolean));
+        const childCategories = cats.filter(c => !parentIds.has(c.id));
+
+        setAvailableCategories(childCategories.map(c => c.name).sort((a, b) => a.localeCompare(b)));
       } catch (err) {
         console.error(err);
       }
