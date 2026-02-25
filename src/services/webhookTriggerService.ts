@@ -1,108 +1,40 @@
 
 import { pb } from '@/lib/pocketbase';
 import { Order } from '@/types';
+import { processChatwootNotification } from './chatwootService';
 
-async function generateWhatsAppMessage(order: Order, status: string, settings: any) {
-    // 1. Identify Category Types
-    // Fetch all categories to check types
-    let categories: any[] = [];
-    try {
-        categories = await pb.collection('categories').getFullList({ fields: 'id,type' });
-    } catch (e) { console.error('Error fetching categories for webhook:', e); }
+async function generateWhatsAppMessage(order: Order, status: string, trackingCode?: string) {
+    const customerName = order.userName || order.userEmail || 'Cliente';
+    const orderId = order.id.slice(0, 8);
 
-    const categoryMap = new Map(categories.map(c => [c.id, c.type]));
+    // Fallback variable until we have dynamic Pix codes
+    const paymentCode = "Acesse o painel do Mercado Pago recebido por e-mail";
 
-    let hasSupplement = false;
-    let hasClothing = false;
+    switch (status.toLowerCase()) {
+        case 'pending':
+            return `Olá ${customerName}! Recebemos seu pedido #${orderId}. Aqui está o seu código para pagamento: ${paymentCode}.`;
 
-    order.items.forEach((item: any) => {
-        // item might have categoryId if passed from Order object, or we need to look it up?
-        // In PB migration, I'm not storing categoryId in order item JSON explicitly unless I added it.
-        // Assuming item.categoryId exists or we infer.
-        // If items come from `orderService` rewrite, I might need to ensure categoryId is there.
-        // For now, let's assume item has it or we skip specific check.
-        const type = categoryMap.get(item.categoryId);
-        if (type === 'supplement') hasSupplement = true;
-        if (type === 'clothing') hasClothing = true;
-    });
+        case 'paid':
+            return `Ótima notícia, ${customerName}! Seu pagamento foi aprovado. Já estamos preparando seus itens com carinho!`;
 
-    let detalheConferencia = "seus produtos";
-    if (hasSupplement && hasClothing) {
-        detalheConferencia = "seus suplementos e o tamanho das suas roupas";
-    } else if (hasSupplement) {
-        detalheConferencia = "seus suplementos e a integridade dos lacres";
-    } else if (hasClothing) {
-        detalheConferencia = "as peças e os tamanhos das suas roupas";
-    } else {
-        detalheConferencia = "seus produtos com todo cuidado";
-    }
+        case 'sent':
+        case 'shipped':
+            return `Seu pedido #${orderId} já está a caminho! 🚚 Acompanhe pelo código: ${trackingCode || 'Não informado'}.`;
 
-    // 2. Templates
-    const customerName = order.userId === 'guest' ? (order as any).user_name || 'Cliente' : 'Cliente';
-    const isPickup = order.shippingAddress && (typeof order.shippingAddress === 'string' ? order.shippingAddress.includes('pickup') : (order.shippingAddress as any).type === 'pickup');
-
-    const itemsList = order.items.map((i: any) => `${i.quantity}x ${i.name} `).join(', ');
-    const total = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.totalAmount);
-    // Safe access for city
-    let city = "sua região";
-    if (order.shippingAddress) {
-        if (typeof order.shippingAddress === 'string') {
-            // Try parse? or just leave default
-            try {
-                const parsed = JSON.parse(order.shippingAddress);
-                if (parsed.city) city = parsed.city;
-            } catch { }
-        } else if ((order.shippingAddress as any).city) {
-            city = (order.shippingAddress as any).city;
-        }
-    }
-
-    let message = "";
-
-    switch (status) {
-        case 'Confirmed': // Pedido Confirmado
-        case 'pending': // Match PB status
-        case 'Pending':
-        case 'paid': // Added paid status
-            if (isPickup) {
-                message = `✅ Pedido Confirmado para Retirada!\n\nOlá ${customerName}, recebemos seu pedido!\n🛒 Itens: ${itemsList} \n💰 Total: ${total} \n\nAguarde: Enviaremos uma mensagem assim que tudo estiver separado para você vir buscar aqui na loja em Caconde.`;
-            } else {
-                message = `✅ Pedido Confirmado!\n\nOlá ${customerName}, seu kit de performance já está no nosso sistema!\n🛒 Itens: ${itemsList} \n🚚 Envio para: ${city} \n💰 Total: ${total} \n\nAvisaremos você assim que iniciarmos a embalagem.`;
-            }
-            break;
-
-        case 'Packing': // Embalagem
         case 'packing':
-            message = `📦 Seu pedido está sendo embalado!\n\nEstamos conferindo ${detalheConferencia} com todo cuidado.O seu pacote está sendo preparado para o envio ou retirada!`;
-            break;
+            // Added packing because it exists in the system enum, mapping it to a similar out of delivery or packing context
+            return `Seu pedido #${orderId} está sendo embalado com todo cuidado!`;
 
-        case 'Delivered': // Saiu para Entrega / Pronto
-        case 'sent': // Matches PB schema 'sent'
         case 'delivered':
-            // If status is 'sent', it usually means out for delivery. 'delivered' means done.
-            // Adapting message for 'sent' as 'Saiu para Entrega'.
-            if (isPickup) {
-                const loja = settings.store_address || "[Endereço da Loja]";
-                const horario = settings.store_hours || "[Horário]";
-                message = `🏪 Tudo pronto! Pode vir retirar.\n\nSeu pedido já está embalado e te esperando no balcão.\n📍 Loja: ${loja} \n⏰ Horário: ${horario} \n\nÉ só chegar e informar seu nome ou o número do pedido: #${order.id.slice(0, 8)}.`;
-            } else {
-                message = `🛵 Seu pedido saiu para entrega!\n\nO entregador já está a caminho de ${city}. Logo você terá seus produtos em mãos para o seu treino ou dia a dia! 💪`;
-            }
-            break;
+            return `Pedido #${orderId} entregue! Esperamos que goste. Se puder, nos conte o que achou aqui no WhatsApp!`;
+
+        case 'out_for_delivery':
+            // Although 'sent' usually is out for delivery, keeping the specific phrase the user asked for 
+            return `Prepare o coração! O entregador acabou de sair para entregar seu pedido #${orderId} no endereço cadastrado.`;
 
         default:
             return null;
     }
-
-    return message
-        .replace('{nome_cliente}', customerName)
-        .replace('{lista_resumida_produtos}', itemsList)
-        .replace('{cidade}', city)
-        .replace('{valor_total}', total)
-        .replace('{detalhe_conferencia}', detalheConferencia)
-        .replace('{endereco_loja}', settings.store_address || '')
-        .replace('{horario_funcionamento}', settings.store_hours || '')
-        .replace('{id_pedido}', order.id.slice(0, 8));
 }
 
 export const triggerOrderCreatedWebhook = async (order: Order) => {
@@ -210,6 +142,8 @@ export const triggerOrderStatusUpdateWebhook = async (orderId: string, newStatus
             totalAmount: orderRecord.total,
             status: orderRecord.status,
             shippingAddress: orderRecord.shipping_address,
+            userPhone: (orderRecord.items?.[0] as any)?.userPhone || (orderRecord as any).user_phone || '',
+            userName: (orderRecord.items?.[0] as any)?.userName || (orderRecord as any).user_name || '',
             items: (orderRecord.items || []).map((oi: any) => ({
                 ...oi,
                 name: oi.name, // assuming name in JSON
@@ -220,31 +154,48 @@ export const triggerOrderStatusUpdateWebhook = async (orderId: string, newStatus
 
         const settings = await pb.collection('integration_settings').getFirstListItem('');
 
-        const whatsappMessage = await generateWhatsAppMessage(mappedOrder, newStatus, settings);
+        // Generate the specific WhatsApp message mapped to the requested status
+        const whatsappMessage = await generateWhatsAppMessage(mappedOrder, newStatus, orderRecord.tracking_code);
 
-        const webhookUrl = settings.webhook_order_created; // Using same webhook or should be a different one? Original code used `webhook_order_created` for status updates too (logic line 232)
+        if (!whatsappMessage) return; // Status doesn't require a message
 
-        if (!webhookUrl) return;
-
-        const payload = {
-            event: 'order_status_updated',
-            status: newStatus,
-            order_id: orderRecord.id,
-            customer_id: orderRecord.user,
-            customer_phone: (orderRecord.items?.[0] as any)?.userPhone || (orderRecord as any).user_phone || '', // Extracting from items or record
-            whatsapp_message: whatsappMessage,
-            updated_at: new Date().toISOString()
+        // Extract Chatwoot configs
+        const chatwootConfig = {
+            url: settings.chatwoot_url,
+            accountId: settings.chatwoot_account_id,
+            token: settings.chatwoot_token,
+            inboxId: settings.chatwoot_inbox_id
         };
 
-        const headers: HeadersInit = { 'Content-Type': 'application/json' };
-        if (settings.auth_token) headers['Authorization'] = `Bearer ${settings.auth_token}`;
+        if (chatwootConfig.url && chatwootConfig.token) {
+            // Send directly to Chatwoot
+            const success = await processChatwootNotification(mappedOrder, whatsappMessage, chatwootConfig);
+            if (success) {
+                console.log(`Chatwoot message sent for status: ${newStatus}`);
+            }
+        }
 
-        await fetch(webhookUrl, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(payload)
-        });
-        console.log(`Status Webhook sent: ${newStatus}`);
+        // Also fire N8N trigger for legacy support/other automations if active for this status
+        const n8nUrl = settings.webhook_order_created;
+        if (n8nUrl && settings.status_order_created) {
+            const payload = {
+                event: 'order_status_updated',
+                status: newStatus,
+                order_id: orderRecord.id,
+                customer_phone: mappedOrder.userPhone,
+                whatsapp_message: whatsappMessage,
+                updated_at: new Date().toISOString()
+            };
+
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (settings.auth_token) headers['Authorization'] = `Bearer ${settings.auth_token}`;
+
+            await fetch(n8nUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+        }
 
     } catch (err) {
         console.error("Webhook trigger failed", err);

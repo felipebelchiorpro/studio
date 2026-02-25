@@ -102,3 +102,16 @@ export async function updateOrderStatusAction(orderId: string, newStatus: string
         return { success: false, message: error.message };
     }
 }
+
+export async function updateOrderTrackingCodeAction(orderId: string, trackingCode: string) {
+    try {
+        console.log(`Updating tracking code for Order ${orderId}`);
+        const pbAdmin = await getPocketBaseAdmin();
+        await pbAdmin.collection('orders').update(orderId, {
+            tracking_code: trackingCode
+        });
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, message: error.message };
+    }
+}

@@ -6,6 +6,10 @@ export interface IntegrationSettings {
     status_order_created: boolean;
     status_abandoned_cart: boolean;
     auth_token?: string;
+    chatwoot_url?: string;
+    chatwoot_account_id?: string;
+    chatwoot_token?: string;
+    chatwoot_inbox_id?: string;
     store_address?: string;
     store_hours?: string;
     created_at?: string;

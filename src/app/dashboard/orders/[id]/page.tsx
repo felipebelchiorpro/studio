@@ -7,11 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2, Save, MessageSquare, Calendar, User, Phone, MapPin, MessageCircle } from 'lucide-react';
 
 import { fetchOrderByIdService } from '@/services/orderService';
-import { updateOrderStatusAction } from '@/actions/order';
+import { updateOrderStatusAction, updateOrderTrackingCodeAction } from '@/actions/order';
 import { translateOrderStatus } from '@/lib/utils/orderStatus';
 import type { Order } from '@/types';
 import Link from 'next/link';
@@ -26,6 +27,7 @@ export default function OrderDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [status, setStatus] = useState<string>("");
+    const [trackingCode, setTrackingCode] = useState<string>("");
 
     useEffect(() => {
         loadOrder();
@@ -37,6 +39,7 @@ export default function OrderDetailsPage() {
         if (data) {
             setOrder(data);
             setStatus(data.status);
+            setTrackingCode(data.trackingCode || "");
         } else {
             toast({
                 title: "Erro",
@@ -52,16 +55,20 @@ export default function OrderDetailsPage() {
         if (!order) return;
         setUpdating(true);
 
+        // First, check if there's a need to update tracking code explicitly if it changed
+        if (trackingCode !== (order.trackingCode || '')) {
+            await updateOrderTrackingCodeAction(order.id, trackingCode);
+        }
+
         const result = await updateOrderStatusAction(order.id, status);
 
         if (result.success) {
             toast({
-                title: "Status Atualizado",
-                description: "Pedido atualizado com sucesso.",
+                title: "Sucesso",
+                description: "Pedido atualizado com sucesso e cliente notificado via WhatsApp.",
                 variant: 'default'
             });
-            // Update local state is manual since we didn't refetch
-            setOrder(prev => prev ? { ...prev, status: status as any } : null);
+            setOrder(prev => prev ? { ...prev, status: status as any, trackingCode } : null);
         } else {
             toast({
                 title: "Erro ao atualizar",
@@ -227,13 +234,26 @@ export default function OrderDetailsPage() {
                                         <SelectItem value="pending">Pendente</SelectItem>
                                         <SelectItem value="paid">Confirmado (Aprovado)</SelectItem>
                                         <SelectItem value="packing">Embalando (Separação)</SelectItem>
-                                        <SelectItem value="delivered">Entregue / Pronto (Saiu)</SelectItem>
+                                        <SelectItem value="sent">Enviado (Em trânsito)</SelectItem>
+                                        <SelectItem value="delivered">Entregue / Pronto</SelectItem>
                                         <SelectItem value="cancelled">Cancelado</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            <Button onClick={handleUpdateStatus} disabled={updating || status === order.status} className="w-full">
+                            {status === 'sent' && (
+                                <div className="space-y-2 pt-2">
+                                    <label className="text-sm font-medium">Código de Rastreio (Opcional)</label>
+                                    <Input
+                                        placeholder="Ex: BR123456789BR"
+                                        value={trackingCode}
+                                        onChange={(e) => setTrackingCode(e.target.value)}
+                                    />
+                                    <p className="text-xs text-muted-foreground">Insira o código antes de salvar para incluí-lo na mensagem do cliente.</p>
+                                </div>
+                            )}
+
+                            <Button onClick={handleUpdateStatus} disabled={updating || (status === order.status && trackingCode === (order.trackingCode || ''))} className="w-full">
                                 {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                                 Salvar & Notificar
                             </Button>
