@@ -12,10 +12,10 @@ async function generateWhatsAppMessage(order: Order, status: string, trackingCod
 
     switch (status.toLowerCase()) {
         case 'pending':
-            return `Olá ${customerName}! Recebemos seu pedido #${orderId}. Aqui está o seu código para pagamento: ${paymentCode}.`;
+            return `Recebemos seu pedido #${orderId}. Aqui está o seu código para pagamento: ${paymentCode}.`;
 
         case 'paid':
-            return `Ótima notícia, ${customerName}! Seu pagamento foi aprovado. Já estamos preparando seus itens com carinho!`;
+            return `Seu pagamento foi aprovado! Já estamos preparando seus itens com carinho.`;
 
         case 'sent':
         case 'shipped':

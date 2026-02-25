@@ -75,15 +75,14 @@ async function getOrCreateContact(phone: string, name: string, config: ChatwootC
     }
 }
 
-// 3. Create conversation and send message
-async function sendChatwootMessage(contactId: number, message: string, config: ChatwootConfig) {
+// 3. Create or Get Conversation
+async function getOrCreateConversation(contactId: number, config: ChatwootConfig) {
     const headers = {
         'api_access_token': config.token,
         'Content-Type': 'application/json'
     };
 
     try {
-        // Create conversation
         const convRes = await fetch(`${config.url}/api/v1/accounts/${config.accountId}/conversations`, {
             method: 'POST',
             headers,
@@ -95,18 +94,26 @@ async function sendChatwootMessage(contactId: number, message: string, config: C
         });
 
         if (!convRes.ok) {
-            const err = await convRes.text();
-            // It might fail if conversation already exists, we could try fetching existing active ones, 
-            // but Chatwoot usually returns the existing one or allows creating a new one.
-            // A more robust approach creates a new message directly if conversation creation fails due to 'already exists'
-            console.error("Chatwoot conversation creation failed:", err);
-            return false;
+            console.error("Chatwoot conversation creation failed:", await convRes.text());
+            return null;
         }
 
         const convData = await convRes.json();
-        const conversationId = convData.id;
+        return convData.id;
+    } catch (e) {
+        console.error("Chatwoot Conversation Error:", e);
+        return null;
+    }
+}
 
-        // Send message
+// 4. Send Message to Conversation
+async function sendMessageToConversation(conversationId: number, message: string, config: ChatwootConfig) {
+    const headers = {
+        'api_access_token': config.token,
+        'Content-Type': 'application/json'
+    };
+
+    try {
         const msgRes = await fetch(`${config.url}/api/v1/accounts/${config.accountId}/conversations/${conversationId}/messages`, {
             method: 'POST',
             headers,
@@ -117,18 +124,42 @@ async function sendChatwootMessage(contactId: number, message: string, config: C
         });
 
         if (msgRes.ok) {
-            console.log("Chatwoot message sent successfully!");
             return true;
         } else {
             console.error("Failed to send Chatwoot message:", await msgRes.text());
             return false;
         }
-
     } catch (e) {
         console.error("Chatwoot Send Message Error:", e);
         return false;
     }
 }
+
+// 5. Typing indicator (Optional)
+async function sendTypingIndicator(conversationId: number, config: ChatwootConfig) {
+    const headers = {
+        'api_access_token': config.token,
+        'Content-Type': 'application/json'
+    };
+
+    try {
+        // endpoint could be /api/v1/accounts/{account_id}/conversations/{conversation_id}/typing_status or /events
+        // Some Chatwoot versions support this hidden endpoint/event trigger
+        await fetch(`${config.url}/api/v1/accounts/${config.accountId}/conversations/${conversationId}/typing_status`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                typing_status: 'on'
+            })
+        });
+        // We don't check for failure because it is optional
+    } catch (e) {
+        // fail silently
+    }
+}
+
+// Helper: Delay
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 export async function processChatwootNotification(order: Order, message: string, config: ChatwootConfig) {
     if (!config.url || !config.token || !config.accountId || !config.inboxId) {
@@ -150,5 +181,56 @@ export async function processChatwootNotification(order: Order, message: string,
         return false;
     }
 
-    return await sendChatwootMessage(contactId, message, config);
+    const conversationId = await getOrCreateConversation(contactId, config);
+    if (!conversationId) {
+        console.error("Could not obtain Chatwoot conversationId. Flow aborted.");
+        return false;
+    }
+
+    // --- HUMANIZATION LOGIC ---
+
+    // 1. Random Greeting
+    const names = customerName.split(' ');
+    const firstName = names[0] !== 'Cliente' && names[0].length > 1 ? names[0] : '';
+
+    let greetings = [
+        "Oi!",
+        "Olá!",
+        "Tudo bem?",
+        "Opa!"
+    ];
+
+    if (firstName) {
+        greetings = [
+            `Oi ${firstName}!`,
+            `Olá, ${firstName}!`,
+            `Tudo bem, ${firstName}?`,
+            `Opa ${firstName}, tudo certo?`
+        ];
+    }
+
+    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+    // Send Greeting
+    const greetingSent = await sendMessageToConversation(conversationId, randomGreeting, config);
+    if (!greetingSent) return false;
+
+    // 2. Typing Indicator & Delay (7s to 12s)
+    const delayTime = Math.floor(Math.random() * (12000 - 7000 + 1)) + 7000;
+
+    // Fire typing indicator
+    await sendTypingIndicator(conversationId, config);
+
+    // Wait
+    await delay(delayTime);
+
+    // 3. Send Main Message
+    const mainMsgSent = await sendMessageToConversation(conversationId, message, config);
+
+    if (mainMsgSent) {
+        console.log(`[Chatwoot] Successfully sent humanized sequence for order ${order.id}`);
+        return true;
+    }
+
+    return false;
 }
