@@ -194,18 +194,16 @@ export async function processChatwootNotification(order: Order, message: string,
     const firstName = names[0] !== 'Cliente' && names[0].length > 1 ? names[0] : '';
 
     let greetings = [
-        "Oi!",
-        "Olá!",
-        "Tudo bem?",
-        "Opa!"
+        "Oi, tudo bem?",
+        "Olá, como vai?",
+        "Ei!"
     ];
 
     if (firstName) {
         greetings = [
-            `Oi ${firstName}!`,
-            `Olá, ${firstName}!`,
-            `Tudo bem, ${firstName}?`,
-            `Opa ${firstName}, tudo certo?`
+            `Oi ${firstName}, tudo bem?`,
+            `Olá ${firstName}, como vai?`,
+            `Ei ${firstName}!`
         ];
     }
 
@@ -215,8 +213,8 @@ export async function processChatwootNotification(order: Order, message: string,
     const greetingSent = await sendMessageToConversation(conversationId, randomGreeting, config);
     if (!greetingSent) return false;
 
-    // 2. Typing Indicator & Delay (7s to 12s)
-    const delayTime = Math.floor(Math.random() * (12000 - 7000 + 1)) + 7000;
+    // 2. Typing Indicator & Delay (8s to 15s)
+    const delayTime = Math.floor(Math.random() * (15000 - 8000 + 1)) + 8000;
 
     // Fire typing indicator
     await sendTypingIndicator(conversationId, config);

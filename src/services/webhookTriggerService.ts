@@ -6,31 +6,49 @@ import { processChatwootNotification } from './chatwootService';
 async function generateWhatsAppMessage(order: Order, status: string, trackingCode?: string) {
     const customerName = order.userName || order.userEmail || 'Cliente';
     const orderId = order.id.slice(0, 8);
+    const productName = order.items && order.items.length > 0 ? order.items[0].name : 'produto';
 
     // Fallback variable until we have dynamic Pix codes
     const paymentCode = "Acesse o painel do Mercado Pago recebido por e-mail";
 
+    const hour = new Date().getHours();
+    let timeContext = '';
+    if (hour >= 5 && hour < 12) {
+        timeContext = 'Bom dia! Já começamos o dia por aqui cuidando do seu pedido.';
+    } else if (hour >= 18 || hour < 5) {
+        timeContext = 'Boa noite! Recebemos seu pedido e amanhã cedo ele já entra na nossa fila de prioridade.';
+    } else {
+        timeContext = 'Boa tarde! Recebemos seu pedido e já estamos no processo por aqui.';
+    }
+
+    const farewells = [
+        'Qualquer coisa, estou aqui!',
+        'Abraços, equipe VENTURE',
+        'Tenha um excelente dia!'
+    ];
+    const randomFarewell = farewells[Math.floor(Math.random() * farewells.length)];
+
+    const cta = `Se tiver qualquer dúvida sobre o ${productName}, é só me chamar por aqui, tá?`;
+
     switch (status.toLowerCase()) {
         case 'pending':
-            return `Recebemos seu pedido #${orderId}. Aqui está o seu código para pagamento: ${paymentCode}.`;
+            return `${timeContext}\n\nAqui está o seu código Pix para finalizar a compra do pedido #${orderId}:\n\n${paymentCode}\n\nAssim que o pagamento cair, te aviso por aqui mesmo!\n\n${randomFarewell}`;
 
         case 'paid':
-            return `Seu pagamento foi aprovado! Já estamos preparando seus itens com carinho.`;
+            return `Conseguimos confirmar seu pagamento aqui! 🎉\n\nJá estamos preparando tudo com muito carinho para o envio.\n\n${cta}\n\n${randomFarewell}`;
 
         case 'sent':
         case 'shipped':
-            return `Seu pedido #${orderId} já está a caminho! 🚚 Acompanhe pelo código: ${trackingCode || 'Não informado'}.`;
+            return `Notícia boa! Seu pedido #${orderId} acabou de sair daqui.\n\nO coração chega a bater mais forte, né? 🚚\n\nSeu código de rastreio para acompanhar: ${trackingCode || 'Não informado'}.\n\n${randomFarewell}`;
 
         case 'packing':
-            // Added packing because it exists in the system enum, mapping it to a similar out of delivery or packing context
-            return `Seu pedido #${orderId} está sendo embalado com todo cuidado!`;
+            return `Passando para avisar que o seu pedido #${orderId} já está na nossa mesa de embalagem.\n\nEstamos cuidando de todos os detalhes para enviar rapidinho!\n\n${randomFarewell}`;
 
         case 'delivered':
-            return `Pedido #${orderId} entregue! Esperamos que goste. Se puder, nos conte o que achou aqui no WhatsApp!`;
+            return `O seu pedido #${orderId} acabou de ser entregue!\n\nEspero que você tenha uma ótima experiência. Depois conta pra gente o que achou!\n\n${randomFarewell}`;
 
         case 'out_for_delivery':
-            // Although 'sent' usually is out for delivery, keeping the specific phrase the user asked for 
-            return `Prepare o coração! O entregador acabou de sair para entregar seu pedido #${orderId} no endereço cadastrado.`;
+            return `Prepare o coração! O entregador acabou de sair para entregar seu pedido #${orderId} no endereço cadastrado.\n\n${randomFarewell}`;
 
         default:
             return null;
