@@ -115,3 +115,44 @@ export async function updateOrderTrackingCodeAction(orderId: string, trackingCod
         return { success: false, message: error.message };
     }
 }
+
+export async function updateCustomerDetailsAction(
+    orderId: string,
+    customerData: { userName?: string, userEmail?: string, userPhone?: string },
+    shippingAddress?: any
+) {
+    try {
+        console.log(`Updating customer details for Order ${orderId}`);
+        const pbAdmin = await getPocketBaseAdmin();
+
+        // 1. Fetch current order to update the nested structured correctly
+        const order = await pbAdmin.collection('orders').getOne(orderId);
+
+        // 2. We update the 'shipping_address' which contains the customer info since the 'user' field is just a reference
+        const currentShippingAddress = order.shipping_address || {};
+
+        const newShippingAddress = {
+            ...currentShippingAddress,
+            ...(shippingAddress || {}),
+        };
+
+        if (customerData.userName !== undefined) newShippingAddress.customerName = customerData.userName;
+        if (customerData.userEmail !== undefined) newShippingAddress.customerEmail = customerData.userEmail;
+        if (customerData.userPhone !== undefined) newShippingAddress.customerPhone = customerData.userPhone;
+
+        const payload: any = {
+            shipping_address: newShippingAddress
+        };
+
+        // Pocketbase has an explicit `user_phone` field too according to previous checks in `fetchOrders`, let's update it if present
+        if (customerData.userPhone !== undefined) {
+            payload.user_phone = customerData.userPhone;
+        }
+
+        await pbAdmin.collection('orders').update(orderId, payload);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error updating order details:", error);
+        return { success: false, message: error.message };
+    }
+}

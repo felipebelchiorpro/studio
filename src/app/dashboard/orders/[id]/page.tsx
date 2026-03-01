@@ -9,13 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2, Save, MessageSquare, Calendar, User, Phone, MapPin, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, MessageSquare, Calendar, User, Phone, MapPin, MessageCircle, RefreshCw, PenSquare, CreditCard } from 'lucide-react';
 
 import { fetchOrderByIdService } from '@/services/orderService';
-import { updateOrderStatusAction, updateOrderTrackingCodeAction } from '@/actions/order';
+import { updateOrderStatusAction, updateOrderTrackingCodeAction, updateCustomerDetailsAction } from '@/actions/order';
+import { checkPaymentStatusByOrderId } from '@/actions/mercadopago';
 import { translateOrderStatus } from '@/lib/utils/orderStatus';
 import type { Order } from '@/types';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 
 export default function OrderDetailsPage() {
     const params = useParams();
@@ -29,6 +31,15 @@ export default function OrderDetailsPage() {
     const [status, setStatus] = useState<string>("");
     const [trackingCode, setTrackingCode] = useState<string>("");
 
+    const [verifyingPayment, setVerifyingPayment] = useState(false);
+
+    // Edit Dialog States
+    const [editOpen, setEditOpen] = useState(false);
+    const [editSaving, setEditSaving] = useState(false);
+    const [editName, setEditName] = useState("");
+    const [editPhone, setEditPhone] = useState("");
+    const [editEmail, setEditEmail] = useState("");
+
     useEffect(() => {
         loadOrder();
     }, [id]);
@@ -40,6 +51,10 @@ export default function OrderDetailsPage() {
             setOrder(data);
             setStatus(data.status);
             setTrackingCode(data.trackingCode || "");
+
+            setEditName(data.userName || "");
+            setEditPhone(data.userPhone || "");
+            setEditEmail(data.userEmail || "");
         } else {
             toast({
                 title: "Erro",
@@ -77,6 +92,50 @@ export default function OrderDetailsPage() {
             });
         }
         setUpdating(false);
+    };
+
+    const handleVerifyPayment = async () => {
+        if (!order) return;
+        setVerifyingPayment(true);
+        const res = await checkPaymentStatusByOrderId(order.id);
+
+        if (res.success) {
+            toast({
+                title: res.updateTo === 'paid' ? "Pagamento Aprovado!" : "Verificação Concluída",
+                description: res.message,
+                variant: 'default'
+            });
+            if (res.updateTo) {
+                setOrder(prev => prev ? { ...prev, status: res.updateTo as any } : null);
+                setStatus(res.updateTo);
+            }
+        } else {
+            toast({
+                title: "Falha na Verificação",
+                description: res.message,
+                variant: 'destructive'
+            });
+        }
+        setVerifyingPayment(false);
+    };
+
+    const handleSaveCustomerDetails = async () => {
+        if (!order) return;
+        setEditSaving(true);
+        const res = await updateCustomerDetailsAction(order.id, {
+            userName: editName,
+            userEmail: editEmail,
+            userPhone: editPhone,
+        });
+
+        if (res.success) {
+            toast({ title: "Sucesso", description: "Dados atualizados." });
+            setOrder(prev => prev ? { ...prev, userName: editName, userEmail: editEmail, userPhone: editPhone } : null);
+            setEditOpen(false);
+        } else {
+            toast({ title: "Erro", description: res.message, variant: 'destructive' });
+        }
+        setEditSaving(false);
     };
 
     if (loading) {
@@ -163,10 +222,42 @@ export default function OrderDetailsPage() {
 
                     {/* Customer & Delivery Info */}
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle>Dados do Cliente e Entrega</CardTitle>
+                            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-neutral-800">
+                                        <PenSquare className="h-4 w-4 text-muted-foreground" />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-neutral-900 border-neutral-800 text-white">
+                                    <DialogHeader>
+                                        <DialogTitle>Editar Dados do Cliente</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm">Nome do Cliente</label>
+                                            <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm">Email</label>
+                                            <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm">Telefone / WhatsApp</label>
+                                            <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setEditOpen(false)} disabled={editSaving}>Cancelar</Button>
+                                        <Button onClick={handleSaveCustomerDetails} disabled={editSaving}>
+                                            {editSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Salvar
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 pt-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 
                                 <div className="space-y-1">
@@ -257,6 +348,32 @@ export default function OrderDetailsPage() {
                                 {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                                 Salvar & Notificar
                             </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-green-500/20 shadow-lg">
+                        <CardHeader className="bg-green-50/10 pb-4">
+                            <CardTitle className="text-lg flex items-center gap-2 text-green-500">
+                                <CreditCard className="h-5 w-5" />
+                                Mercado Pago
+                            </CardTitle>
+                            <CardDescription>
+                                Verifique se o cliente concluiu o pagamento do pedido via Mercado Pago.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                            <Button
+                                onClick={handleVerifyPayment}
+                                disabled={verifyingPayment || order.status === 'paid' || order.status === 'cancelled'}
+                                variant="outline"
+                                className="w-full border-green-500 text-green-500 hover:bg-green-500/10 hover:text-green-400"
+                            >
+                                {verifyingPayment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                                Verificar Pagamento
+                            </Button>
+                            {order.status === 'paid' && (
+                                <p className="text-sm text-center text-muted-foreground mt-3">✅ Pedido já está pago.</p>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

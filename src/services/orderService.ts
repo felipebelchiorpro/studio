@@ -43,7 +43,8 @@ export const fetchOrdersService = async (): Promise<Order[]> => {
                 status: record.status as Order['status'],
                 shippingAddress: parsedShipping,
                 channel: record.channel || 'ecommerce',
-                userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone || ''
+                userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone || '',
+                trackingCode: record.tracking_code || ''
             };
         });
     } catch (err) {
@@ -92,7 +93,8 @@ export const fetchMyOrdersService = async (userId: string): Promise<Order[]> => 
                 status: record.status as Order['status'],
                 shippingAddress: parsedShipping,
                 channel: record.channel || 'ecommerce',
-                userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone || ''
+                userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone || '',
+                trackingCode: record.tracking_code || ''
             };
         });
     } catch (err) {
@@ -139,7 +141,8 @@ export const fetchOrderByIdService = async (id: string): Promise<Order | null> =
             status: record.status as Order['status'],
             shippingAddress: parsedShipping,
             channel: record.channel,
-            userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone || ''
+            userPhone: record.user_phone || record.expand?.user?.phone || parsedShipping?.customerPhone || '',
+            trackingCode: record.tracking_code || ''
         };
     } catch (err) {
         console.error('Service error fetching order by ID:', err);

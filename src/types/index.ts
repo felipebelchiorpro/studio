@@ -120,6 +120,7 @@ export interface Order {
   shippingAddress?: any; // Usually a JSON object with street, city, etc.
   channel?: string; // Added for BI Dashboard
   userPhone?: string; // Added for WhatsApp Integration
+  trackingCode?: string; // Added for Order Management
 }
 
 export interface Promotion {
