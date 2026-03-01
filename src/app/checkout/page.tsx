@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
 
 export default function CheckoutPage() {
     const { cartItems, getCartTotal, updateContactInfo, shippingInfo } = useCart();
@@ -22,6 +23,8 @@ export default function CheckoutPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+
+    const { storeSettings, storeStatus } = useStoreStatus();
 
     // Redirect if no shipping info (basic check)
     useEffect(() => {
@@ -119,15 +122,27 @@ export default function CheckoutPage() {
                                     <div className="flex items-start gap-3">
                                         <Store className="h-5 w-5 text-red-500 mt-1 shrink-0" />
                                         <div>
-                                            <p className="font-semibold text-white text-lg">Retirada na Loja DarkStore</p>
-                                            <p className="text-gray-400">Rua Principal, 123 - Centro</p>
-                                            <p className="text-gray-400">São Paulo - SP</p>
+                                            <p className="font-semibold text-white text-lg">Retirada na Loja</p>
+                                            <p className="text-gray-400 max-w-[280px] sm:max-w-none">
+                                                {storeSettings?.store_address || 'Endereço da loja não configurado no painel'}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div className="bg-neutral-950/50 p-3 rounded-lg border border-neutral-800 text-sm text-gray-400 flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                        Horário de Retirada: 09:00 - 18:00
-                                    </div>
+                                    {storeSettings?.store_hours && (
+                                        <div className="bg-neutral-950/50 p-3 rounded-lg border border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-2.5 h-2.5 rounded-full ${storeStatus.isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                                                <span className={`font-semibold ${storeStatus.isOpen ? 'text-green-500' : 'text-red-500'}`}>
+                                                    {storeStatus.text}
+                                                </span>
+                                            </div>
+                                            {storeStatus.rawText && (
+                                                <span className="text-sm text-gray-400">
+                                                    Horário hoje: {storeStatus.rawText}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </CardContent>

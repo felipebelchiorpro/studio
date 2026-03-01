@@ -14,12 +14,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, Store, MapPin, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
 
 export default function DeliverySelectionClient() {
     const router = useRouter();
     const { updateShippingInfo, shippingInfo } = useCart();
     const { user, isAuthenticated } = useAuth();
     const { toast } = useToast();
+    const { storeSettings, storeStatus } = useStoreStatus();
 
     const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
     const [method, setMethod] = useState<'shipping' | 'pickup'>(shippingInfo.method || 'shipping');
@@ -262,14 +264,26 @@ export default function DeliverySelectionClient() {
                                         <div className="flex items-start gap-4 relative z-10">
                                             <MapPin className="h-6 w-6 text-red-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-white font-bold text-lg">DarkStore Nutrition</p>
-                                                <p className="text-gray-400 mt-1">Rua Principal, 123 - Centro</p>
-                                                <p className="text-gray-400">São Paulo - SP</p>
+                                                <p className="text-white font-bold text-lg">Retirada na Loja</p>
+                                                <p className="text-gray-400 mt-1">
+                                                    {storeSettings?.store_address || 'Endereço da loja não configurado no painel'}
+                                                </p>
 
-                                                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 bg-neutral-900 w-fit px-3 py-1.5 rounded-full">
-                                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                                    Aberto agora • Fecha às 18:00
-                                                </div>
+                                                {storeSettings?.store_hours && (
+                                                    <div className="mt-4 flex flex-col gap-1 text-sm text-gray-400 bg-neutral-900 w-fit px-4 py-2 rounded-xl border border-neutral-800">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`w-2.5 h-2.5 rounded-full ${storeStatus.isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                                                            <span className={`font-semibold ${storeStatus.isOpen ? 'text-green-500' : 'text-red-500'}`}>
+                                                                {storeStatus.text}
+                                                            </span>
+                                                        </div>
+                                                        {storeStatus.rawText && (
+                                                            <span className="text-xs">
+                                                                Hoje: {storeStatus.rawText}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
