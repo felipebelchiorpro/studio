@@ -65,8 +65,8 @@ export async function getCoupons() {
             expiration_date: c.expiration_date,
             usage_limit: c.usage_limit,
             active: c.active,
-            created_at: c.created,
-            used_count: c.used_count,
+            created_at: c.created || c.updated || new Date().toISOString(),
+            used_count: c.usage_count || 0,
             partner_name: c.partner_name,
         })) as Coupon[];
     } catch (error) {
@@ -112,7 +112,7 @@ export async function validateCoupon(code: string) {
             if (coupon.expiration_date && new Date(coupon.expiration_date) < new Date()) {
                 return { valid: false, message: "Cupom expirado." };
             }
-            if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
+            if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
                 return { valid: false, message: "Cupom esgotado." };
             }
 
@@ -154,7 +154,7 @@ export async function incrementCouponUsage(code: string) {
     try {
         const coupon = await pb.collection('coupons').getFirstListItem(`code="${code}"`);
         await pb.collection('coupons').update(coupon.id, {
-            used_count: (coupon.used_count || 0) + 1
+            usage_count: (coupon.usage_count || 0) + 1
         });
         revalidatePath('/dashboard/coupons');
     } catch (error) {
