@@ -59,6 +59,23 @@ export const triggerOrderCreatedWebhook = async (order: Order) => {
     try {
         const settings = await pb.collection('integration_settings').getFirstListItem('');
 
+        // --- CHATWOOT INTEGRATION FOR ORDER CREATED ---
+        const whatsappMessage = await generateWhatsAppMessage(order, 'pending');
+        if (whatsappMessage) {
+            const chatwootConfig = {
+                url: settings.chatwoot_url,
+                accountId: settings.chatwoot_account_id,
+                token: settings.chatwoot_token,
+                inboxId: settings.chatwoot_inbox_id
+            };
+
+            if (chatwootConfig.url && chatwootConfig.token) {
+                await processChatwootNotification(order, whatsappMessage, chatwootConfig);
+                console.log(`Chatwoot message sent for new order: ${order.id}`);
+            }
+        }
+        // ----------------------------------------------
+
         if (!settings.status_order_created || !settings.webhook_order_created) {
             return;
         }
@@ -99,21 +116,7 @@ export const triggerOrderCreatedWebhook = async (order: Order) => {
             console.log(`Webhook Trigger: Successfully sent event to ${settings.webhook_order_created} `);
         }
 
-        // --- NEW: CHATWOOT INTEGRATION FOR ORDER CREATED ---
-        const whatsappMessage = await generateWhatsAppMessage(order, 'pending');
-        if (whatsappMessage) {
-            const chatwootConfig = {
-                url: settings.chatwoot_url,
-                accountId: settings.chatwoot_account_id,
-                token: settings.chatwoot_token,
-                inboxId: settings.chatwoot_inbox_id
-            };
-
-            if (chatwootConfig.url && chatwootConfig.token) {
-                await processChatwootNotification(order, whatsappMessage, chatwootConfig);
-                console.log(`Chatwoot message sent for new order: ${order.id}`);
-            }
-        }
+        // Chatwoot logic moved to the beginning of the function
         // ---------------------------------------------------
 
     } catch (err: any) {
@@ -170,15 +173,20 @@ export const triggerOrderStatusUpdateWebhook = async (orderId: string, newStatus
     try {
         const orderRecord = await pb.collection('orders').getOne(orderId);
 
+        // Parse shipping_address if it's a string
+        const address = typeof orderRecord.shipping_address === 'string'
+            ? JSON.parse(orderRecord.shipping_address)
+            : (orderRecord.shipping_address || {});
+
         // Map items
         const mappedOrder = {
             id: orderRecord.id,
             userId: orderRecord.user,
             totalAmount: orderRecord.total,
             status: orderRecord.status,
-            shippingAddress: orderRecord.shipping_address,
-            userPhone: (orderRecord.items?.[0] as any)?.userPhone || (orderRecord as any).user_phone || '',
-            userName: (orderRecord.items?.[0] as any)?.userName || (orderRecord as any).user_name || '',
+            shippingAddress: address,
+            userPhone: (orderRecord.items?.[0] as any)?.userPhone || address.customerPhone || orderRecord.user_phone || '',
+            userName: (orderRecord.items?.[0] as any)?.userName || address.customerName || orderRecord.user_name || '',
             items: (orderRecord.items || []).map((oi: any) => ({
                 ...oi,
                 name: oi.name, // assuming name in JSON
