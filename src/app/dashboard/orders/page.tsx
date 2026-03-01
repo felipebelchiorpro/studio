@@ -163,6 +163,7 @@ export default function OrdersPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead className="px-2 py-3 sm:px-4">ID</TableHead>
+                            <TableHead className="px-2 py-3 sm:px-4">Cliente</TableHead>
                             <TableHead className="px-2 py-3 sm:px-4">Data</TableHead>
                             <TableHead className="text-right px-2 py-3 sm:px-4">Total</TableHead>
                             <TableHead className="text-center px-2 py-3 sm:px-4">Status</TableHead>
@@ -179,8 +180,20 @@ export default function OrdersPage() {
                         ) : paginatedOrders.length > 0 ? paginatedOrders.map((order) => (
                             <TableRow key={order.id}>
                                 <TableCell className="font-medium px-2 py-3 sm:px-4 text-xs sm:text-sm">#{order.id.substring(0, 8)}</TableCell>
-                                <TableCell className="px-2 py-3 sm:px-4 text-xs sm:text-sm">{new Date(order.orderDate).toLocaleDateString('pt-BR')}</TableCell>
-                                <TableCell className="text-right px-2 py-3 sm:px-4 text-xs sm:text-sm">R$ {order.totalAmount.toFixed(2).replace('.', ',')}</TableCell>
+                                <TableCell className="px-2 py-3 sm:px-4 text-xs sm:text-sm max-w-[120px] sm:max-w-none truncate" title={order.userName}>
+                                    {order.userName || 'Local/Convidado'}
+                                </TableCell>
+                                <TableCell className="px-2 py-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">
+                                    {(() => {
+                                        try {
+                                            const d = new Date(order.orderDate);
+                                            return isNaN(d.getTime()) ? 'Indisponível' : d.toLocaleDateString('pt-BR');
+                                        } catch {
+                                            return 'Indisponível';
+                                        }
+                                    })()}
+                                </TableCell>
+                                <TableCell className="text-right px-2 py-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">R$ {order.totalAmount.toFixed(2).replace('.', ',')}</TableCell>
                                 <TableCell className="text-center px-2 py-3 sm:px-4">
                                     <Badge variant="outline" className={`text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 ${getStatusColorClass(order.status)} whitespace-nowrap`}>
                                         {translateOrderStatus(order.status)}
