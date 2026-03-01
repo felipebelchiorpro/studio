@@ -14,6 +14,10 @@ export interface IntegrationSettings {
     mp_public_key?: string;
     store_address?: string;
     store_hours?: string;
+    chatwoot_url?: string;
+    chatwoot_account_id?: string;
+    chatwoot_token?: string;
+    chatwoot_inbox_id?: string;
     created_at?: string;
     updated_at?: string;
 }
@@ -36,6 +40,10 @@ export async function getIntegrationSettings() {
                 mp_public_key: settings.mp_public_key,
                 store_address: settings.store_address,
                 store_hours: settings.store_hours,
+                chatwoot_url: settings.chatwoot_url,
+                chatwoot_account_id: settings.chatwoot_account_id,
+                chatwoot_token: settings.chatwoot_token,
+                chatwoot_inbox_id: settings.chatwoot_inbox_id,
                 created_at: settings.created,
                 updated_at: settings.updated
             } as IntegrationSettings

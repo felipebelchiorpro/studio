@@ -30,7 +30,11 @@ export default function SettingsPage() {
         status_abandoned_cart: false,
         auth_token: '',
         store_address: '',
-        store_hours: ''
+        store_hours: '',
+        chatwoot_url: '',
+        chatwoot_account_id: '',
+        chatwoot_token: '',
+        chatwoot_inbox_id: ''
     });
 
     // Profile State
@@ -61,7 +65,11 @@ export default function SettingsPage() {
                 status_abandoned_cart: result.data.status_abandoned_cart || false,
                 auth_token: result.data.auth_token || '',
                 store_address: result.data.store_address || '',
-                store_hours: result.data.store_hours || ''
+                store_hours: result.data.store_hours || '',
+                chatwoot_url: result.data.chatwoot_url || '',
+                chatwoot_account_id: result.data.chatwoot_account_id || '',
+                chatwoot_token: result.data.chatwoot_token || '',
+                chatwoot_inbox_id: result.data.chatwoot_inbox_id || ''
             });
         }
         setLoading(false);
@@ -198,6 +206,61 @@ export default function SettingsPage() {
                                     value={integrationData.auth_token}
                                     onChange={handleIntegrationChange}
                                     placeholder="Bearer ..."
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Chatwoot Integration Settings */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Webhook className="h-5 w-5 text-pink-500" /> Integração Chatwoot (WhatsApp)
+                            </CardTitle>
+                            <CardDescription>Configure sua conta do Chatwoot para envio de mensagens automáticas.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="chatwoot_url">URL da Instalação Chatwoot</Label>
+                                <Input
+                                    id="chatwoot_url"
+                                    name="chatwoot_url"
+                                    value={integrationData.chatwoot_url}
+                                    onChange={handleIntegrationChange}
+                                    placeholder="https://chatwoot.seu-dominio.com"
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="chatwoot_account_id">ID da Conta</Label>
+                                    <Input
+                                        id="chatwoot_account_id"
+                                        name="chatwoot_account_id"
+                                        value={integrationData.chatwoot_account_id}
+                                        onChange={handleIntegrationChange}
+                                        placeholder="Ex: 1"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="chatwoot_inbox_id">ID da Inbox (WhatsApp)</Label>
+                                    <Input
+                                        id="chatwoot_inbox_id"
+                                        name="chatwoot_inbox_id"
+                                        value={integrationData.chatwoot_inbox_id}
+                                        onChange={handleIntegrationChange}
+                                        placeholder="Ex: 5"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="chatwoot_token">Token de Acesso (API Key)</Label>
+                                <Input
+                                    id="chatwoot_token"
+                                    name="chatwoot_token"
+                                    value={integrationData.chatwoot_token}
+                                    onChange={handleIntegrationChange}
+                                    placeholder="O token que fica nas configurações do seu perfil"
+                                    type="password"
                                 />
                             </div>
                         </CardContent>

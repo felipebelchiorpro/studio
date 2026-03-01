@@ -99,6 +99,23 @@ export const triggerOrderCreatedWebhook = async (order: Order) => {
             console.log(`Webhook Trigger: Successfully sent event to ${settings.webhook_order_created} `);
         }
 
+        // --- NEW: CHATWOOT INTEGRATION FOR ORDER CREATED ---
+        const whatsappMessage = await generateWhatsAppMessage(order, 'pending');
+        if (whatsappMessage) {
+            const chatwootConfig = {
+                url: settings.chatwoot_url,
+                accountId: settings.chatwoot_account_id,
+                token: settings.chatwoot_token,
+                inboxId: settings.chatwoot_inbox_id
+            };
+
+            if (chatwootConfig.url && chatwootConfig.token) {
+                await processChatwootNotification(order, whatsappMessage, chatwootConfig);
+                console.log(`Chatwoot message sent for new order: ${order.id}`);
+            }
+        }
+        // ---------------------------------------------------
+
     } catch (err: any) {
         if (err.status !== 404) {
             console.error('Webhook Trigger: Error or Settings not found', err);
