@@ -1,17 +1,15 @@
 'use server';
 
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { pb } from "@/lib/pocketbase";
 
 export async function updateUserAddressAction(userId: string, address: any) {
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(
-        userId,
-        { user_metadata: { address: address } }
-    );
-
-    if (error) {
+    try {
+        await pb.collection('users').update(userId, {
+            address: address
+        });
+        return { success: true };
+    } catch (error: any) {
         console.error("Error updating user address:", error);
         return { success: false, message: error.message };
     }
-
-    return { success: true };
 }

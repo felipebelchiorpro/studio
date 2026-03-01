@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: model.email,
             name: (model as any).name || model.email || 'Admin', // Admins might not have name
             phone: (model as any).phone || '',
+            user_metadata: { address: (model as any).address }
           });
           setIsAuthenticated(true);
         }
@@ -58,6 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: model.email,
           name: (model as any).name || model.email || 'Admin',
           phone: (model as any).phone || '',
+          user_metadata: { address: (model as any).address }
         });
         setIsAuthenticated(true);
       } else {

@@ -14,16 +14,16 @@ export type ShippingRate = {
 export async function getShippingRates() {
     try {
         const records = await pb.collection('shipping_rates').getFullList({
-            sort: 'base_fee',
-            filter: 'is_active=true'
+            sort: 'price',
+            filter: 'active=true'
         });
 
         return records.map((r: any) => ({
             id: r.id,
-            city_name: r.city_name,
-            base_fee: r.base_fee,
-            estimated_delivery_time: r.estimated_delivery_time,
-            is_active: r.is_active,
+            city_name: r.city,
+            base_fee: r.price,
+            estimated_delivery_time: `${r.delivery_days} dias úteis`,
+            is_active: r.active,
             created_at: r.created
         })) as ShippingRate[];
     } catch (err) {
@@ -35,10 +35,10 @@ export async function getShippingRates() {
 export async function createShippingRate(data: Omit<ShippingRate, 'id' | 'is_active' | 'created_at'>) {
     try {
         await pb.collection('shipping_rates').create({
-            city_name: data.city_name,
-            base_fee: data.base_fee,
-            estimated_delivery_time: data.estimated_delivery_time,
-            is_active: true
+            city: data.city_name,
+            price: data.base_fee,
+            delivery_days: parseInt(data.estimated_delivery_time) || 1,
+            active: true
         });
         return { success: true };
     } catch (error: any) {
@@ -49,7 +49,13 @@ export async function createShippingRate(data: Omit<ShippingRate, 'id' | 'is_act
 
 export async function updateShippingRate(id: string, data: Partial<ShippingRate>) {
     try {
-        await pb.collection('shipping_rates').update(id, data);
+        const mappedData: any = {};
+        if (data.city_name !== undefined) mappedData.city = data.city_name;
+        if (data.base_fee !== undefined) mappedData.price = data.base_fee;
+        if (data.estimated_delivery_time !== undefined) mappedData.delivery_days = parseInt(data.estimated_delivery_time) || 1;
+        if (data.is_active !== undefined) mappedData.active = data.is_active;
+
+        await pb.collection('shipping_rates').update(id, mappedData);
         return { success: true };
     } catch (error: any) {
         console.error("Error updating shipping rate:", error);
