@@ -57,9 +57,11 @@ export function OrderList({ orders, loading }: OrderListProps) {
                     <Card key={order.id} className="overflow-hidden border-neutral-800 bg-neutral-900/30">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-neutral-900/50">
                             <div className="space-y-1">
-                                <CardTitle className="text-base font-medium">Pedido #{order.id.slice(0, 8)}</CardTitle>
+                                <CardTitle className="text-base font-medium">Pedido #{String(order.id).slice(0, 8)}</CardTitle>
                                 <CardDescription>
-                                    {format(new Date(order.orderDate), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                                    {order.orderDate && !isNaN(new Date(order.orderDate).getTime())
+                                        ? format(new Date(order.orderDate), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+                                        : 'Data não disponível'}
                                 </CardDescription>
                             </div>
                             <Badge className={`${statusColor} border-0`}>{translatedStatus}</Badge>
@@ -78,7 +80,7 @@ export function OrderList({ orders, loading }: OrderListProps) {
 
                                 <div className="border-t border-neutral-800 mt-4 pt-4 flex justify-between items-center">
                                     <span className="font-semibold text-gray-300">Total</span>
-                                    <span className="font-bold text-lg text-white">R$ {order.totalAmount.toFixed(2)}</span>
+                                    <span className="font-bold text-lg text-white">R$ {Number(order.totalAmount || 0).toFixed(2)}</span>
                                 </div>
                             </div>
                         </CardContent>
