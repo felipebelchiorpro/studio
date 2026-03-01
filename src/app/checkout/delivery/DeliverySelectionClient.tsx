@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Truck, Store, MapPin, ArrowRight } from 'lucide-react';
+import { Truck, Store, MapPin, ArrowRight, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useStoreStatus } from '@/hooks/useStoreStatus';
 
@@ -34,6 +34,8 @@ export default function DeliverySelectionClient() {
         cep: shippingInfo.address?.cep || ''
     });
     const [loading, setLoading] = useState(false);
+    const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
 
     // Fetch Rates
     useEffect(() => {
@@ -42,14 +44,41 @@ export default function DeliverySelectionClient() {
 
     // Load User Address if available and not already set
     useEffect(() => {
-        if (isAuthenticated && user && user.user_metadata?.address && !shippingInfo.address?.street) {
-            const savedAddress = user.user_metadata.address;
-            setAddress(savedAddress);
-            if (savedAddress.cityId) {
-                setSelectedCityId(savedAddress.cityId);
+        if (isAuthenticated && user && user.user_metadata?.address) {
+            // We use an array to support multiple addresses later if needed, but for now wrap the single profile address
+            const profileAddress = user.user_metadata.address;
+            const singleAddressList = [{ id: 'profile', ...profileAddress }];
+            setSavedAddresses(singleAddressList);
+
+            if (!shippingInfo.address?.street) {
+                setAddress(profileAddress);
+                if (profileAddress.cityId) {
+                    setSelectedCityId(profileAddress.cityId);
+                }
+                setSelectedAddressId('profile');
             }
         }
     }, [isAuthenticated, user, shippingInfo.address?.street]);
+
+    const handleSavedAddressChange = (addressId: string) => {
+        setSelectedAddressId(addressId);
+        if (addressId === 'new') {
+            setAddress({ street: '', number: '', neighborhood: '', reference: '', cep: '' });
+            setSelectedCityId('');
+        } else {
+            const selected = savedAddresses.find(a => a.id === addressId);
+            if (selected) {
+                setAddress({
+                    street: selected.street || '',
+                    number: selected.number || '',
+                    neighborhood: selected.neighborhood || '',
+                    reference: selected.reference || '',
+                    cep: selected.cep || ''
+                });
+                setSelectedCityId(selected.cityId || '');
+            }
+        }
+    };
 
     const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -171,6 +200,33 @@ export default function DeliverySelectionClient() {
                                     </div>
 
                                     <div className="space-y-5">
+                                        {savedAddresses.length > 0 && (
+                                            <div className="space-y-2 mb-6">
+                                                <Label htmlFor="saved-address" className="text-gray-400 text-xs uppercase tracking-wider font-semibold ml-1">Usar Endereço Salvo</Label>
+                                                <Select onValueChange={handleSavedAddressChange} value={selectedAddressId}>
+                                                    <SelectTrigger id="saved-address" className="bg-neutral-900 border-neutral-700 text-white h-12 focus:ring-1 focus:ring-red-500/50 rounded-lg">
+                                                        <div className="flex items-center gap-2">
+                                                            <Home className="h-4 w-4 text-red-500" />
+                                                            <SelectValue placeholder="Selecione um endereço salvo" />
+                                                        </div>
+                                                    </SelectTrigger>
+                                                    <SelectContent className="bg-neutral-900 border-neutral-800 text-white">
+                                                        <SelectItem value="new" className="focus:bg-red-600 focus:text-white cursor-pointer py-3">
+                                                            + Inserir novo endereço
+                                                        </SelectItem>
+                                                        {savedAddresses.map(addr => (
+                                                            <SelectItem key={addr.id} value={addr.id} className="focus:bg-red-600 focus:text-white cursor-pointer py-3">
+                                                                <div className="flex flex-col text-left">
+                                                                    <span>{addr.street}, {addr.number}</span>
+                                                                    <span className="text-xs opacity-70">{addr.neighborhood}</span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        )}
+
                                         <div className="space-y-2">
                                             <Label htmlFor="city" className="text-gray-400 text-xs uppercase tracking-wider font-semibold ml-1">Cidade Explorer</Label>
                                             <Select onValueChange={setSelectedCityId} value={selectedCityId}>
