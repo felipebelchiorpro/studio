@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs
 import { useToast } from '@/hooks/use-toast';
-import { getIntegrationSettings, updateIntegrationSettings, testWebhook } from '@/actions/settings';
+import { getIntegrationSettings, updateIntegrationSettings, testWebhook, testChatwootConnection } from '@/actions/settings';
 import { Loader2, Save, CreditCard, Webhook, Store, User } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
@@ -20,6 +20,8 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [testing, setTesting] = useState(false);
+    const [testingChatwoot, setTestingChatwoot] = useState(false);
+    const [testPhone, setTestPhone] = useState('');
 
     // Integration State
     const [integrationData, setIntegrationData] = useState({
@@ -113,7 +115,6 @@ export default function SettingsPage() {
             setSaving(false);
         }
     };
-
     const handleTestWebhook = async () => {
         setTesting(true);
         await updateIntegrationSettings(integrationData);
@@ -124,6 +125,21 @@ export default function SettingsPage() {
             toast({ title: "Falha no Teste", description: result.message, variant: 'destructive' });
         }
         setTesting(false);
+    };
+
+    const handleTestChatwoot = async () => {
+        if (!testPhone) {
+            toast({ title: "Atenção", description: "Digite um número de telefone para testar (ex: 5511999999999).", variant: 'destructive' });
+            return;
+        }
+        setTestingChatwoot(true);
+        const result = await testChatwootConnection(testPhone);
+        if (result.success) {
+            toast({ title: "Sucesso!", description: result.message, variant: 'default' });
+        } else {
+            toast({ title: "Falha no Teste", description: result.message, variant: 'destructive' });
+        }
+        setTestingChatwoot(false);
     };
 
     if (loading) {
@@ -264,6 +280,26 @@ export default function SettingsPage() {
                                 />
                             </div>
                         </CardContent>
+                        <CardFooter className="flex flex-col items-start gap-4 border-t px-6 py-4">
+                            <div className="flex w-full items-center gap-2">
+                                <Input
+                                    placeholder="Seu número (ex: 5511999999999)"
+                                    value={testPhone}
+                                    onChange={(e) => setTestPhone(e.target.value)}
+                                    className="max-w-[250px]"
+                                />
+                                <Button
+                                    variant="outline"
+                                    onClick={handleTestChatwoot}
+                                    disabled={testingChatwoot}
+                                    type="button"
+                                >
+                                    {testingChatwoot ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Webhook className="mr-2 h-4 w-4" />}
+                                    Testar Envio Chatwoot
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Salve as configurações antes de testar.</p>
+                        </CardFooter>
                     </Card>
 
                     {/* Store Settings */}

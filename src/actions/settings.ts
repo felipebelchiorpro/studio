@@ -141,3 +141,42 @@ export async function testWebhook() {
         return { success: false, message: `Erro ao testar webhook: ${error.message}` };
     }
 }
+
+export async function testChatwootConnection(phone: string) {
+    try {
+        const settingsRes = await getIntegrationSettings();
+        if (!settingsRes.success || !settingsRes.data) {
+            return { success: false, message: "Não foi possível carregar as configurações." };
+        }
+
+        const settings = settingsRes.data;
+        if (!settings.chatwoot_url || !settings.chatwoot_token) {
+            return { success: false, message: "URL ou Token do Chatwoot não configurados." };
+        }
+
+        const { processChatwootNotification } = await import('@/services/chatwootService');
+
+        // Mock order for testing
+        const mockOrder: any = {
+            id: 'TEST-123',
+            userName: 'Teste de Integração',
+            userPhone: phone
+        };
+
+        const result = await processChatwootNotification(mockOrder, "Esta é uma mensagem de teste da sua loja VENTURE! Se você recebeu isso, a integração está funcionando. 🎉", {
+            url: settings.chatwoot_url,
+            accountId: settings.chatwoot_account_id || '',
+            token: settings.chatwoot_token,
+            inboxId: settings.chatwoot_inbox_id || ''
+        });
+
+        if (result) {
+            return { success: true, message: "Mensagem de teste enviada com sucesso! Verifique seu Chatwoot." };
+        } else {
+            return { success: false, message: "Falha ao enviar mensagem. Verifique os logs do servidor ou as configurações (ID da Conta/Inbox)." };
+        }
+    } catch (error: any) {
+        console.error("Chatwoot Test Exception:", error);
+        return { success: false, message: `Erro no teste: ${error.message}` };
+    }
+}

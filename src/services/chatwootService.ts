@@ -12,18 +12,19 @@ function formatPhoneForChatwoot(phone?: string): string {
     if (!phone) return '';
     let cleaned = phone.replace(/\D/g, '');
 
-    // If it already has 55 and length is valid
-    if (cleaned.startsWith('55') && cleaned.length >= 12) {
-        return `+${cleaned}`;
+    // Bradeaux phones (+55): if doesn't start with 55
+    if (!cleaned.startsWith('55')) {
+        // Assume brazil if 10 or 11 digits
+        if (cleaned.length === 10 || cleaned.length === 11) {
+            cleaned = `55${cleaned}`;
+        }
     }
 
-    // Usually brazil phones have 10 (without 9) or 11 digits (with 9)
-    if (cleaned.length === 10 || cleaned.length === 11) {
-        return `+55${cleaned}`;
-    }
-
-    // Default fallback
     return `+${cleaned}`;
+}
+
+function getBaseUrl(url: string): string {
+    return url.replace(/\/$/, ""); // Remove trailing slash
 }
 
 // 2. Find or Create Contact in Chatwoot
@@ -37,8 +38,11 @@ async function getOrCreateContact(phone: string, name: string, config: ChatwootC
     };
 
     try {
+        const baseUrl = getBaseUrl(config.url);
+        console.log(`[Chatwoot] Searching for contact: ${formattedPhone}`);
+
         // Search first
-        const searchRes = await fetch(`${config.url}/api/v1/accounts/${config.accountId}/contacts/search?q=${encodeURIComponent(formattedPhone)}`, {
+        const searchRes = await fetch(`${baseUrl}/api/v1/accounts/${config.accountId}/contacts/search?q=${encodeURIComponent(formattedPhone)}`, {
             headers,
             method: 'GET'
         });
@@ -46,16 +50,20 @@ async function getOrCreateContact(phone: string, name: string, config: ChatwootC
         if (searchRes.ok) {
             const data = await searchRes.json();
             if (data.payload && data.payload.length > 0) {
+                console.log(`[Chatwoot] Found existing contact: ${data.payload[0].id}`);
                 return data.payload[0].id;
             }
+        } else {
+            console.error(`[Chatwoot] Contact search failed: ${searchRes.status} ${await searchRes.text()}`);
         }
 
         // Create if not found
-        const createRes = await fetch(`${config.url}/api/v1/accounts/${config.accountId}/contacts`, {
+        console.log(`[Chatwoot] Creating new contact: ${name}`);
+        const createRes = await fetch(`${baseUrl}/api/v1/accounts/${config.accountId}/contacts`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
-                inbox_id: config.inboxId,
+                inbox_id: Number(config.inboxId),
                 name: name || 'Cliente',
                 phone_number: formattedPhone
             })
@@ -63,14 +71,15 @@ async function getOrCreateContact(phone: string, name: string, config: ChatwootC
 
         if (createRes.ok) {
             const data = await createRes.json();
+            console.log(`[Chatwoot] Contact created: ${data.payload.contact.id}`);
             return data.payload.contact.id;
         }
 
-        console.error("Failed to create Chatwoot contact", await createRes.text());
+        console.error(`[Chatwoot] Failed to create Chatwoot contact: ${createRes.status} ${await createRes.text()}`);
         return null;
 
     } catch (e) {
-        console.error("Chatwoot Contact Error:", e);
+        console.error("[Chatwoot] Contact exception:", e);
         return null;
     }
 }
@@ -83,25 +92,46 @@ async function getOrCreateConversation(contactId: number, config: ChatwootConfig
     };
 
     try {
-        const convRes = await fetch(`${config.url}/api/v1/accounts/${config.accountId}/conversations`, {
+        const baseUrl = getBaseUrl(config.url);
+
+        // Check for existing conversation for this contact
+        const searchConvRes = await fetch(`${baseUrl}/api/v1/accounts/${config.accountId}/contacts/${contactId}/conversations`, {
+            headers,
+            method: 'GET'
+        });
+
+        if (searchConvRes.ok) {
+            const convData = await searchConvRes.json();
+            if (convData.payload && convData.payload.length > 0) {
+                const active = convData.payload.find((c: any) => c.status !== 'resolved');
+                if (active) {
+                    console.log(`[Chatwoot] Found existing active conversation: ${active.id}`);
+                    return active.id;
+                }
+            }
+        }
+
+        console.log(`[Chatwoot] Creating new conversation for contact ${contactId}`);
+        const convRes = await fetch(`${baseUrl}/api/v1/accounts/${config.accountId}/conversations`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
-                source_id: contactId,
-                inbox_id: config.inboxId,
-                contact_id: contactId
+                inbox_id: Number(config.inboxId),
+                contact_id: Number(contactId)
             })
         });
 
         if (!convRes.ok) {
-            console.error("Chatwoot conversation creation failed:", await convRes.text());
+            const errText = await convRes.text();
+            console.error(`[Chatwoot] Conversation creation failed: ${convRes.status} ${errText}`);
             return null;
         }
 
         const convData = await convRes.json();
+        console.log(`[Chatwoot] Conversation created: ${convData.id}`);
         return convData.id;
     } catch (e) {
-        console.error("Chatwoot Conversation Error:", e);
+        console.error("[Chatwoot] Conversation exception:", e);
         return null;
     }
 }
@@ -114,7 +144,8 @@ async function sendMessageToConversation(conversationId: number, message: string
     };
 
     try {
-        const msgRes = await fetch(`${config.url}/api/v1/accounts/${config.accountId}/conversations/${conversationId}/messages`, {
+        const baseUrl = getBaseUrl(config.url);
+        const msgRes = await fetch(`${baseUrl}/api/v1/accounts/${config.accountId}/conversations/${conversationId}/messages`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
@@ -124,13 +155,14 @@ async function sendMessageToConversation(conversationId: number, message: string
         });
 
         if (msgRes.ok) {
+            console.log(`[Chatwoot] Message sent successfully to conversation ${conversationId}`);
             return true;
         } else {
-            console.error("Failed to send Chatwoot message:", await msgRes.text());
+            console.error(`[Chatwoot] Failed to send message: ${msgRes.status} ${await msgRes.text()}`);
             return false;
         }
     } catch (e) {
-        console.error("Chatwoot Send Message Error:", e);
+        console.error("[Chatwoot] Send message exception:", e);
         return false;
     }
 }
@@ -143,16 +175,14 @@ async function sendTypingIndicator(conversationId: number, config: ChatwootConfi
     };
 
     try {
-        // endpoint could be /api/v1/accounts/{account_id}/conversations/{conversation_id}/typing_status or /events
-        // Some Chatwoot versions support this hidden endpoint/event trigger
-        await fetch(`${config.url}/api/v1/accounts/${config.accountId}/conversations/${conversationId}/typing_status`, {
+        const baseUrl = getBaseUrl(config.url);
+        await fetch(`${baseUrl}/api/v1/accounts/${config.accountId}/conversations/${conversationId}/typing_status`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
                 typing_status: 'on'
             })
         });
-        // We don't check for failure because it is optional
     } catch (e) {
         // fail silently
     }
