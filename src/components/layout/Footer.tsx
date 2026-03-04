@@ -79,8 +79,8 @@ export default function Footer() {
     return (
         <footer className="bg-card text-card-foreground border-t border-border/40">
             <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                    <div className="md:col-span-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
                         <h3 className="font-headline text-lg font-semibold text-primary mb-2">DarkStore Suplementos</h3>
                         <p className="text-sm text-muted-foreground">Sua jornada para o próximo nível começa aqui. Qualidade e performance em cada scoop.</p>
 
@@ -91,25 +91,7 @@ export default function Footer() {
                         <ul className="space-y-2 text-sm">
                             <li><Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">Sobre Nós</Link></li>
                             <li><Link href="/products" className="text-muted-foreground hover:text-primary transition-colors">Produtos</Link></li>
-                            <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Fale Conosco</Link></li>
-                            <li><Link href="/blog" className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
                         </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-md font-semibold mb-3">Ajuda</h4>
-                        <ul className="space-y-2 text-sm">
-                            <li><Link href="/faq" className="text-muted-foreground hover:text-primary transition-colors">Perguntas Frequentes</Link></li>
-                            <li><Link href="/shipping" className="text-muted-foreground hover:text-primary transition-colors">Fretes e Entregas</Link></li>
-                            <li><Link href="/returns" className="text-muted-foreground hover:text-primary transition-colors">Trocas e Devoluções</Link></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-md font-semibold mb-3">Redes Sociais</h4>
-                        <div className="flex space-x-4">
-                            <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={24} /></a>
-                            <a href="#" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-muted-foreground hover:text-primary transition-colors"><Linkedin size={24} /></a>
-                            <a href="#" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="text-muted-foreground hover:text-primary transition-colors"><Github size={24} /></a>
-                        </div>
                     </div>
                 </div>
 

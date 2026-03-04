@@ -5,50 +5,48 @@ import { processChatwootNotification } from './chatwootService';
 
 async function generateWhatsAppMessage(order: Order, status: string, trackingCode?: string) {
     const customerName = order.userName || order.userEmail || 'Cliente';
+    const firstName = customerName.split(' ')[0] !== 'Cliente' && customerName.split(' ')[0].length > 1 ? customerName.split(' ')[0] : 'Cliente';
     const orderId = order.id.slice(0, 8);
-    const productName = order.items && order.items.length > 0 ? order.items[0].name : 'produto';
-
-    // Fallback variable until we have dynamic Pix codes
-    const paymentCode = "Acesse o painel do Mercado Pago recebido por e-mail";
-
-    const hour = new Date().getHours();
-    let timeContext = '';
-    if (hour >= 5 && hour < 12) {
-        timeContext = 'Bom dia! Já começamos o dia por aqui cuidando do seu pedido.';
-    } else if (hour >= 18 || hour < 5) {
-        timeContext = 'Boa noite! Recebemos seu pedido e amanhã cedo ele já entra na nossa fila de prioridade.';
-    } else {
-        timeContext = 'Boa tarde! Recebemos seu pedido e já estamos no processo por aqui.';
-    }
-
-    const farewells = [
-        'Qualquer coisa, estou aqui!',
-        'Abraços, equipe VENTURE',
-        'Tenha um excelente dia!'
-    ];
-    const randomFarewell = farewells[Math.floor(Math.random() * farewells.length)];
-
-    const cta = `Se tiver qualquer dúvida sobre o ${productName}, é só me chamar por aqui, tá?`;
 
     switch (status.toLowerCase()) {
         case 'pending':
-            return `${timeContext}\n\nAqui está o seu código Pix para finalizar a compra do pedido #${orderId}:\n\n${paymentCode}\n\nAssim que o pagamento cair, te aviso por aqui mesmo!\n\n${randomFarewell}`;
+            let orderItemsString = '';
+            let subtotal = 0;
+
+            if (order.items && order.items.length > 0) {
+                order.items.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    subtotal += itemTotal;
+                    orderItemsString += `\n${item.name} — ${item.quantity}x — Valor Unitário: R$ ${item.price.toFixed(2).replace('.', ',')} 🏷️`;
+                });
+            } else {
+                orderItemsString = '\nItens indisponíveis 🏷️';
+            }
+
+            // Fallback para shippingCost e desconto se não estiverem presentes no objeto inicial
+            const shippingCost = (order as any).shippingCost || 0; // Se o type original não comportava
+
+            // O totalAmount vem do banco. subtotal + frete - total = desconto (se positivo)
+            const calculatedDiscount = Math.max(0, (subtotal + shippingCost) - order.totalAmount);
+            const cupom = (order.items && order.items[0]?.couponCode) ? order.items[0].couponCode : "Nenhum";
+
+            return `Assunto: Pedido Recebido! Detalhes dos itens e valores #${orderId} 💎\n\nOlá, ${firstName},\n\nRecebemos o seu pedido na DarkStore! 🌑 Ele já está registrado em nossa base sob o ID #${orderId}. Confira abaixo o detalhamento completo da sua compra:\n\n📦 Resumo dos Itens:${orderItemsString}\n\n📊 Resumo Financeiro:\n\nSubtotal: R$ ${subtotal.toFixed(2).replace('.', ',')} 💵\n\nFrete: R$ ${shippingCost.toFixed(2).replace('.', ',')} 🚚\n\nCupom: ${cupom} 🎟️\n\nDesconto Aplicado: - R$ ${calculatedDiscount.toFixed(2).replace('.', ',')} ✨\n\nTOTAL: R$ ${order.totalAmount.toFixed(2).replace('.', ',')} 💰\n\n🚀 Próximos Passos:\nEstamos aguardando a confirmação do seu pagamento. Assim que o status mudar para Aprovado, iniciaremos a preparação do seu pacote imediatamente. ⚡\n\nAgradecemos a confiança em nossa loja.`;
 
         case 'paid':
-            return `Conseguimos confirmar seu pagamento aqui! 🎉\n\nJá estamos preparando tudo com muito carinho para o envio.\n\n${cta}\n\n${randomFarewell}`;
+            return `Assunto: Pagamento Aprovado! Tudo pronto para o próximo passo 💎\n\nÓtimas notícias, ${firstName}! ⚡\n\nO pagamento do seu pedido #${orderId} foi validado com sucesso. Agora, ele entrou oficialmente em nossa fila de processamento. 🛠️\n\nPróximo passo: Seu pedido será encaminhado para o setor de triagem e conferência de estoque. 🔍`;
+
+        case 'packing':
+            return `Assunto: Preparação: Estamos montando o seu pacote 🛠️\n\nOlá, ${firstName},\n\nSeu pedido #${orderId} está na fase de separação. 📦 Nossa equipe está conferindo cada item e preparando a embalagem para garantir que sua suplementação chegue em perfeitas condições. 🛡️\n\nStatus Atual: Embalando (Separação) 🏗️\n\nEm breve, você receberá o alerta de envio com seu código de rastreio. 📡`;
 
         case 'sent':
         case 'shipped':
-            return `Notícia boa! Seu pedido #${orderId} acabou de sair daqui.\n\nO coração chega a bater mais forte, né? 🚚\n\nSeu código de rastreio para acompanhar: ${trackingCode || 'Não informado'}.\n\n${randomFarewell}`;
-
-        case 'packing':
-            return `Passando para avisar que o seu pedido #${orderId} já está na nossa mesa de embalagem.\n\nEstamos cuidando de todos os detalhes para enviar rapidinho!\n\n${randomFarewell}`;
+            return `Assunto: Pedido Enviado! Sua encomenda está a caminho 🚀\n\nSeu pedido foi enviado! 💨\n\nA logística da DarkStore concluiu o despacho do seu pedido #${orderId}. Ele agora está em trânsito para o seu endereço. 📍\n\n📦 Detalhes do Rastreio:\n\nCódigo de Rastreio: ${trackingCode || 'Não informado ainda'} 🆔\n\nLink de Rastreio: ${trackingCode ? 'Verifique na transportadora com seu código' : 'Aguarde atualização'} 🔗\n\nAcompanhe o trajeto em tempo real e prepare-se para a entrega! ⚡`;
 
         case 'delivered':
-            return `O seu pedido #${orderId} acabou de ser entregue!\n\nEspero que você tenha uma ótima experiência. Depois conta pra gente o que achou!\n\n${randomFarewell}`;
+            return `Assunto: Entregue! O que você achou da experiência? 🏆\n\nOlá, ${firstName},\n\nConsta em nosso sistema que o seu pedido #${orderId} foi entregue com sucesso! 🎉 Esperamos que os produtos ajudem você a atingir seus objetivos e sua melhor performance. 🧬\n\nAvaliação:\nSua opinião é fundamental para nossa estratégia de crescimento. 📈 Se puder, avalie sua experiência conosco respondendo a esta mensagem! ⭐`;
 
-        case 'out_for_delivery':
-            return `Prepare o coração! O entregador acabou de sair para entregar seu pedido #${orderId} no endereço cadastrado.\n\n${randomFarewell}`;
+        case 'cancelled':
+            return `Assunto: Pedido Cancelado: Houve um problema com sua compra ⚠️\n\nOlá, ${firstName},\n\nInformamos que o pedido #${orderId} foi cancelado em nosso sistema. 🚫\n\nPossíveis causas:\n\nO pagamento não foi identificado no prazo estipulado. ⏳\n\nHouve uma falha na comunicação com o seu banco ou operadora de cartão. 💳\n\nCaso queira refazer sua compra ou precise de suporte, entre em contato conosco por aqui mesmo. 🛠️`;
 
         default:
             return null;

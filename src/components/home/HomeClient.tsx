@@ -28,48 +28,7 @@ interface HomeClientProps {
     promotions: Promotion[];
 }
 
-const CarouselDots = ({ api, onDotClick }: { api: CarouselApi | undefined, onDotClick: (index: number) => void }) => {
-    const [snapCount, setSnapCount] = useState(0);
-    const [currentSnap, setCurrentSnap] = useState(0);
 
-    const updateDots = useCallback(() => {
-        if (!api) return;
-        setSnapCount(api.scrollSnapList().length);
-        setCurrentSnap(api.selectedScrollSnap());
-    }, [api]);
-
-    useEffect(() => {
-        if (!api) return;
-
-        updateDots();
-        api.on("select", updateDots);
-        api.on("reInit", updateDots);
-
-        return () => {
-            api.off("select", updateDots);
-            api.off("reInit", updateDots);
-        };
-    }, [api, updateDots]);
-
-    if (snapCount <= 1) return null;
-
-    return (
-        <div className="flex justify-center items-center space-x-1.5 sm:space-x-2 mt-2 sm:mt-3 py-1.5 sm:py-2">
-            {Array.from({ length: snapCount }).map((_, index) => (
-                <button
-                    key={index}
-                    onClick={() => onDotClick(index)}
-                    className={cn(
-                        "h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full transition-all duration-300 ease-in-out",
-                        index === currentSnap ? "bg-primary scale-110 sm:scale-125" : "bg-primary/40 hover:bg-primary/60"
-                    )}
-                    aria-label={`Ir para slide ${index + 1}`}
-                />
-            ))}
-        </div>
-
-    );
-};
 
 export default function HomeClient({ newReleases, bestSellers, onSale, promotions }: HomeClientProps) {
     const [carouselLoopThreshold, setCarouselLoopThreshold] = useState(3);
@@ -93,16 +52,13 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
     }, []);
 
     const newReleasesPlugin = useRef(Autoplay({ delay: 4500, stopOnInteraction: true }));
-    const [apiNewReleases, setApiNewReleases] = useState<CarouselApi>();
-    const handleNewReleasesDotClick = useCallback((index: number) => apiNewReleases?.scrollTo(index), [apiNewReleases]);
+
 
     const bestSellersPlugin = useRef(Autoplay({ delay: 5500, stopOnInteraction: true }));
-    const [apiBestSellers, setApiBestSellers] = useState<CarouselApi>();
-    const handleBestSellersDotClick = useCallback((index: number) => apiBestSellers?.scrollTo(index), [apiBestSellers]);
+
 
     const onSaleProductsPlugin = useRef(Autoplay({ delay: 6000, stopOnInteraction: true }));
-    const [apiOnSale, setApiOnSale] = useState<CarouselApi>();
-    const handleOnSaleDotClick = useCallback((index: number) => apiOnSale?.scrollTo(index), [apiOnSale]);
+
 
     const mainCarouselPromotions = useMemo(() => promotions.filter(p => !p.position || p.position === 'main_carousel'), [promotions]);
     const gridLeft = useMemo(() => promotions.find(p => p.position === 'grid_left'), [promotions]);
@@ -136,7 +92,6 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                     {newReleases.length > 0 ? (
                         <>
                             <Carousel
-                                setApi={setApiNewReleases}
                                 plugins={[newReleasesPlugin.current]}
                                 className="w-full"
                                 opts={{
@@ -158,7 +113,7 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                 <CarouselPrevious className="absolute left-[-10px] sm:left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
                                 <CarouselNext className="absolute right-[-10px] sm:right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
                             </Carousel>
-                            <CarouselDots api={apiNewReleases} onDotClick={handleNewReleasesDotClick} />
+
                         </>
                     ) : (
                         <p className="text-muted-foreground text-sm sm:text-base">Nenhum lançamento encontrado.</p>
@@ -177,7 +132,6 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                     {bestSellers.length > 0 ? (
                         <>
                             <Carousel
-                                setApi={setApiBestSellers}
                                 plugins={[bestSellersPlugin.current]}
                                 className="w-full"
                                 opts={{
@@ -199,7 +153,7 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                 <CarouselPrevious className="absolute left-[-10px] sm:left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
                                 <CarouselNext className="absolute right-[-10px] sm:right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
                             </Carousel>
-                            <CarouselDots api={apiBestSellers} onDotClick={handleBestSellersDotClick} />
+
                         </>
                     ) : (
                         <p className="text-muted-foreground text-sm sm:text-base">Nenhum produto mais vendido encontrado.</p>
@@ -411,7 +365,6 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                     {onSale.length > 0 ? (
                         <>
                             <Carousel
-                                setApi={setApiOnSale}
                                 plugins={[onSaleProductsPlugin.current]}
                                 className="w-full"
                                 opts={{
@@ -433,7 +386,7 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                 <CarouselPrevious className="absolute left-[-10px] sm:left-[-20px] md:left-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
                                 <CarouselNext className="absolute right-[-10px] sm:right-[-20px] md:right-[-25px] top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background text-foreground border-border shadow-md hidden sm:flex" />
                             </Carousel>
-                            <CarouselDots api={apiOnSale} onDotClick={handleOnSaleDotClick} />
+
                         </>
                     ) : (
                         <p className="text-muted-foreground text-sm sm:text-base">Nenhum produto em promoção encontrado.</p>
