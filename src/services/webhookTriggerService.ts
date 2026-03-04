@@ -190,7 +190,8 @@ export const triggerOrderStatusUpdateWebhook = async (orderId: string, newStatus
                 name: oi.name, // assuming name in JSON
                 categoryId: oi.categoryId || '', // fallback
                 quantity: oi.quantity
-            }))
+            })),
+            shippingCost: orderRecord.shipping_cost || 0
         } as Order;
 
         const settings = await pb.collection('integration_settings').getFirstListItem('');

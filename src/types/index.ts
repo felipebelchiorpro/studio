@@ -121,6 +121,7 @@ export interface Order {
   channel?: string; // Added for BI Dashboard
   userPhone?: string; // Added for WhatsApp Integration
   trackingCode?: string; // Added for Order Management
+  shippingCost?: number; // Added to display shipping in WhatsApp receipt
 }
 
 export interface Promotion {

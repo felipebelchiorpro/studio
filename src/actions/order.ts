@@ -63,7 +63,8 @@ export async function createOrderAction(params: CreateOrderParams) {
             status: (params.status || 'Pending') as any,
             shippingAddress: JSON.stringify(enrichedShippingAddress),
             channel: params.channel,
-            userPhone: params.userPhone
+            userPhone: params.userPhone,
+            shippingCost: params.shippingFee || 0
         };
 
         try {
