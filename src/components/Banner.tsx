@@ -46,7 +46,7 @@ export function Banner({ promotions }: BannerProps) {
           return (
             <CarouselItem key={promotion.id}>
               <Card className="bg-card border-0 shadow-none rounded-none">
-                <CardContent className="relative flex aspect-[16/10] md:aspect-[1920/492] items-center justify-center p-0">
+                <CardContent className="relative flex aspect-[16/10] md:aspect-[1920/600] items-center justify-center p-0">
                   {hasText ? (
                     // Layout with Overlay Text
                     <>
