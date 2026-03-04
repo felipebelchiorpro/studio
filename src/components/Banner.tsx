@@ -45,19 +45,18 @@ export function Banner({ promotions }: BannerProps) {
 
           return (
             <CarouselItem key={promotion.id}>
-              <Card className="bg-card border-0 shadow-none rounded-none">
-                <CardContent className="relative flex aspect-[16/10] md:aspect-[1920/600] items-center justify-center p-0">
+              <Card className="bg-card border-0 shadow-none rounded-none w-full">
+                <CardContent className={`relative flex items-center justify-center p-0 w-full ${hasText ? 'aspect-[16/10] md:aspect-[1920/600]' : ''}`}>
                   {hasText ? (
-                    // Layout with Overlay Text
+                    // Layout with Overlay Text (Fixed Heights)
                     <>
                       {/* Mobile Image */}
                       <div className="md:hidden absolute inset-0">
                         <Image
                           src={promotion.mobileImageUrl || promotion.imageUrl}
                           alt={promotion.title}
-                          layout="fill"
-                          objectFit="cover"
-                          className="brightness-75"
+                          fill
+                          className="object-cover brightness-75"
                         />
                       </div>
                       {/* Desktop Image */}
@@ -65,9 +64,8 @@ export function Banner({ promotions }: BannerProps) {
                         <Image
                           src={promotion.imageUrl}
                           alt={promotion.title}
-                          layout="fill"
-                          objectFit="cover"
-                          className="brightness-75"
+                          fill
+                          className="object-cover brightness-75"
                         />
                       </div>
 
@@ -88,49 +86,43 @@ export function Banner({ promotions }: BannerProps) {
                       </div>
                     </>
                   ) : (
-                    // Layout Image Only (Full Art)
+                    // Layout Image Only (Dynamic Heights based on Original Image Aspect)
                     promotion.link ? (
-                      <Link href={promotion.link} className="relative w-full h-full block">
-                        {/* Mobile Image Only */}
-                        <div className="md:hidden relative w-full h-full">
-                          <Image
+                      <Link href={promotion.link} className="w-full h-auto block">
+                        {/* Mobile Image Only - Next.js responsive image technique */}
+                        <div className="md:hidden w-full h-auto block leading-none">
+                          <img
                             src={promotion.mobileImageUrl || promotion.imageUrl}
-                            alt={promotion.title || "Banner Mobile"}
-                            layout="fill"
-                            objectFit="cover"
-                            priority={true}
+                            alt={promotion.title || "Banner Oferta"}
+                            className="w-full h-auto object-contain block"
                           />
                         </div>
                         {/* Desktop Image Only */}
-                        <div className="hidden md:block relative w-full h-full">
-                          <Image
+                        <div className="hidden md:block w-full h-auto block leading-none">
+                          <img
                             src={promotion.imageUrl}
-                            alt={promotion.title || "Banner Desktop"}
-                            layout="fill"
-                            objectFit="cover"
-                            priority={true}
+                            alt={promotion.title || "Banner Oferta"}
+                            className="w-full h-auto object-contain block"
                           />
                         </div>
                       </Link>
                     ) : (
-                      <>
-                        <div className="md:hidden relative w-full h-full">
-                          <Image
+                      <div className="w-full h-auto block">
+                        <div className="md:hidden w-full h-auto block leading-none">
+                          <img
                             src={promotion.mobileImageUrl || promotion.imageUrl}
-                            alt={promotion.title || "Banner Mobile"}
-                            layout="fill"
-                            objectFit="cover"
+                            alt={promotion.title || "Banner Oferta"}
+                            className="w-full h-auto object-contain block"
                           />
                         </div>
-                        <div className="hidden md:block relative w-full h-full">
-                          <Image
+                        <div className="hidden md:block w-full h-auto block leading-none">
+                          <img
                             src={promotion.imageUrl}
-                            alt={promotion.title || "Banner Desktop"}
-                            layout="fill"
-                            objectFit="cover"
+                            alt={promotion.title || "Banner Oferta"}
+                            className="w-full h-auto object-contain block"
                           />
                         </div>
-                      </>
+                      </div>
                     )
                   )}
                 </CardContent>
