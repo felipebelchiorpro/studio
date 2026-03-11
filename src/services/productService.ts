@@ -50,8 +50,7 @@ export const fetchProductsService = async (): Promise<Product[]> => {
     try {
         // Use public instance for public data
         // Add random param to bust Next.js cache potentially
-        const records = await pb.collection('products').getList(1, 1000, {
-            sort: '-created',
+        const records = await pb.collection('products').getList(1, 200, {
             expand: 'category,brand',
             requestKey: null, // Disable auto-cancel
             $autoCancel: false,
@@ -152,7 +151,6 @@ export const fetchNewReleasesService = async (limit: number = 8): Promise<Produc
         // Use public instance
         const records = await pb.collection('products').getList(1, limit, {
             filter: 'featured = true',
-            sort: '-created',
             expand: 'category,brand',
         });
         return records.items.map(mapProductFromDB);
@@ -175,7 +173,6 @@ export const fetchOnSaleService = async (limit: number = 8): Promise<Product[]> 
         // Fetch products with an original price set (implying a discount)
         const records = await pb.collection('products').getList(1, limit, {
             filter: 'original_price > 0',
-            sort: '-created',
             expand: 'category,brand',
         });
         return records.items.map(mapProductFromDB);
