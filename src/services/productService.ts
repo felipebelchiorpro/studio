@@ -50,14 +50,14 @@ export const fetchProductsService = async (): Promise<Product[]> => {
     try {
         // Use public instance for public data
         // Add random param to bust Next.js cache potentially
-        const records = await pb.collection('products').getFullList({
+        const records = await pb.collection('products').getList(1, 1000, {
             sort: '-created',
             expand: 'category,brand',
             requestKey: null, // Disable auto-cancel
             $autoCancel: false,
             // fields: '*,expand.category.name,expand.brand.name', // optimize
         });
-        return records.map(mapProductFromDB);
+        return records.items.map(mapProductFromDB);
     } catch (error: any) {
         console.error('Error fetching products detailed:', {
             message: error.message,
