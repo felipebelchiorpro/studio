@@ -13,15 +13,9 @@ export async function middleware(request: NextRequest) {
 
     try {
         // get an up-to-date auth store state by verifying and refreshing the loaded auth model (if any)
-        if (pb.authStore.isValid) {
-            try {
-                // Try Admin Refresh
-                await pb.admins.authRefresh();
-            } catch (err) {
-                // If failed, try User Refresh (in case it's a regular user logged in via dashboard?)
-                // Although Dashboard is for Admins... 
-                await pb.collection('users').authRefresh();
-            }
+        // We removed authRefresh to stop Next.js middleware from deleting the token locally if the network is slow or it gets mixed up.
+        if (!pb.authStore.isValid) {
+            pb.authStore.clear();
         }
     } catch (_) {
         // clear the auth store on failed refresh
@@ -29,7 +23,8 @@ export async function middleware(request: NextRequest) {
     }
 
     // send back the default 'pb_auth' cookie to the client with the latest store state
-    response.headers.append('set-cookie', pb.authStore.exportToCookie({ httpOnly: false }));
+    // We add maxAge to match the frontend settings and keep the session active for 7 days
+    response.headers.append('set-cookie', pb.authStore.exportToCookie({ httpOnly: false, maxAge: 60 * 60 * 24 * 7 }));
 
     return response;
 }

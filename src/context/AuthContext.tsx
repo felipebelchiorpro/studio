@@ -25,7 +25,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check active session on mount
     const checkAuth = async () => {
       // Sync pocketbase's LocalStorage to document cookie so Next.js Middleware can read it
-      document.cookie = pb.authStore.exportToCookie({ httpOnly: false });
+      // Set maxAge to 7 days to persist across sessions
+      document.cookie = pb.authStore.exportToCookie({ httpOnly: false, maxAge: 60 * 60 * 24 * 7 });
 
       if (pb.authStore.isValid) {
         const model = pb.authStore.model;
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listen for auth changes
     const unsubscribe = pb.authStore.onChange((token, model) => {
-      document.cookie = pb.authStore.exportToCookie({ httpOnly: false });
+      document.cookie = pb.authStore.exportToCookie({ httpOnly: false, maxAge: 60 * 60 * 24 * 7 });
       if (token && model) {
         setUser({
           id: model.id,
@@ -106,6 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     pb.authStore.clear();
+    // Clearing the cookie by exporting the empty store
     document.cookie = pb.authStore.exportToCookie({ httpOnly: false });
     setUser(null);
     setIsAuthenticated(false);
