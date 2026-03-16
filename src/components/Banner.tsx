@@ -56,6 +56,8 @@ export function Banner({ promotions }: BannerProps) {
                           src={promotion.mobileImageUrl || promotion.imageUrl}
                           alt={promotion.title}
                           fill
+                          quality={90}
+                          sizes="100vw"
                           className="object-cover brightness-75"
                         />
                       </div>
@@ -65,6 +67,8 @@ export function Banner({ promotions }: BannerProps) {
                           src={promotion.imageUrl}
                           alt={promotion.title}
                           fill
+                          quality={90}
+                          sizes="100vw"
                           className="object-cover brightness-75"
                         />
                       </div>

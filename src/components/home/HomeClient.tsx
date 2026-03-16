@@ -174,18 +174,20 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                             <Image
                                                 src={gridLeft.mobileImageUrl}
                                                 alt={gridLeft.title || "Destaque Mobile"}
-                                                layout="fill"
-                                                objectFit="cover"
-                                                className={cn("transition-transform duration-300 group-hover:scale-105", (gridLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                fill
+                                                quality={90}
+                                                sizes="100vw"
+                                                className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                             />
                                         </div>
                                         <div className="hidden md:block absolute inset-0">
                                             <Image
                                                 src={gridLeft.imageUrl}
                                                 alt={gridLeft.title || "Destaque"}
-                                                layout="fill"
-                                                objectFit="cover"
-                                                className={cn("transition-transform duration-300 group-hover:scale-105", (gridLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                fill
+                                                quality={90}
+                                                sizes="50vw"
+                                                className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                             />
                                         </div>
                                     </>
@@ -193,9 +195,10 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                     <Image
                                         src={gridLeft?.imageUrl || "https://placehold.co/600x800.png?text=Destaque+Esquerda"}
                                         alt={gridLeft?.title || "Destaque"}
-                                        layout="fill"
-                                        objectFit="cover"
-                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridLeft?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                        fill
+                                        quality={90}
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                        className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridLeft?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                     />
                                 )}
 
@@ -220,18 +223,20 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                                 <Image
                                                     src={gridTopRight.mobileImageUrl}
                                                     alt={gridTopRight.title || "Destaque Mobile"}
-                                                    layout="fill"
-                                                    objectFit="cover"
-                                                    className={cn("transition-transform duration-300 group-hover:scale-105", (gridTopRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                    fill
+                                                    quality={90}
+                                                    sizes="100vw"
+                                                    className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridTopRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                                 />
                                             </div>
                                             <div className="hidden md:block absolute inset-0">
                                                 <Image
                                                     src={gridTopRight.imageUrl}
                                                     alt={gridTopRight.title || "Destaque"}
-                                                    layout="fill"
-                                                    objectFit="cover"
-                                                    className={cn("transition-transform duration-300 group-hover:scale-105", (gridTopRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                    fill
+                                                    quality={90}
+                                                    sizes="50vw"
+                                                    className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridTopRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                                 />
                                             </div>
                                         </>
@@ -239,9 +244,10 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                         <Image
                                             src={gridTopRight?.imageUrl || "https://placehold.co/800x400.png?text=Destaque+Topo"}
                                             alt={gridTopRight?.title || "Destaque"}
-                                            layout="fill"
-                                            objectFit="cover"
-                                            className={cn("transition-transform duration-300 group-hover:scale-105", (gridTopRight?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                            fill
+                                            quality={90}
+                                            sizes="(max-width: 768px) 100vw, 50vw"
+                                            className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridTopRight?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                         />
                                     )}
 
@@ -266,18 +272,20 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                                     <Image
                                                         src={gridBottomLeft.mobileImageUrl}
                                                         alt={gridBottomLeft.title || "Destaque Mobile"}
-                                                        layout="fill"
-                                                        objectFit="cover"
-                                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                        fill
+                                                        quality={90}
+                                                        sizes="50vw"
+                                                        className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridBottomLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                                     />
                                                 </div>
                                                 <div className="hidden md:block absolute inset-0">
                                                     <Image
                                                         src={gridBottomLeft.imageUrl}
                                                         alt={gridBottomLeft.title || "Destaque"}
-                                                        layout="fill"
-                                                        objectFit="cover"
-                                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                        fill
+                                                        quality={90}
+                                                        sizes="25vw"
+                                                        className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridBottomLeft.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                                     />
                                                 </div>
                                             </>
@@ -285,9 +293,10 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                             <Image
                                                 src={gridBottomLeft?.imageUrl || "https://placehold.co/400x400.png?text=Peq+Esq"}
                                                 alt={gridBottomLeft?.title || "Destaque"}
-                                                layout="fill"
-                                                objectFit="cover"
-                                                className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomLeft?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                fill
+                                                quality={90}
+                                                sizes="(max-width: 768px) 50vw, 25vw"
+                                                className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridBottomLeft?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                             />
                                         )}
 
@@ -311,18 +320,20 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                                     <Image
                                                         src={gridBottomRight.mobileImageUrl}
                                                         alt={gridBottomRight.title || "Destaque Mobile"}
-                                                        layout="fill"
-                                                        objectFit="cover"
-                                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                        fill
+                                                        quality={90}
+                                                        sizes="50vw"
+                                                        className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridBottomRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                                     />
                                                 </div>
                                                 <div className="hidden md:block absolute inset-0">
                                                     <Image
                                                         src={gridBottomRight.imageUrl}
                                                         alt={gridBottomRight.title || "Destaque"}
-                                                        layout="fill"
-                                                        objectFit="cover"
-                                                        className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                        fill
+                                                        quality={90}
+                                                        sizes="25vw"
+                                                        className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridBottomRight.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                                     />
                                                 </div>
                                             </>
@@ -330,9 +341,10 @@ export default function HomeClient({ newReleases, bestSellers, onSale, promotion
                                             <Image
                                                 src={gridBottomRight?.imageUrl || "https://placehold.co/400x400.png?text=Peq+Dir"}
                                                 alt={gridBottomRight?.title || "Destaque"}
-                                                layout="fill"
-                                                objectFit="cover"
-                                                className={cn("transition-transform duration-300 group-hover:scale-105", (gridBottomRight?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
+                                                fill
+                                                quality={90}
+                                                sizes="(max-width: 768px) 50vw, 25vw"
+                                                className={cn("object-cover transition-transform duration-300 group-hover:scale-105", (gridBottomRight?.title) ? "brightness-50 group-hover:brightness-75" : "brightness-100")}
                                             />
                                         )}
 
