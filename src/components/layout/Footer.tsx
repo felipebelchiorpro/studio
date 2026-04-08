@@ -123,6 +123,14 @@ export default function Footer() {
                     <div>
                         <h4 className="text-md font-semibold mb-4">Segurança</h4>
                         <div className="flex flex-wrap gap-4 items-center">
+                            <Image 
+                                src="/images/pagamentoseguro.png"
+                                alt="Pagamento Seguro"
+                                width={300}
+                                height={60}
+                                className="h-10 sm:h-12 w-auto object-contain"
+                                unoptimized
+                            />
                             <div className="flex items-center gap-1 px-3 py-1 bg-white rounded border border-gray-200 shadow-sm">
                                 <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[8px] font-bold">✓</div>
                                 <div className="flex flex-col leading-none">
@@ -142,7 +150,6 @@ export default function Footer() {
                         </div>
                     </div>
                 </div>
-
                 <div className="mt-8 border-t border-border/40 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-xs sm:text-sm text-muted-foreground order-2 md:order-1 text-center md:text-left">
                         &copy; {currentYear} DarkStore Suplementos. Todos os direitos reservados.

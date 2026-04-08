@@ -42,8 +42,8 @@ const NavLink = ({ href, children, onClick }: { href: string; children: React.Re
 };
 
 const topBarMessages = [
-  { text: "Parcelamento em até 3x sem juros!", icon: CreditCard },
-  { text: "Frete Grátis acima de R$199 para todo Brasil!", icon: ShoppingCart },
+  { text: "Entregas em Caconde, Tapiratiba e Divinolândia", icon: Package },
+  { text: "Compre com o cupom do seu parceiro", icon: ShoppingCart },
   { text: "Novidades toda semana, confira!", icon: Info },
 ];
 
@@ -162,15 +162,7 @@ export default function Header() {
               <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 text-primary" /> contato@darkstoresuplementos.com
             </a>
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <Link href="/about" className="hover:text-primary transition-colors">Sobre Nós</Link>
-            <Link href="/contact" className="hover:text-primary transition-colors">Fale Conosco</Link>
-            <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
-            <div className="flex items-center space-x-1.5 sm:space-x-2">
-              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={14} /></a>
-              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="text-muted-foreground hover:text-primary transition-colors"><Youtube size={14} /></a>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -332,7 +324,7 @@ export default function Header() {
                     </Button>
                   </a>
                   <div className="flex justify-center space-x-6 mt-4 opacity-70">
-                    <a href="#" className="hover:text-primary transition-colors"><Instagram size={20} /></a>
+                    <a href="https://www.instagram.com/darkstoresuplementosofc/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors"><Instagram size={20} /></a>
                     <a href="#" className="hover:text-primary transition-colors"><Youtube size={20} /></a>
                     <a href="mailto:contato@darkstoresuplementos.com" className="hover:text-primary transition-colors"><Mail size={20} /></a>
                   </div>

@@ -266,16 +266,8 @@ export default function CheckoutPage() {
                                 Você será redirecionado para o ambiente seguro do <strong>Mercado Pago</strong> para finalizar sua compra. Aceitamos Cartão de Crédito, Pix e Boleto.
                             </p>
 
-                            <div className="grid grid-cols-3 gap-3 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-                                <div className="bg-white p-2 rounded flex items-center justify-center h-10">
-                                    <img src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/ui-navigation/5.21.3/mercadopago/logo__small.png" alt="Mercado Pago" className="h-full object-contain" />
-                                </div>
-                                <div className="bg-white p-2 rounded flex items-center justify-center h-10">
-                                    <img src="https://logospng.org/download/pix/logo-pix-icone-512.png" alt="Pix" className="h-full object-contain" />
-                                </div>
-                                <div className="bg-white p-2 rounded flex items-center justify-center h-10">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" alt="Mastercard" className="h-full object-contain" />
-                                </div>
+                            <div className="flex justify-center opacity-90 transition-all duration-300 bg-transparent rounded">
+                                <img src="/images/pagamentoseguro.png" alt="Métodos de Pagamento e Segurança" className="h-12 sm:h-14 w-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300" />
                             </div>
 
                             <Button
