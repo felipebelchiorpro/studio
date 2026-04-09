@@ -59,6 +59,13 @@ export default function Header() {
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [hasMounted, setHasMounted] = useState(false);
+  const [expandedMobileMenus, setExpandedMobileMenus] = useState<string[]>([]);
+
+  const toggleMobileMenu = (menu: string) => {
+    setExpandedMobileMenus(prev => 
+      prev.includes(menu) ? prev.filter(m => m !== menu) : [...prev, menu]
+    );
+  };
 
   useEffect(() => {
     setHasMounted(true);
@@ -301,16 +308,101 @@ export default function Header() {
                     <SearchBar onSearch={handleSearch} />
 
                     <nav className="flex flex-col space-y-1">
-                      {mainSiteLinks.map(link => (
-                        <Link key={link.href} href={link.href} onClick={closeSheet}>
-                          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group">
-                            <div className="flex items-center text-sm font-medium text-foreground group-hover:text-primary">
-                              {link.icon} <span className="ml-3">{link.label}</span>
-                            </div>
-                            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                      <Link href="/" onClick={closeSheet}>
+                        <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group">
+                          <div className="flex items-center text-sm font-medium text-foreground"><Home className="mr-3 h-4 w-4" /> Home</div>
+                        </div>
+                      </Link>
+
+                      {/* Suplementos Dynamic Accordion */}
+                      <div className="flex flex-col">
+                        <div 
+                          className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer group"
+                          onClick={() => toggleMobileMenu('suplementos')}
+                        >
+                          <div className="flex items-center text-sm font-medium text-foreground uppercase"><Package className="mr-3 h-4 w-4" /> Suplementos</div>
+                          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedMobileMenus.includes('suplementos') ? 'rotate-180' : ''}`} />
+                        </div>
+                        {expandedMobileMenus.includes('suplementos') && (
+                          <div className="pl-10 pr-3 py-2 flex flex-col space-y-3 mb-2">
+                            <Link href="/products" onClick={closeSheet} className="text-sm font-bold text-foreground">
+                              Ver todos os Suplementos
+                            </Link>
+                            {topLevelCategories.filter(c => !c.parentId && (c.type === 'supplement' || !c.type)).map(root => {
+                               const children = topLevelCategories.filter(c => c.parentId === root.id);
+                               return (
+                                 <div key={root.id} className="flex flex-col space-y-1.5 border-l-2 border-primary/20 pl-3">
+                                   <Link href={`/products?category=${encodeURIComponent(root.name)}`} onClick={closeSheet} className="text-sm font-semibold text-foreground hover:text-primary transition-colors">
+                                     {root.name}
+                                   </Link>
+                                   {children.map(child => (
+                                     <Link key={child.id} href={`/products?category=${encodeURIComponent(child.name)}`} onClick={closeSheet} className="text-[13px] text-muted-foreground hover:text-primary transition-colors">
+                                       {child.name}
+                                     </Link>
+                                   ))}
+                                 </div>
+                               );
+                            })}
                           </div>
-                        </Link>
-                      ))}
+                        )}
+                      </div>
+
+                      {/* Vestuário Dynamic Accordion */}
+                      <div className="flex flex-col">
+                        <div 
+                          className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer group"
+                          onClick={() => toggleMobileMenu('vestuario')}
+                        >
+                          <div className="flex items-center text-sm font-medium text-foreground uppercase"><Package className="mr-3 h-4 w-4" /> Vestuário</div>
+                          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedMobileMenus.includes('vestuario') ? 'rotate-180' : ''}`} />
+                        </div>
+                        {expandedMobileMenus.includes('vestuario') && (
+                          <div className="pl-10 pr-3 py-2 flex flex-col space-y-3 mb-2">
+                            {topLevelCategories.filter(c => !c.parentId && c.type === 'clothing').map(root => {
+                               const children = topLevelCategories.filter(c => c.parentId === root.id);
+                               return (
+                                 <div key={root.id} className="flex flex-col space-y-1.5 border-l-2 border-primary/20 pl-3">
+                                   <Link href={`/products?category=${encodeURIComponent(root.name)}`} onClick={closeSheet} className="text-sm font-semibold text-foreground hover:text-primary transition-colors">
+                                     {root.name}
+                                   </Link>
+                                   {children.map(child => (
+                                     <Link key={child.id} href={`/products?category=${encodeURIComponent(child.name)}`} onClick={closeSheet} className="text-[13px] text-muted-foreground hover:text-primary transition-colors">
+                                       {child.name}
+                                     </Link>
+                                   ))}
+                                 </div>
+                               );
+                            })}
+                            {topLevelCategories.filter(c => !c.parentId && c.type === 'clothing').length === 0 && (
+                              <span className="text-xs text-muted-foreground">Nenhuma categoria de vestuário found.</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <Link href="/products?filter=on-sale" onClick={closeSheet}>
+                        <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group">
+                          <div className="flex items-center text-sm font-medium text-foreground uppercase"><Info className="mr-3 h-4 w-4" /> Outlet</div>
+                        </div>
+                      </Link>
+                      
+                      <Link href="/products?category=KITS" onClick={closeSheet}>
+                        <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group">
+                          <div className="flex items-center text-sm font-medium text-foreground uppercase"><Package className="mr-3 h-4 w-4" /> Kits</div>
+                        </div>
+                      </Link>
+                      
+                      <Link href="/products?tag=new" onClick={closeSheet}>
+                        <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group">
+                          <div className="flex items-center text-sm font-medium text-foreground uppercase"><Package className="mr-3 h-4 w-4" /> Lançamentos</div>
+                        </div>
+                      </Link>
+
+                      <Link href="/about" onClick={closeSheet}>
+                        <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group">
+                          <div className="flex items-center text-sm font-medium text-foreground uppercase"><Info className="mr-3 h-4 w-4" /> Sobre Nós</div>
+                        </div>
+                      </Link>
 
                     </nav>
                   </div>
@@ -475,16 +567,15 @@ export default function Header() {
       <nav className="md:hidden bg-background border-b border-border/40 py-2 overflow-x-auto no-scrollbar">
         <div className="container mx-auto px-4 flex items-center space-x-4 min-w-max">
           <Link href="/products" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
-            Suplementos
+            Todos
           </Link>
-          <Link href="/products?category=ROUPAS" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
-            Vestuário
-          </Link>
+          {topLevelCategories.filter(c => !c.parentId && (c.type === 'supplement' || !c.type || c.type === 'clothing')).map(cat => (
+            <Link key={cat.id} href={`/products?category=${encodeURIComponent(cat.name)}`} className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
+              {cat.name}
+            </Link>
+          ))}
           <Link href="/products?filter=on-sale" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
             Outlet
-          </Link>
-          <Link href="/products?category=KITS" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
-            Kits
           </Link>
           <Link href="/products?tag=new" className="text-sm font-bold text-foreground hover:text-primary whitespace-nowrap uppercase">
             Lançamentos

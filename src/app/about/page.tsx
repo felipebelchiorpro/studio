@@ -22,15 +22,17 @@ export default function AboutPage() {
             Comprometemo-nos com a transparência, a inovação e a excelência em cada produto que oferecemos. Do atleta de elite ao entusiasta do fitness, a DarkStore é sua parceira confiável na busca por resultados extraordinários.
           </p>
         </div>
-        <div className="relative aspect-video rounded-lg overflow-hidden shadow-xl">
-          <Image
-            src="https://placehold.co/800x600.png"
-            alt="Equipe DarkStore ou produtos em destaque"
-            layout="fill"
-            objectFit="cover"
-            className="transform hover:scale-105 transition-transform duration-500"
-            data-ai-hint="fitness team supplements"
-          />
+        <div className="relative aspect-video rounded-lg overflow-hidden shadow-xl bg-black/40 flex items-center justify-center border border-white/10 p-8">
+          <div className="relative w-full h-full">
+            <Image
+              src="/darkstore-logo.png"
+              alt="Logo DarkStore Suplementos"
+              layout="fill"
+              objectFit="contain"
+              className="transform hover:scale-105 transition-transform duration-500 drop-shadow-2xl"
+              data-ai-hint="fitness team supplements"
+            />
+          </div>
         </div>
       </div>
 
