@@ -103,6 +103,11 @@ function ProductsContent() {
       result = result.filter(p => p.originalPrice && p.originalPrice > p.price);
     }
 
+    const isNewFilter = searchParams.get('tag') === 'new';
+    if (isNewFilter) {
+      result = result.filter(p => p.isNewRelease);
+    }
+
     // Hierarchical category filtering
     if (filters.categories.length > 0) {
       // 1. Get all relevant category names (selected + descendants)
